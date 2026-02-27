@@ -9,14 +9,16 @@
     body { 
       font-family: 'Segoe UI', system-ui, sans-serif; 
       height: 100vh;
+      height: -webkit-fill-available; /* iOS Safari 修正 */
       overflow: hidden;
       background: #f5f5f5;
-      touch-action: manipulation; /* 優化觸控 */
+      touch-action: manipulation;
     }
     
     .container {
       display: flex;
       height: 100vh;
+      height: 100dvh; /* 動態視口高度 */
       position: relative;
     }
     
@@ -29,7 +31,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
+      -webkit-overflow-scrolling: touch;
     }
     
     .search-container {
@@ -81,7 +83,7 @@
       font-size: 18px;
       transition: all 0.3s;
       background: #f8f9fa;
-      -webkit-appearance: none; /* 移除 iOS 預設樣式 */
+      -webkit-appearance: none;
     }
     
     input[type="text"]:focus {
@@ -121,7 +123,7 @@
       margin-bottom: 25px;
       position: relative;
       overflow: hidden;
-      -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
+      -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
     
@@ -430,23 +432,32 @@
     
     /* ==================== 手機端適配 ==================== */
     @media screen and (max-width: 768px) {
+      body {
+        overflow: auto; /* 允許 body 滾動 */
+        height: auto;
+      }
+      
       .container {
         flex-direction: column;
-        overflow-y: auto;
         height: auto;
         min-height: 100vh;
+        min-height: 100dvh;
       }
       
       .left-panel {
         width: 100%;
         padding: 20px;
         min-height: 100vh;
-        padding-bottom: 100px; /* 預留空間給底部按鈕 */
+        min-height: 100dvh;
+        padding-bottom: 100px;
+        overflow-y: visible; /* 改為 visible，讓 body 處理滾動 */
+        display: block; /* 改為 block 避免 flex 滾動問題 */
       }
       
       .search-container {
         padding: 20px;
         max-width: 100%;
+        margin-bottom: 20px;
       }
       
       h1 {
@@ -459,7 +470,7 @@
       
       input[type="text"] {
         padding: 15px;
-        font-size: 16px; /* 防止 iOS 縮放 */
+        font-size: 16px;
       }
       
       button {
@@ -468,7 +479,38 @@
       }
       
       .results-container {
-        grid-template-columns: 1fr; /* 手機端單欄顯示 */
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
+      /* 結果框在手機端自適應高度 */
+      .result-box {
+        max-height: none; /* 移除 300px 限制 */
+        overflow-y: visible; /* 讓內容自然展開 */
+        min-height: auto;
+      }
+      
+      /* 圖書館表格容器獨立滾動 */
+      .result-section.full-width .result-box {
+        overflow-x: auto; /* 允許橫向滾動 */
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: white;
+        padding: 0;
+      }
+      
+      .library-table {
+        min-width: 800px; /* 確保表格有最小寬度，強制橫向滾動 */
+        font-size: 13px;
+        margin: 0;
+      }
+      
+      .library-table th,
+      .library-table td {
+        padding: 10px 6px;
+        white-space: nowrap; /* 防止文字換行 */
       }
       
       /* 右側面板改為抽屜式 */
@@ -476,18 +518,19 @@
         position: fixed;
         top: 0;
         right: 0;
-        width: 85%; /* 佔據 85% 寬度，留出空間返回 */
+        width: 85%;
         height: 100vh;
-        transform: translateX(100%); /* 預設隱藏在右側 */
+        height: 100dvh;
+        transform: translateX(100%);
         box-shadow: -5px 0 25px rgba(0,0,0,0.3);
       }
       
       .right-panel.open {
-        transform: translateX(0); /* 打開時滑入 */
+        transform: translateX(0);
       }
       
       .mobile-toggle {
-        display: flex; /* 手機端顯示切換按鈕 */
+        display: flex;
       }
       
       .close-panel-btn {
@@ -504,6 +547,7 @@
         left: 0;
         width: 100%;
         height: 100%;
+        height: 100dvh;
         background: rgba(0,0,0,0.5);
         z-index: 40;
       }
@@ -521,6 +565,26 @@
       
       .search-container {
         max-width: 100%;
+      }
+    }
+    
+    /* 小屏幕手機優化 */
+    @media screen and (max-width: 380px) {
+      .left-panel {
+        padding: 10px;
+        padding-bottom: 80px;
+      }
+      
+      .search-container {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 20px;
+      }
+      
+      .library-table {
+        font-size: 12px;
       }
     }
   </style>
@@ -624,7 +688,7 @@
 
   <script>
     // API 基礎網址
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec ';
     
     // 本地資料緩存
     let manualSelectData = [];
