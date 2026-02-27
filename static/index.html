@@ -11,7 +11,7 @@
       height: 100vh;
       overflow: hidden;
       background: #f5f5f5;
-      touch-action: manipulation; /* 優化觸控 */
+      touch-action: manipulation;
     }
     
     .container {
@@ -29,7 +29,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
+      -webkit-overflow-scrolling: touch;
     }
     
     .search-container {
@@ -81,7 +81,7 @@
       font-size: 18px;
       transition: all 0.3s;
       background: #f8f9fa;
-      -webkit-appearance: none; /* 移除 iOS 預設樣式 */
+      -webkit-appearance: none;
     }
     
     input[type="text"]:focus {
@@ -121,7 +121,7 @@
       margin-bottom: 25px;
       position: relative;
       overflow: hidden;
-      -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
+      -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
     
@@ -428,20 +428,27 @@
       font-size: 18px;
     }
     
-    /* ==================== 手機端適配 ==================== */
+    /* ==================== 手機端適配（修正版） ==================== */
     @media screen and (max-width: 768px) {
+      body {
+        overflow-y: auto; /* 修正：允許 body 滾動 */
+        height: auto;     /* 修正：高度自適應內容 */
+        -webkit-overflow-scrolling: touch;
+      }
+      
       .container {
         flex-direction: column;
-        overflow-y: auto;
-        height: auto;
+        height: auto;     /* 修正：高度自適應 */
         min-height: 100vh;
+        overflow-y: visible; /* 修正：讓 body 處理滾動 */
       }
       
       .left-panel {
         width: 100%;
         padding: 20px;
-        min-height: 100vh;
-        padding-bottom: 100px; /* 預留空間給底部按鈕 */
+        min-height: auto; /* 修正：移除固定高度限制 */
+        overflow-y: visible; /* 修正：讓 body 處理滾動 */
+        -webkit-overflow-scrolling: touch;
       }
       
       .search-container {
@@ -459,7 +466,7 @@
       
       input[type="text"] {
         padding: 15px;
-        font-size: 16px; /* 防止 iOS 縮放 */
+        font-size: 16px;
       }
       
       button {
@@ -468,26 +475,48 @@
       }
       
       .results-container {
-        grid-template-columns: 1fr; /* 手機端單欄顯示 */
+        grid-template-columns: 1fr;
+        gap: 15px;
       }
       
-      /* 右側面板改為抽屜式 */
+      /* 修正：確保結果區域可以正確顯示和滾動 */
+      .result-section {
+        overflow: visible;
+      }
+      
+      .result-box {
+        max-height: none; /* 修正：移除最大高度限制，讓內容自然展開 */
+        overflow-y: visible; /* 修正：讓頁面整體滾動 */
+        min-height: auto;
+      }
+      
+      /* 表格容器允許橫向滾動 */
+      .result-section.full-width {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .library-table {
+        min-width: 600px; /* 確保表格有足夠寬度 */
+      }
+      
+      /* 右側面板保持抽屜式 */
       .right-panel {
         position: fixed;
         top: 0;
         right: 0;
-        width: 85%; /* 佔據 85% 寬度，留出空間返回 */
+        width: 85%;
         height: 100vh;
-        transform: translateX(100%); /* 預設隱藏在右側 */
+        transform: translateX(100%);
         box-shadow: -5px 0 25px rgba(0,0,0,0.3);
       }
       
       .right-panel.open {
-        transform: translateX(0); /* 打開時滑入 */
+        transform: translateX(0);
       }
       
       .mobile-toggle {
-        display: flex; /* 手機端顯示切換按鈕 */
+        display: flex;
       }
       
       .close-panel-btn {
@@ -496,7 +525,6 @@
         justify-content: center;
       }
       
-      /* 點擊外部關閉的遮罩 */
       .overlay {
         display: none;
         position: fixed;
@@ -624,7 +652,7 @@
 
   <script>
     // API 基礎網址
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec ';
     
     // 本地資料緩存
     let manualSelectData = [];
@@ -661,6 +689,8 @@
         panel.classList.add('open');
         overlay.classList.add('show');
         toggleBtn.style.display = 'none'; // 打開時隱藏按鈕
+        // 打開面板時禁止背景滾動
+        document.body.style.overflow = 'hidden';
       } else {
         closePanel();
       }
@@ -675,6 +705,10 @@
       overlay.classList.remove('show');
       isPanelOpen = false;
       toggleBtn.style.display = 'flex'; // 顯示浮動按鈕
+      // 關閉面板時恢復背景滾動
+      if (window.innerWidth <= 768) {
+        document.body.style.overflow = 'auto';
+      }
     }
     
     // 顯示狀態訊息
@@ -729,6 +763,12 @@
             showStatus(`✅ 共 ${data.rowCount} 筆結果`, 'success', true);
             document.getElementById('addInput').value = inputValue;
             showStatus('✅ 已自動填入14位數字', 'success');
+            // 手機端查詢後自動滾動到結果區域
+            if (window.innerWidth <= 768) {
+              setTimeout(() => {
+                document.getElementById('searchResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }
           }
         } else {
           showStatus('❌ ' + data.error, 'error', true);
@@ -776,18 +816,19 @@
       
       if (libraries.length > 0) {
         let tableHtml = `
-          <table class="library-table">
-            <thead>
-              <tr>
-                <th>圖書館</th>
-                <th>索書號</th>
-                <th>期次</th>
-                <th>媒體碼</th>
-                <th>館藏現況</th>
-                <th>館藏</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table class="library-table">
+              <thead>
+                <tr>
+                  <th>圖書館</th>
+                  <th>索書號</th>
+                  <th>期次</th>
+                  <th>媒體碼</th>
+                  <th>館藏現況</th>
+                  <th>館藏</th>
+                </tr>
+              </thead>
+              <tbody>
         `;
         
         libraries.forEach((lib) => {
@@ -803,7 +844,7 @@
           `;
         });
         
-        tableHtml += '</tbody></table>';
+        tableHtml += '</tbody></table></div>';
         document.getElementById('librariesBox').innerHTML = tableHtml;
       } else {
         document.getElementById('librariesBox').innerHTML = '<div class="empty-state">無圖書館資料</div>';
