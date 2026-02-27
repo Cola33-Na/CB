@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>資料查詢與管理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,11 +11,13 @@
       height: 100vh;
       overflow: hidden;
       background: #f5f5f5;
+      touch-action: manipulation; /* 優化觸控 */
     }
     
     .container {
       display: flex;
       height: 100vh;
+      position: relative;
     }
     
     /* 左側：搜尋介面 */
@@ -27,6 +29,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
     }
     
     .search-container {
@@ -78,6 +81,7 @@
       font-size: 18px;
       transition: all 0.3s;
       background: #f8f9fa;
+      -webkit-appearance: none; /* 移除 iOS 預設樣式 */
     }
     
     input[type="text"]:focus {
@@ -117,6 +121,8 @@
       margin-bottom: 25px;
       position: relative;
       overflow: hidden;
+      -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
+      touch-action: manipulation;
     }
     
     button:hover:not(:disabled) {
@@ -190,6 +196,7 @@
       font-size: 13px;
       line-height: 1.6;
       color: #333;
+      -webkit-overflow-scrolling: touch;
     }
     
     .empty-state {
@@ -270,6 +277,8 @@
       display: flex;
       flex-direction: column;
       box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      z-index: 50;
     }
     
     .panel-header {
@@ -279,6 +288,9 @@
       font-size: 16px;
       font-weight: bold;
       text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
     .panel-content {
@@ -288,6 +300,7 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
+      -webkit-overflow-scrolling: touch;
     }
     
     .display-box {
@@ -300,6 +313,7 @@
       resize: none;
       background: #fafafa;
       transition: all 0.3s;
+      min-height: 100px;
     }
     
     .display-box.updating {
@@ -325,6 +339,7 @@
       align-items: center;
       justify-content: center;
       gap: 5px;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .btn:active:not(:disabled) {
@@ -346,26 +361,14 @@
       color: #333;
     }
     
-    .btn-secondary:hover:not(:disabled) {
-      background: #e0e0e0;
-    }
-    
     .btn-danger {
       background: #f44336;
       color: white;
     }
     
-    .btn-danger:hover:not(:disabled) {
-      background: #d32f2f;
-    }
-    
     .btn-warning {
       background: #ff9800;
       color: white;
-    }
-    
-    .btn-warning:hover:not(:disabled) {
-      background: #f57c00;
     }
     
     .status-msg {
@@ -380,7 +383,6 @@
     .status-msg.error { color: #f44336; }
     .status-msg.info { color: #2196f3; }
     
-    /* 強調新增項目輸入框 */
     #addInput {
       border: 2px solid #667eea;
       background: #f0f4ff;
@@ -393,9 +395,140 @@
       background: white;
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
     }
+    
+    /* 手機端切換按鈕 */
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-size: 24px;
+      z-index: 100;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .close-panel-btn {
+      display: none;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    
+    /* ==================== 手機端適配 ==================== */
+    @media screen and (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      .left-panel {
+        width: 100%;
+        padding: 20px;
+        min-height: 100vh;
+        padding-bottom: 100px; /* 預留空間給底部按鈕 */
+      }
+      
+      .search-container {
+        padding: 20px;
+        max-width: 100%;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .subtitle {
+        font-size: 14px;
+      }
+      
+      input[type="text"] {
+        padding: 15px;
+        font-size: 16px; /* 防止 iOS 縮放 */
+      }
+      
+      button {
+        padding: 15px;
+        font-size: 16px;
+      }
+      
+      .results-container {
+        grid-template-columns: 1fr; /* 手機端單欄顯示 */
+      }
+      
+      /* 右側面板改為抽屜式 */
+      .right-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 85%; /* 佔據 85% 寬度，留出空間返回 */
+        height: 100vh;
+        transform: translateX(100%); /* 預設隱藏在右側 */
+        box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+      }
+      
+      .right-panel.open {
+        transform: translateX(0); /* 打開時滑入 */
+      }
+      
+      .mobile-toggle {
+        display: flex; /* 手機端顯示切換按鈕 */
+      }
+      
+      .close-panel-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      /* 點擊外部關閉的遮罩 */
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 40;
+      }
+      
+      .overlay.show {
+        display: block;
+      }
+    }
+    
+    /* 平板適配（中等屏幕） */
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+      .right-panel {
+        width: 300px;
+      }
+      
+      .search-container {
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- 遮罩層（手機端點擊關閉面板） -->
+  <div class="overlay" id="overlay" onclick="togglePanel()"></div>
+  
   <div class="container">
     <!-- 左側：搜尋介面 -->
     <div class="left-panel">
@@ -405,7 +538,7 @@
         
         <div class="input-group">
           <label for="inputBox">輸入關鍵字（14位純數字）</label>
-          <input type="text" id="inputBox" placeholder="請輸入14位純數字..." autofocus maxlength="14">
+          <input type="text" id="inputBox" placeholder="請輸入14位純數字..." autofocus maxlength="14" inputmode="numeric" pattern="[0-9]*">
           <div class="error-hint" id="errorHint">格式不符，請重新輸入（必須是14位純數字）</div>
         </div>
         
@@ -441,9 +574,10 @@
     </div>
     
     <!-- 右側：ManualSelect 管理面板 -->
-    <div class="right-panel">
+    <div class="right-panel" id="rightPanel">
       <div class="panel-header">
-        📋 Manual Select 管理
+        <span>📋 Manual Select</span>
+        <button class="close-panel-btn" onclick="togglePanel()">✕</button>
       </div>
       
       <div class="panel-content">
@@ -455,8 +589,8 @@
         </div>
         
         <div class="input-group">
-          <label>新增項目（搜索完成後自動填入14位數字）：</label>
-          <input type="text" id="addInput" placeholder="搜索完成後自動填入...">
+          <label>新增項目：</label>
+          <input type="text" id="addInput" placeholder="搜索完成後自動填入..." inputmode="numeric">
         </div>
         
         <div class="button-group">
@@ -465,11 +599,11 @@
           </button>
           
           <div style="display: flex; gap: 8px;">
-            <button class="btn btn-danger" style="flex: 1;" onclick="clearAll()">
+            <button class="btn btn-danger" style="flex: 1; font-size: 12px; padding: 10px;" onclick="clearAll()">
               清除全部
             </button>
-            <button class="btn btn-warning" style="flex: 1;" onclick="removeLast()">
-              清除最後一項
+            <button class="btn btn-warning" style="flex: 1; font-size: 12px; padding: 10px;" onclick="removeLast()">
+              清除最後
             </button>
           </div>
           
@@ -482,19 +616,66 @@
       </div>
     </div>
   </div>
+  
+  <!-- 手機端浮動切換按鈕 -->
+  <button class="mobile-toggle" id="mobileToggle" onclick="togglePanel()" title="開啟 Manual Select">
+    📋
+  </button>
 
   <script>
     // API 基礎網址
     const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
     
-    // 本地資料緩存（樂觀更新用）
+    // 本地資料緩存
     let manualSelectData = [];
-    let isSyncing = false;
+    let isPanelOpen = false;
     
     // 頁面載入時自動載入 ManualSelect 資料
     window.onload = function() {
       loadManualSelect();
+      // 檢測是否為手機端，如果是且屏幕小，默認關閉右側面板
+      if (window.innerWidth <= 768) {
+        closePanel();
+      }
     };
+    
+    // 監聽窗口大小變化
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        // 桌面端強制顯示
+        document.getElementById('rightPanel').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+        isPanelOpen = false;
+      }
+    });
+    
+    // 切換面板顯示（手機端用）
+    function togglePanel() {
+      const panel = document.getElementById('rightPanel');
+      const overlay = document.getElementById('overlay');
+      const toggleBtn = document.getElementById('mobileToggle');
+      
+      isPanelOpen = !isPanelOpen;
+      
+      if (isPanelOpen) {
+        panel.classList.add('open');
+        overlay.classList.add('show');
+        toggleBtn.style.display = 'none'; // 打開時隱藏按鈕
+      } else {
+        closePanel();
+      }
+    }
+    
+    function closePanel() {
+      const panel = document.getElementById('rightPanel');
+      const overlay = document.getElementById('overlay');
+      const toggleBtn = document.getElementById('mobileToggle');
+      
+      panel.classList.remove('open');
+      overlay.classList.remove('show');
+      isPanelOpen = false;
+      toggleBtn.style.display = 'flex'; // 顯示浮動按鈕
+    }
     
     // 顯示狀態訊息
     function showStatus(msg, type = '', isSearch = false) {
@@ -546,7 +727,6 @@
           } else {
             displaySearchResults(data);
             showStatus(`✅ 共 ${data.rowCount} 筆結果`, 'success', true);
-            // 自動將輸入的14位純數字填入新增項目
             document.getElementById('addInput').value = inputValue;
             showStatus('✅ 已自動填入14位數字', 'success');
           }
@@ -560,7 +740,6 @@
       } finally {
         btn.classList.remove('loading');
         btn.textContent = '送出查詢';
-        // 修改1: 搜索完成後清空輸入框
         inputBox.value = '';
       }
     }
@@ -631,14 +810,11 @@
       }
     }
     
-    //========== Manual Select 功能（右側）- 優化版本 ==========
+    //========== Manual Select 功能（右側） ==========
     
-    // 更新顯示（即時）
     function updateDisplay() {
       const display = document.getElementById('manualSelectDisplay');
       display.value = manualSelectData.length > 0 ? manualSelectData.join('\n') : '(無資料)';
-      
-      // 視覺回饋：短暫變色表示更新
       display.classList.add('updating');
       setTimeout(() => display.classList.remove('updating'), 300);
     }
@@ -659,7 +835,6 @@
       }
     }
     
-    // 修改2: 優化「複製(新增)」- 樂觀更新（即時顯示，後台同步）
     async function addToManualSelect() {
       const input = document.getElementById('addInput');
       const value = input.value.trim();
@@ -669,31 +844,32 @@
         return;
       }
       
-      // 樂觀更新：立即更新本地資料和UI，不等待伺服器
       manualSelectData.push(value);
       updateDisplay();
-      input.value = ''; // 立即清空輸入框
+      input.value = '';
       showStatus('✅ 已新增（同步中...）', 'info');
+      
+      // 手機端自動關閉面板（可選）
+      if (window.innerWidth <= 768 && isPanelOpen) {
+        setTimeout(() => closePanel(), 500);
+      }
       
       const btn = document.getElementById('btnCopy');
       btn.disabled = true;
       
       try {
-        // 後台發送請求
         const response = await fetch(`${GAS_API_URL}?action=addToManualSelect&value=${encodeURIComponent(value)}`);
         const data = await response.json();
         
         if (data.success) {
           showStatus('✅ 同步完成', 'success');
         } else {
-          // 失敗回滾
           manualSelectData.pop();
           updateDisplay();
-          input.value = value; // 恢復輸入框
+          input.value = value;
           showStatus('❌ ' + data.error, 'error');
         }
       } catch (error) {
-        // 失敗回滾
         manualSelectData.pop();
         updateDisplay();
         input.value = value;
@@ -703,12 +879,11 @@
       }
     }
     
-    // 修改3: 優化「清除全部」- 樂觀更新
     async function clearAll() {
       if (!confirm('確定要清除 A 欄所有資料嗎？此動作無法復原。')) return;
       
-      const originalData = [...manualSelectData]; // 備份
-      manualSelectData = []; // 立即清空
+      const originalData = [...manualSelectData];
+      manualSelectData = [];
       updateDisplay();
       showStatus('🗑️ 已清除（同步中...）', 'info');
       
@@ -719,7 +894,6 @@
         if (data.success) {
           showStatus('✅ 同步完成', 'success');
         } else {
-          // 回滾
           manualSelectData = originalData;
           updateDisplay();
           showStatus('❌ ' + data.error, 'error');
@@ -731,17 +905,14 @@
       }
     }
     
-    // 修改3: 優化「清除最後一項」- 樂觀更新
     async function removeLast() {
       if (manualSelectData.length === 0) {
         showStatus('沒有可清除的資料', 'error');
         return;
       }
       
-      const removedValue = manualSelectData[manualSelectData.length - 1];
       const originalData = [...manualSelectData];
-      
-      manualSelectData.pop(); // 立即移除最後一個
+      manualSelectData.pop();
       updateDisplay();
       showStatus('🗑️ 已移除（同步中...）', 'info');
       
@@ -752,7 +923,6 @@
         if (data.success) {
           showStatus('✅ 同步完成', 'success');
         } else {
-          // 回滾
           manualSelectData = originalData;
           updateDisplay();
           showStatus('❌ ' + data.error, 'error');
@@ -766,7 +936,6 @@
     
     async function exportToTxt() {
       try {
-        // 使用本地資料直接匯出，無需等待伺服器
         if (manualSelectData.length === 0) {
           showStatus('無資料可匯出', 'error');
           return;
@@ -790,19 +959,12 @@
       }
     }
     
-    // 定期同步（改為10秒，並且只在閒置時）
-    let syncInterval;
-    function startSync() {
-      syncInterval = setInterval(async () => {
-        if (!isSyncing) {
-          await loadManualSelect();
-        }
-      }, 10000); // 10秒檢查一次
-    }
+    // 定期同步
+    setInterval(() => {
+      loadManualSelect();
+    }, 10000);
     
-    startSync();
-    
-    // 頁面重新獲得焦點時立即同步
+    // 頁面重新獲得焦點時同步
     window.addEventListener('focus', () => {
       loadManualSelect();
     });
