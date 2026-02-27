@@ -173,7 +173,8 @@
       border: 2px solid #e0e0e0;
       border-radius: 12px;
       padding: 15px;
-      width: 100%; /* 確保寬度填滿 */
+      display: flex;
+      flex-direction: column;
     }
     
     .result-section h3 {
@@ -185,6 +186,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
     }
     
     .result-section.full-width {
@@ -192,6 +194,7 @@
     }
     
     .result-box {
+      flex: 1;
       min-height: 100px;
       max-height: 300px;
       overflow-y: auto;
@@ -200,7 +203,7 @@
       line-height: 1.6;
       color: #333;
       -webkit-overflow-scrolling: touch;
-      width: 100%; /* 確保寬度填滿 */
+      word-break: break-all; /* 防止內容撐破 */
     }
     
     .empty-state {
@@ -227,15 +230,14 @@
     .book-info-label {
       color: #666;
       font-weight: 600;
-      white-space: nowrap; /* 標籤不換行 */
+      font-size: 12px;
+      white-space: nowrap;
     }
     
     .book-info-value {
       color: #333;
-      word-wrap: break-word; /* 長文字換行 */
-      word-break: break-word; /* 強制換行 */
-      overflow-wrap: break-word; /* 確保溢出時換行 */
-      line-height: 1.5;
+      font-size: 12px;
+      word-break: break-all;
     }
     
     .library-count {
@@ -465,7 +467,6 @@
         padding: 20px;
         max-width: 100%;
         margin-bottom: 20px;
-        width: 100%; /* 確保容器寬度100% */
       }
       
       h1 {
@@ -484,48 +485,49 @@
       button {
         padding: 15px;
         font-size: 16px;
-        width: 100%; /* 確保按鈕寬度100% */
       }
       
+      /* 關鍵修改：保持兩欄佈局，調整比例與按鈕一致 */
       .results-container {
-        grid-template-columns: 1fr; /* 單列布局 */
-        gap: 15px;
+        grid-template-columns: 1fr 1fr; /* 保持並排 */
+        gap: 12px; /* 調整間距 */
         width: 100%; /* 確保與按鈕同寬 */
-        margin-bottom: 20px;
       }
       
-      /* 結果框在手機端與按鈕對齊 */
       .result-section {
-        width: 100%; /* 與送出查詢按鈕同寬 */
-        padding: 15px;
-        margin: 0; /* 移除可能的外邊距 */
+        padding: 12px; /* 統一內邊距 */
+        min-height: 0; /* 移除最小高度限制，讓兩框等高 */
       }
       
+      .result-section h3 {
+        font-size: 14px; /* 稍小字體 */
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+      }
+      
+      /* 調整兩個框的內容區域高度一致 */
       .result-box {
-        max-height: none;
-        overflow-y: visible;
-        min-height: auto;
-        width: 100%; /* 確保內部寬度100% */
+        max-height: 200px; /* 統一最大高度 */
+        min-height: 120px; /* 統一最小高度 */
+        font-size: 12px; /* 較小字體適應手機 */
+        overflow-y: auto;
       }
       
-      /* 書本資料格線布局優化 */
+      /* 書本資料網格調整 */
       .book-info-grid {
-        grid-template-columns: 80px 1fr; /* 固定標籤寬度，內容自適應 */
-        gap: 10px 12px;
+        gap: 6px 8px;
       }
       
-      .book-info-label {
-        font-size: 14px;
-      }
-      
+      .book-info-label,
       .book-info-value {
-        font-size: 14px;
-        word-wrap: break-word;
-        word-break: break-word;
-        line-height: 1.5;
+        font-size: 11px; /* 手機端稍小字體 */
       }
       
-      /* 圖書館表格容器獨立滾動 */
+      /* 圖書館表格容器 */
+      .result-section.full-width {
+        grid-column: 1 / -1; /* 全寬 */
+      }
+      
       .result-section.full-width .result-box {
         overflow-x: auto;
         overflow-y: visible;
@@ -534,17 +536,19 @@
         border-radius: 8px;
         background: white;
         padding: 0;
+        max-height: none; /* 圖書館列表需要更多空間 */
+        min-height: 150px;
       }
       
       .library-table {
         min-width: 800px;
-        font-size: 13px;
+        font-size: 12px;
         margin: 0;
       }
       
       .library-table th,
       .library-table td {
-        padding: 10px 6px;
+        padding: 8px 6px;
         white-space: nowrap;
       }
       
@@ -592,6 +596,32 @@
       }
     }
     
+    /* 超小屏幕手機（iPhone SE 等）進一步優化 */
+    @media screen and (max-width: 380px) {
+      .results-container {
+        gap: 8px;
+      }
+      
+      .result-section {
+        padding: 8px;
+      }
+      
+      .result-section h3 {
+        font-size: 13px;
+      }
+      
+      .result-box {
+        max-height: 180px;
+        min-height: 100px;
+        font-size: 11px;
+      }
+      
+      .book-info-label,
+      .book-info-value {
+        font-size: 10px;
+      }
+    }
+    
     /* 平板適配（中等屏幕） */
     @media screen and (min-width: 769px) and (max-width: 1024px) {
       .right-panel {
@@ -600,31 +630,6 @@
       
       .search-container {
         max-width: 100%;
-      }
-    }
-    
-    /* 小屏幕手機優化 */
-    @media screen and (max-width: 380px) {
-      .left-panel {
-        padding: 10px;
-        padding-bottom: 80px;
-      }
-      
-      .search-container {
-        padding: 15px;
-      }
-      
-      h1 {
-        font-size: 20px;
-      }
-      
-      .book-info-grid {
-        grid-template-columns: 70px 1fr; /* 更小屏幕標籤更窄 */
-        gap: 8px 10px;
-      }
-      
-      .library-table {
-        font-size: 12px;
       }
     }
   </style>
@@ -803,7 +808,7 @@
         const response = await fetch(url, {
           ...options,
           signal: controller.signal,
-          mode: 'cors', // 明確指定 CORS 模式
+          mode: 'cors',
           headers: {
             'Accept': 'application/json',
             ...options.headers
@@ -841,7 +846,6 @@
       btn.classList.add('loading');
       btn.textContent = '執行中...';
       
-      // 清除之前的錯誤訊息
       showStatus('', '', true);
       
       try {
@@ -850,7 +854,7 @@
         const response = await fetchWithTimeout(
           `${GAS_API_URL}?action=query&input=${encodeURIComponent(inputValue)}`,
           {},
-          30000 // 30秒超時
+          30000
         );
         
         console.log('響應狀態:', response.status);
@@ -860,7 +864,7 @@
         }
         
         const text = await response.text();
-        console.log('原始響應:', text.substring(0, 200)); // 只顯示前200字符
+        console.log('原始響應:', text.substring(0, 200));
         
         let data;
         try {
@@ -893,7 +897,7 @@
         if (error.name === 'AbortError') {
           errorMsg = '請求超時，請檢查網路連線';
         } else if (error.message.includes('Failed to fetch')) {
-          errorMsg = '無法連接伺服器，請確認網路正常或伺服器CORS設置';
+          errorMsg = '無法連接伺服器，請確認網路正常';
         } else {
           errorMsg = error.message;
         }
@@ -925,15 +929,15 @@
       
       document.getElementById('bookInfoBox').innerHTML = `
         <div class="book-info-grid">
-          <div class="book-info-label">書名:</div><div class="book-info-value">${escapeHtml(bookInfo.title) || 'N/A'}</div>
-          <div class="book-info-label">館藏編目號碼:</div><div class="book-info-value">${escapeHtml(bookInfo.catalogNo) || 'N/A'}</div>
-          <div class="book-info-label">索書號:</div><div class="book-info-value">${escapeHtml(bookInfo.callNo) || 'N/A'}</div>
-          <div class="book-info-label">著者:</div><div class="book-info-value">${escapeHtml(bookInfo.author) || 'N/A'}</div>
-          <div class="book-info-label">著錄:</div><div class="book-info-value">${escapeHtml(bookInfo.description) || 'N/A'}</div>
-          <div class="book-info-label">出版地:</div><div class="book-info-value">${escapeHtml(bookInfo.pubLoc) || 'N/A'}</div>
-          <div class="book-info-label">出版者:</div><div class="book-info-value">${escapeHtml(bookInfo.publisher) || 'N/A'}</div>
-          <div class="book-info-label">出版年份:</div><div class="book-info-value">${escapeHtml(bookInfo.pubYear) || 'N/A'}</div>
-          <div class="book-info-label">叢書名:</div><div class="book-info-value">${escapeHtml(bookInfo.series) || 'N/A'}</div>
+          <div class="book-info-label">書名:</div><div class="book-info-value">${bookInfo.title || 'N/A'}</div>
+          <div class="book-info-label">館藏編目號碼:</div><div class="book-info-value">${bookInfo.catalogNo || 'N/A'}</div>
+          <div class="book-info-label">索書號:</div><div class="book-info-value">${bookInfo.callNo || 'N/A'}</div>
+          <div class="book-info-label">著者:</div><div class="book-info-value">${bookInfo.author || 'N/A'}</div>
+          <div class="book-info-label">著錄:</div><div class="book-info-value">${bookInfo.description || 'N/A'}</div>
+          <div class="book-info-label">出版地:</div><div class="book-info-value">${bookInfo.pubLoc || 'N/A'}</div>
+          <div class="book-info-label">出版者:</div><div class="book-info-value">${bookInfo.publisher || 'N/A'}</div>
+          <div class="book-info-label">出版年份:</div><div class="book-info-value">${bookInfo.pubYear || 'N/A'}</div>
+          <div class="book-info-label">叢書名:</div><div class="book-info-value">${bookInfo.series || 'N/A'}</div>
         </div>
       `;
       
@@ -956,12 +960,12 @@
         libraries.forEach((lib) => {
           tableHtml += `
             <tr>
-              <td>${escapeHtml(lib.library) || ''}</td>
-              <td>${escapeHtml(lib.callNumber) || ''}</td>
-              <td>${escapeHtml(lib.issue) || '<span class="text-muted">-</span>'}</td>
-              <td>${escapeHtml(lib.mediaCode) || '<span class="text-muted">-</span>'}</td>
-              <td>${escapeHtml(lib.status) || ''}</td>
-              <td>${escapeHtml(lib.collection) || ''}</td>
+              <td>${lib.library || ''}</td>
+              <td>${lib.callNumber || ''}</td>
+              <td>${lib.issue || '<span class="text-muted">-</span>'}</td>
+              <td>${lib.mediaCode || '<span class="text-muted">-</span>'}</td>
+              <td>${lib.status || ''}</td>
+              <td>${lib.collection || ''}</td>
             </tr>
           `;
         });
@@ -971,14 +975,6 @@
       } else {
         document.getElementById('librariesBox').innerHTML = '<div class="empty-state">無圖書館資料</div>';
       }
-    }
-    
-    // HTML 轉義函數，防止 XSS 和確保長文本正確顯示
-    function escapeHtml(text) {
-      if (!text) return text;
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
     }
     
     //========== Manual Select 功能（右側） ==========
@@ -1034,7 +1030,6 @@
       input.value = '';
       showStatus('✅ 已新增（同步中...）', 'info');
       
-      // 手機端自動關閉面板（可選）
       if (window.innerWidth <= 768 && isPanelOpen) {
         setTimeout(() => closePanel(), 500);
       }
@@ -1163,21 +1158,20 @@
       }
     }
     
-    // 定期同步（僅在頁面可見時）
+    // 定期同步
     let syncInterval;
     function startSync() {
       syncInterval = setInterval(() => {
         if (!document.hidden) {
           loadManualSelect();
         }
-      }, 30000); // 改為30秒，減少請求頻率
+      }, 30000);
     }
     
     function stopSync() {
       if (syncInterval) clearInterval(syncInterval);
     }
     
-    // 頁面可見性變化時控制同步
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopSync();
@@ -1189,24 +1183,20 @@
     
     startSync();
     
-    // 頁面重新獲得焦點時同步
     window.addEventListener('focus', () => {
       loadManualSelect();
     });
     
-    // 輸入框即時驗證
     document.getElementById('inputBox').addEventListener('input', function() {
       const value = this.value.replace(/\D/g, '');
       if (this.value !== value) this.value = value;
       if (value.length > 14) this.value = value.substring(0, 14);
     });
     
-    // Enter 鍵提交
     document.getElementById('inputBox').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') submitQuery();
     });
     
-    // 調試模式：在網址加上 ?debug=true 開啟
     if (window.location.search.includes('debug=true')) {
       window.onerror = function(msg, url, line) {
         alert('錯誤: ' + msg + '\n行號: ' + line);
