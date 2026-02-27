@@ -9,7 +9,7 @@
     body { 
       font-family: 'Segoe UI', system-ui, sans-serif; 
       height: 100vh;
-      height: -webkit-fill-available; /* iOS Safari 修正 */
+      height: -webkit-fill-available;
       overflow: hidden;
       background: #f5f5f5;
       touch-action: manipulation;
@@ -18,7 +18,7 @@
     .container {
       display: flex;
       height: 100vh;
-      height: 100dvh; /* 動態視口高度 */
+      height: 100dvh;
       position: relative;
     }
     
@@ -433,7 +433,7 @@
     /* ==================== 手機端適配 ==================== */
     @media screen and (max-width: 768px) {
       body {
-        overflow: auto; /* 允許 body 滾動 */
+        overflow: auto;
         height: auto;
       }
       
@@ -450,8 +450,8 @@
         min-height: 100vh;
         min-height: 100dvh;
         padding-bottom: 100px;
-        overflow-y: visible; /* 改為 visible，讓 body 處理滾動 */
-        display: block; /* 改為 block 避免 flex 滾動問題 */
+        overflow-y: visible;
+        display: block;
       }
       
       .search-container {
@@ -485,14 +485,14 @@
       
       /* 結果框在手機端自適應高度 */
       .result-box {
-        max-height: none; /* 移除 300px 限制 */
-        overflow-y: visible; /* 讓內容自然展開 */
+        max-height: none;
+        overflow-y: visible;
         min-height: auto;
       }
       
       /* 圖書館表格容器獨立滾動 */
       .result-section.full-width .result-box {
-        overflow-x: auto; /* 允許橫向滾動 */
+        overflow-x: auto;
         overflow-y: visible;
         -webkit-overflow-scrolling: touch;
         border: 1px solid #e0e0e0;
@@ -502,7 +502,7 @@
       }
       
       .library-table {
-        min-width: 800px; /* 確保表格有最小寬度，強制橫向滾動 */
+        min-width: 800px;
         font-size: 13px;
         margin: 0;
       }
@@ -510,7 +510,7 @@
       .library-table th,
       .library-table td {
         padding: 10px 6px;
-        white-space: nowrap; /* 防止文字換行 */
+        white-space: nowrap;
       }
       
       /* 右側面板改為抽屜式 */
@@ -687,8 +687,8 @@
   </button>
 
   <script>
-    // API 基礎網址
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec ';
+    // API 基礎網址 - 注意：移除末尾空格！
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
     
     // 本地資料緩存
     let manualSelectData = [];
@@ -754,6 +754,29 @@
       }
     }
     
+    // 封裝 fetch 請求，處理超時和錯誤
+    async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          mode: 'cors', // 明確指定 CORS 模式
+          headers: {
+            'Accept': 'application/json',
+            ...options.headers
+          }
+        });
+        clearTimeout(id);
+        return response;
+      } catch (error) {
+        clearTimeout(id);
+        throw error;
+      }
+    }
+    
     //========== 搜尋功能（左側） ==========
     
     function validateInput(value) {
@@ -778,9 +801,34 @@
       btn.classList.add('loading');
       btn.textContent = '執行中...';
       
+      // 清除之前的錯誤訊息
+      showStatus('', '', true);
+      
       try {
-        const response = await fetch(`${GAS_API_URL}?action=query&input=${encodeURIComponent(inputValue)}`);
-        const data = await response.json();
+        console.log('發送請求:', `${GAS_API_URL}?action=query&input=${encodeURIComponent(inputValue)}`);
+        
+        const response = await fetchWithTimeout(
+          `${GAS_API_URL}?action=query&input=${encodeURIComponent(inputValue)}`,
+          {},
+          30000 // 30秒超時
+        );
+        
+        console.log('響應狀態:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const text = await response.text();
+        console.log('原始響應:', text.substring(0, 200)); // 只顯示前200字符
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error('JSON 解析錯誤:', e);
+          throw new Error('伺服器返回格式錯誤');
+        }
         
         document.getElementById('searchResults').style.display = 'block';
         
@@ -795,11 +843,22 @@
             showStatus('✅ 已自動填入14位數字', 'success');
           }
         } else {
-          showStatus('❌ ' + data.error, 'error', true);
+          showStatus('❌ ' + (data.error || '未知錯誤'), 'error', true);
           document.getElementById('addInput').value = '';
         }
       } catch (error) {
-        showStatus('❌ 連線錯誤：' + error.message, 'error', true);
+        console.error('請求錯誤:', error);
+        let errorMsg = '連線錯誤';
+        
+        if (error.name === 'AbortError') {
+          errorMsg = '請求超時，請檢查網路連線';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMsg = '無法連接伺服器，請確認網路正常或伺服器CORS設置';
+        } else {
+          errorMsg = error.message;
+        }
+        
+        showStatus('❌ ' + errorMsg, 'error', true);
         document.getElementById('addInput').value = '';
       } finally {
         btn.classList.remove('loading');
@@ -885,16 +944,30 @@
     
     async function loadManualSelect() {
       try {
-        const response = await fetch(`${GAS_API_URL}?action=getManualSelect`);
-        const data = await response.json();
+        console.log('載入 ManualSelect...');
+        const response = await fetchWithTimeout(`${GAS_API_URL}?action=getManualSelect`, {}, 10000);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error('JSON解析錯誤');
+        }
         
         if (data.success) {
           manualSelectData = data.data || [];
           updateDisplay();
+          console.log('載入成功:', manualSelectData.length, '筆資料');
         } else {
-          showStatus('載入失敗：' + data.error, 'error');
+          showStatus('載入失敗：' + (data.error || '未知錯誤'), 'error');
         }
       } catch (error) {
+        console.error('載入錯誤:', error);
         showStatus('載入錯誤：' + error.message, 'error');
       }
     }
@@ -922,22 +995,30 @@
       btn.disabled = true;
       
       try {
-        const response = await fetch(`${GAS_API_URL}?action=addToManualSelect&value=${encodeURIComponent(value)}`);
-        const data = await response.json();
+        const response = await fetchWithTimeout(
+          `${GAS_API_URL}?action=addToManualSelect&value=${encodeURIComponent(value)}`,
+          {},
+          30000
+        );
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        const data = JSON.parse(text);
         
         if (data.success) {
           showStatus('✅ 同步完成', 'success');
         } else {
-          manualSelectData.pop();
-          updateDisplay();
-          input.value = value;
-          showStatus('❌ ' + data.error, 'error');
+          throw new Error(data.error || '同步失敗');
         }
       } catch (error) {
+        console.error('新增錯誤:', error);
         manualSelectData.pop();
         updateDisplay();
         input.value = value;
-        showStatus('❌ 同步失敗，請重試', 'error');
+        showStatus('❌ ' + error.message, 'error');
       } finally {
         btn.disabled = false;
       }
@@ -952,20 +1033,25 @@
       showStatus('🗑️ 已清除（同步中...）', 'info');
       
       try {
-        const response = await fetch(`${GAS_API_URL}?action=clearManualSelect`);
-        const data = await response.json();
+        const response = await fetchWithTimeout(`${GAS_API_URL}?action=clearManualSelect`, {}, 30000);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        const data = JSON.parse(text);
         
         if (data.success) {
           showStatus('✅ 同步完成', 'success');
         } else {
-          manualSelectData = originalData;
-          updateDisplay();
-          showStatus('❌ ' + data.error, 'error');
+          throw new Error(data.error || '清除失敗');
         }
       } catch (error) {
+        console.error('清除錯誤:', error);
         manualSelectData = originalData;
         updateDisplay();
-        showStatus('❌ 同步失敗', 'error');
+        showStatus('❌ ' + error.message, 'error');
       }
     }
     
@@ -981,20 +1067,25 @@
       showStatus('🗑️ 已移除（同步中...）', 'info');
       
       try {
-        const response = await fetch(`${GAS_API_URL}?action=removeLastManualSelect`);
-        const data = await response.json();
+        const response = await fetchWithTimeout(`${GAS_API_URL}?action=removeLastManualSelect`, {}, 30000);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        const data = JSON.parse(text);
         
         if (data.success) {
           showStatus('✅ 同步完成', 'success');
         } else {
-          manualSelectData = originalData;
-          updateDisplay();
-          showStatus('❌ ' + data.error, 'error');
+          throw new Error(data.error || '移除失敗');
         }
       } catch (error) {
+        console.error('移除錯誤:', error);
         manualSelectData = originalData;
         updateDisplay();
-        showStatus('❌ 同步失敗', 'error');
+        showStatus('❌ ' + error.message, 'error');
       }
     }
     
@@ -1019,14 +1110,36 @@
         
         showStatus('✅ 已匯出 TXT', 'success');
       } catch (error) {
+        console.error('匯出錯誤:', error);
         showStatus('❌ 匯出失敗：' + error.message, 'error');
       }
     }
     
-    // 定期同步
-    setInterval(() => {
-      loadManualSelect();
-    }, 10000);
+    // 定期同步（僅在頁面可見時）
+    let syncInterval;
+    function startSync() {
+      syncInterval = setInterval(() => {
+        if (!document.hidden) {
+          loadManualSelect();
+        }
+      }, 30000); // 改為30秒，減少請求頻率
+    }
+    
+    function stopSync() {
+      if (syncInterval) clearInterval(syncInterval);
+    }
+    
+    // 頁面可見性變化時控制同步
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopSync();
+      } else {
+        loadManualSelect();
+        startSync();
+      }
+    });
+    
+    startSync();
     
     // 頁面重新獲得焦點時同步
     window.addEventListener('focus', () => {
@@ -1044,6 +1157,13 @@
     document.getElementById('inputBox').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') submitQuery();
     });
+    
+    // 調試模式：在網址加上 ?debug=true 開啟
+    if (window.location.search.includes('debug=true')) {
+      window.onerror = function(msg, url, line) {
+        alert('錯誤: ' + msg + '\n行號: ' + line);
+      };
+    }
   </script>
 </body>
 </html>
