@@ -35,7 +35,7 @@
       padding: 40px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 1350px;  /* 修改：從 900px 擴大至 1350px（再放大 1.5 倍） */
+      max-width: 1350px;
       animation: slideIn 0.5s ease-out;
     }
     
@@ -47,7 +47,7 @@
     h1 {
       color: #333;
       margin-bottom: 10px;
-      font-size: 32px;  /* 稍微放大標題 */
+      font-size: 32px;
       text-align: center;
     }
     
@@ -55,7 +55,7 @@
       color: #666;
       text-align: center;
       margin-bottom: 30px;
-      font-size: 16px;  /* 稍微放大副標題 */
+      font-size: 16px;
     }
     
     .input-group {
@@ -67,15 +67,15 @@
       margin-bottom: 8px;
       color: #555;
       font-weight: 600;
-      font-size: 15px;  /* 稍微放大標籤 */
+      font-size: 15px;
     }
     
     input[type="text"] {
       width: 100%;
-      padding: 18px;  /* 增加內邊距 */
+      padding: 18px;
       border: 2px solid #e0e0e0;
       border-radius: 12px;
-      font-size: 18px;  /* 放大字體 */
+      font-size: 18px;
       transition: all 0.3s;
       background: #f8f9fa;
     }
@@ -105,12 +105,12 @@
     
     button {
       width: 100%;
-      padding: 18px;  /* 增加按鈕高度 */
+      padding: 18px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
       border-radius: 12px;
-      font-size: 18px;  /* 放大按鈕字體 */
+      font-size: 18px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
@@ -119,9 +119,14 @@
       overflow: hidden;
     }
     
-    button:hover {
+    button:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
     
     button.loading {
@@ -294,6 +299,12 @@
       font-size: 13px;
       resize: none;
       background: #fafafa;
+      transition: all 0.3s;
+    }
+    
+    .display-box.updating {
+      background: #e8f5e9;
+      border-color: #4caf50;
     }
     
     .button-group {
@@ -309,11 +320,15 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
+    }
+    
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
     }
     
     .btn-primary {
@@ -321,7 +336,7 @@
       color: white;
     }
     
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
@@ -331,9 +346,17 @@
       color: #333;
     }
     
+    .btn-secondary:hover:not(:disabled) {
+      background: #e0e0e0;
+    }
+    
     .btn-danger {
       background: #f44336;
       color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: #d32f2f;
     }
     
     .btn-warning {
@@ -341,23 +364,29 @@
       color: white;
     }
     
+    .btn-warning:hover:not(:disabled) {
+      background: #f57c00;
+    }
+    
     .status-msg {
       font-size: 12px;
       text-align: center;
       color: #666;
       min-height: 20px;
+      font-weight: 600;
     }
     
     .status-msg.success { color: #4caf50; }
     .status-msg.error { color: #f44336; }
+    .status-msg.info { color: #2196f3; }
     
     /* 強調新增項目輸入框 */
     #addInput {
       border: 2px solid #667eea;
       background: #f0f4ff;
-      font-family: 'Courier New', monospace;  /* 等寬字體顯示數字 */
+      font-family: 'Courier New', monospace;
       font-size: 16px;
-      letter-spacing: 2px;  /* 數字間距 */
+      letter-spacing: 2px;
     }
     
     #addInput:focus {
@@ -458,6 +487,10 @@
     // API 基礎網址
     const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
     
+    // 本地資料緩存（樂觀更新用）
+    let manualSelectData = [];
+    let isSyncing = false;
+    
     // 頁面載入時自動載入 ManualSelect 資料
     window.onload = function() {
       loadManualSelect();
@@ -468,10 +501,12 @@
       const statusEl = isSearch ? document.getElementById('searchStatus') : document.getElementById('manualStatus');
       statusEl.textContent = msg;
       statusEl.className = 'status-msg ' + type;
-      setTimeout(() => {
-        statusEl.textContent = '';
-        statusEl.className = 'status-msg';
-      }, 3000);
+      if (type !== 'info') {
+        setTimeout(() => {
+          statusEl.textContent = '';
+          statusEl.className = 'status-msg';
+        }, 3000);
+      }
     }
     
     //========== 搜尋功能（左側） ==========
@@ -507,12 +542,11 @@
         if (data.success) {
           if (data.a1Value && data.a1Value.toString().includes('找不到相應值')) {
             showNotFound(data.a1Value);
-            // 找不到時清空新增項目
             document.getElementById('addInput').value = '';
           } else {
             displaySearchResults(data);
             showStatus(`✅ 共 ${data.rowCount} 筆結果`, 'success', true);
-            // 修改：自動將輸入的14位純數字填入新增項目對話框
+            // 自動將輸入的14位純數字填入新增項目
             document.getElementById('addInput').value = inputValue;
             showStatus('✅ 已自動填入14位數字', 'success');
           }
@@ -526,6 +560,8 @@
       } finally {
         btn.classList.remove('loading');
         btn.textContent = '送出查詢';
+        // 修改1: 搜索完成後清空輸入框
+        inputBox.value = '';
       }
     }
     
@@ -542,11 +578,9 @@
       const libraries = data.libraries || [];
       const libraryCount = data.libraryCount || 0;
       
-      // 顯示可選圖書館數量
       document.getElementById('libraryCountBox').innerHTML = 
         `<div class="library-count">${libraryCount}<div style="font-size: 14px; color: #666; margin-top: 5px;">個項目</div></div>`;
       
-      // 顯示書本資料
       document.getElementById('bookInfoBox').innerHTML = `
         <div class="book-info-grid">
           <div class="book-info-label">書名:</div><div class="book-info-value">${bookInfo.title || 'N/A'}</div>
@@ -561,7 +595,6 @@
         </div>
       `;
       
-      // 顯示圖書館列表
       if (libraries.length > 0) {
         let tableHtml = `
           <table class="library-table">
@@ -598,7 +631,17 @@
       }
     }
     
-    //========== Manual Select 功能（右側） ==========
+    //========== Manual Select 功能（右側）- 優化版本 ==========
+    
+    // 更新顯示（即時）
+    function updateDisplay() {
+      const display = document.getElementById('manualSelectDisplay');
+      display.value = manualSelectData.length > 0 ? manualSelectData.join('\n') : '(無資料)';
+      
+      // 視覺回饋：短暫變色表示更新
+      display.classList.add('updating');
+      setTimeout(() => display.classList.remove('updating'), 300);
+    }
     
     async function loadManualSelect() {
       try {
@@ -606,8 +649,8 @@
         const data = await response.json();
         
         if (data.success) {
-          const display = document.getElementById('manualSelectDisplay');
-          display.value = data.data && data.data.length > 0 ? data.data.join('\n') : '(無資料)';
+          manualSelectData = data.data || [];
+          updateDisplay();
         } else {
           showStatus('載入失敗：' + data.error, 'error');
         }
@@ -616,6 +659,7 @@
       }
     }
     
+    // 修改2: 優化「複製(新增)」- 樂觀更新（即時顯示，後台同步）
     async function addToManualSelect() {
       const input = document.getElementById('addInput');
       const value = input.value.trim();
@@ -625,74 +669,110 @@
         return;
       }
       
+      // 樂觀更新：立即更新本地資料和UI，不等待伺服器
+      manualSelectData.push(value);
+      updateDisplay();
+      input.value = ''; // 立即清空輸入框
+      showStatus('✅ 已新增（同步中...）', 'info');
+      
       const btn = document.getElementById('btnCopy');
       btn.disabled = true;
-      btn.innerHTML = '處理中...';
       
       try {
+        // 後台發送請求
         const response = await fetch(`${GAS_API_URL}?action=addToManualSelect&value=${encodeURIComponent(value)}`);
         const data = await response.json();
         
         if (data.success) {
-          showStatus('✅ 已新增至 A 欄', 'success');
-          input.value = '';
-          await loadManualSelect();
+          showStatus('✅ 同步完成', 'success');
         } else {
+          // 失敗回滾
+          manualSelectData.pop();
+          updateDisplay();
+          input.value = value; // 恢復輸入框
           showStatus('❌ ' + data.error, 'error');
         }
       } catch (error) {
-        showStatus('❌ 錯誤：' + error.message, 'error');
+        // 失敗回滾
+        manualSelectData.pop();
+        updateDisplay();
+        input.value = value;
+        showStatus('❌ 同步失敗，請重試', 'error');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span>📋</span> 複製（新增）';
       }
     }
     
+    // 修改3: 優化「清除全部」- 樂觀更新
     async function clearAll() {
       if (!confirm('確定要清除 A 欄所有資料嗎？此動作無法復原。')) return;
+      
+      const originalData = [...manualSelectData]; // 備份
+      manualSelectData = []; // 立即清空
+      updateDisplay();
+      showStatus('🗑️ 已清除（同步中...）', 'info');
       
       try {
         const response = await fetch(`${GAS_API_URL}?action=clearManualSelect`);
         const data = await response.json();
         
         if (data.success) {
-          showStatus('✅ 已清除全部資料', 'success');
-          await loadManualSelect();
+          showStatus('✅ 同步完成', 'success');
         } else {
+          // 回滾
+          manualSelectData = originalData;
+          updateDisplay();
           showStatus('❌ ' + data.error, 'error');
         }
       } catch (error) {
-        showStatus('❌ 錯誤：' + error.message, 'error');
+        manualSelectData = originalData;
+        updateDisplay();
+        showStatus('❌ 同步失敗', 'error');
       }
     }
     
+    // 修改3: 優化「清除最後一項」- 樂觀更新
     async function removeLast() {
+      if (manualSelectData.length === 0) {
+        showStatus('沒有可清除的資料', 'error');
+        return;
+      }
+      
+      const removedValue = manualSelectData[manualSelectData.length - 1];
+      const originalData = [...manualSelectData];
+      
+      manualSelectData.pop(); // 立即移除最後一個
+      updateDisplay();
+      showStatus('🗑️ 已移除（同步中...）', 'info');
+      
       try {
         const response = await fetch(`${GAS_API_URL}?action=removeLastManualSelect`);
         const data = await response.json();
         
         if (data.success) {
-          showStatus('✅ 已清除最後一項', 'success');
-          await loadManualSelect();
+          showStatus('✅ 同步完成', 'success');
         } else {
+          // 回滾
+          manualSelectData = originalData;
+          updateDisplay();
           showStatus('❌ ' + data.error, 'error');
         }
       } catch (error) {
-        showStatus('❌ 錯誤：' + error.message, 'error');
+        manualSelectData = originalData;
+        updateDisplay();
+        showStatus('❌ 同步失敗', 'error');
       }
     }
     
     async function exportToTxt() {
       try {
-        const response = await fetch(`${GAS_API_URL}?action=getManualSelect`);
-        const data = await response.json();
-        
-        if (!data.success || !data.data || data.data.length === 0) {
+        // 使用本地資料直接匯出，無需等待伺服器
+        if (manualSelectData.length === 0) {
           showStatus('無資料可匯出', 'error');
           return;
         }
         
-        const content = data.data.join('\n');
+        const content = manualSelectData.join('\n');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         
@@ -710,8 +790,22 @@
       }
     }
     
-    // 定期自動更新（每 30 秒）
-    setInterval(loadManualSelect, 30000);
+    // 定期同步（改為10秒，並且只在閒置時）
+    let syncInterval;
+    function startSync() {
+      syncInterval = setInterval(async () => {
+        if (!isSyncing) {
+          await loadManualSelect();
+        }
+      }, 10000); // 10秒檢查一次
+    }
+    
+    startSync();
+    
+    // 頁面重新獲得焦點時立即同步
+    window.addEventListener('focus', () => {
+      loadManualSelect();
+    });
     
     // 輸入框即時驗證
     document.getElementById('inputBox').addEventListener('input', function() {
