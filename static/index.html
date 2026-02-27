@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>資料查詢</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; overflow: hidden; }
+    
+    #loading {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 100;
+      transition: opacity 0.5s;
+    }
+    
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 15px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      display: none;
+    }
+    
+    iframe.loaded { display: block; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="spinner"></div>
+    <span>系統載入中...</span>
+  </div>
+  
+  <iframe id="gasFrame" src="https://script.google.com/macros/s/AKfycbw5ZPLmXwFOtPgErt9dn9AndOeqrDQD9lUXQv1i6qwygOu9x7WdWYF87jDTCpYDhg7G/exec"></iframe>
+
+  <script>
+    const frame = document.getElementById('gasFrame');
+    const loading = document.getElementById('loading');
+    
+    frame.onload = function() {
+      loading.classList.add('hidden');
+      frame.classList.add('loaded');
+    };
+    
+    // 5秒後強制隱藏載入畫面（防止無限載入）
+    setTimeout(() => {
+      loading.classList.add('hidden');
+      frame.classList.add('loaded');
+    }, 5000);
+  </script>
+</body>
+</html>
