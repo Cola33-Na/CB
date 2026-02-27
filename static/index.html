@@ -35,7 +35,7 @@
       padding: 40px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 600px;
+      max-width: 900px;  /* 修改：從 600px 擴大至 900px (1.5倍) */
       animation: slideIn 0.5s ease-out;
     }
     
@@ -350,6 +350,17 @@
     
     .status-msg.success { color: #4caf50; }
     .status-msg.error { color: #f44336; }
+    
+    /* 新增：強調新增項目輸入框 */
+    #addInput {
+      border: 2px solid #667eea;
+      background: #f0f4ff;
+    }
+    
+    #addInput:focus {
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -412,8 +423,8 @@
         </div>
         
         <div class="input-group">
-          <label>新增項目：</label>
-          <input type="text" id="addInput" placeholder="輸入資料後按複製...">
+          <label>新增項目（搜索結果將自動填入）：</label>
+          <input type="text" id="addInput" placeholder="搜索完成後自動填入...">
         </div>
         
         <div class="button-group">
@@ -493,15 +504,24 @@
         if (data.success) {
           if (data.a1Value && data.a1Value.toString().includes('找不到相應值')) {
             showNotFound(data.a1Value);
+            // 找不到時清空新增項目
+            document.getElementById('addInput').value = '';
           } else {
             displaySearchResults(data);
             showStatus(`✅ 共 ${data.rowCount} 筆結果`, 'success', true);
+            // 修改：自動將書名填入新增項目對話框
+            const bookTitle = data.bookInfo && data.bookInfo.title ? data.bookInfo.title : inputValue;
+            document.getElementById('addInput').value = bookTitle;
+            // 視覺提示
+            showStatus('✅ 已自動填入「新增項目」', 'success');
           }
         } else {
           showStatus('❌ ' + data.error, 'error', true);
+          document.getElementById('addInput').value = '';
         }
       } catch (error) {
         showStatus('❌ 連線錯誤：' + error.message, 'error', true);
+        document.getElementById('addInput').value = '';
       } finally {
         btn.classList.remove('loading');
         btn.textContent = '送出查詢';
