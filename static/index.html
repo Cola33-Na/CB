@@ -173,6 +173,7 @@
       border: 2px solid #e0e0e0;
       border-radius: 12px;
       padding: 15px;
+      width: 100%; /* 確保寬度填滿 */
     }
     
     .result-section h3 {
@@ -199,6 +200,7 @@
       line-height: 1.6;
       color: #333;
       -webkit-overflow-scrolling: touch;
+      width: 100%; /* 確保寬度填滿 */
     }
     
     .empty-state {
@@ -225,10 +227,15 @@
     .book-info-label {
       color: #666;
       font-weight: 600;
+      white-space: nowrap; /* 標籤不換行 */
     }
     
     .book-info-value {
       color: #333;
+      word-wrap: break-word; /* 長文字換行 */
+      word-break: break-word; /* 強制換行 */
+      overflow-wrap: break-word; /* 確保溢出時換行 */
+      line-height: 1.5;
     }
     
     .library-count {
@@ -458,6 +465,7 @@
         padding: 20px;
         max-width: 100%;
         margin-bottom: 20px;
+        width: 100%; /* 確保容器寬度100% */
       }
       
       h1 {
@@ -476,18 +484,45 @@
       button {
         padding: 15px;
         font-size: 16px;
+        width: 100%; /* 確保按鈕寬度100% */
       }
       
       .results-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* 單列布局 */
         gap: 15px;
+        width: 100%; /* 確保與按鈕同寬 */
+        margin-bottom: 20px;
       }
       
-      /* 結果框在手機端自適應高度 */
+      /* 結果框在手機端與按鈕對齊 */
+      .result-section {
+        width: 100%; /* 與送出查詢按鈕同寬 */
+        padding: 15px;
+        margin: 0; /* 移除可能的外邊距 */
+      }
+      
       .result-box {
         max-height: none;
         overflow-y: visible;
         min-height: auto;
+        width: 100%; /* 確保內部寬度100% */
+      }
+      
+      /* 書本資料格線布局優化 */
+      .book-info-grid {
+        grid-template-columns: 80px 1fr; /* 固定標籤寬度，內容自適應 */
+        gap: 10px 12px;
+      }
+      
+      .book-info-label {
+        font-size: 14px;
+      }
+      
+      .book-info-value {
+        font-size: 14px;
+        word-wrap: break-word;
+        word-break: break-word;
+        line-height: 1.5;
       }
       
       /* 圖書館表格容器獨立滾動 */
@@ -581,6 +616,11 @@
       
       h1 {
         font-size: 20px;
+      }
+      
+      .book-info-grid {
+        grid-template-columns: 70px 1fr; /* 更小屏幕標籤更窄 */
+        gap: 8px 10px;
       }
       
       .library-table {
@@ -885,15 +925,15 @@
       
       document.getElementById('bookInfoBox').innerHTML = `
         <div class="book-info-grid">
-          <div class="book-info-label">書名:</div><div class="book-info-value">${bookInfo.title || 'N/A'}</div>
-          <div class="book-info-label">館藏編目號碼:</div><div class="book-info-value">${bookInfo.catalogNo || 'N/A'}</div>
-          <div class="book-info-label">索書號:</div><div class="book-info-value">${bookInfo.callNo || 'N/A'}</div>
-          <div class="book-info-label">著者:</div><div class="book-info-value">${bookInfo.author || 'N/A'}</div>
-          <div class="book-info-label">著錄:</div><div class="book-info-value">${bookInfo.description || 'N/A'}</div>
-          <div class="book-info-label">出版地:</div><div class="book-info-value">${bookInfo.pubLoc || 'N/A'}</div>
-          <div class="book-info-label">出版者:</div><div class="book-info-value">${bookInfo.publisher || 'N/A'}</div>
-          <div class="book-info-label">出版年份:</div><div class="book-info-value">${bookInfo.pubYear || 'N/A'}</div>
-          <div class="book-info-label">叢書名:</div><div class="book-info-value">${bookInfo.series || 'N/A'}</div>
+          <div class="book-info-label">書名:</div><div class="book-info-value">${escapeHtml(bookInfo.title) || 'N/A'}</div>
+          <div class="book-info-label">館藏編目號碼:</div><div class="book-info-value">${escapeHtml(bookInfo.catalogNo) || 'N/A'}</div>
+          <div class="book-info-label">索書號:</div><div class="book-info-value">${escapeHtml(bookInfo.callNo) || 'N/A'}</div>
+          <div class="book-info-label">著者:</div><div class="book-info-value">${escapeHtml(bookInfo.author) || 'N/A'}</div>
+          <div class="book-info-label">著錄:</div><div class="book-info-value">${escapeHtml(bookInfo.description) || 'N/A'}</div>
+          <div class="book-info-label">出版地:</div><div class="book-info-value">${escapeHtml(bookInfo.pubLoc) || 'N/A'}</div>
+          <div class="book-info-label">出版者:</div><div class="book-info-value">${escapeHtml(bookInfo.publisher) || 'N/A'}</div>
+          <div class="book-info-label">出版年份:</div><div class="book-info-value">${escapeHtml(bookInfo.pubYear) || 'N/A'}</div>
+          <div class="book-info-label">叢書名:</div><div class="book-info-value">${escapeHtml(bookInfo.series) || 'N/A'}</div>
         </div>
       `;
       
@@ -916,12 +956,12 @@
         libraries.forEach((lib) => {
           tableHtml += `
             <tr>
-              <td>${lib.library || ''}</td>
-              <td>${lib.callNumber || ''}</td>
-              <td>${lib.issue || '<span class="text-muted">-</span>'}</td>
-              <td>${lib.mediaCode || '<span class="text-muted">-</span>'}</td>
-              <td>${lib.status || ''}</td>
-              <td>${lib.collection || ''}</td>
+              <td>${escapeHtml(lib.library) || ''}</td>
+              <td>${escapeHtml(lib.callNumber) || ''}</td>
+              <td>${escapeHtml(lib.issue) || '<span class="text-muted">-</span>'}</td>
+              <td>${escapeHtml(lib.mediaCode) || '<span class="text-muted">-</span>'}</td>
+              <td>${escapeHtml(lib.status) || ''}</td>
+              <td>${escapeHtml(lib.collection) || ''}</td>
             </tr>
           `;
         });
@@ -931,6 +971,14 @@
       } else {
         document.getElementById('librariesBox').innerHTML = '<div class="empty-state">無圖書館資料</div>';
       }
+    }
+    
+    // HTML 轉義函數，防止 XSS 和確保長文本正確顯示
+    function escapeHtml(text) {
+      if (!text) return text;
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
     
     //========== Manual Select 功能（右側） ==========
