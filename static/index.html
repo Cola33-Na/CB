@@ -18,7 +18,7 @@
       height: 100vh;
     }
     
-    /* 左側：搜尋介面（取代 iframe） */
+    /* 左側：搜尋介面 */
     .left-panel {
       flex: 1;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -35,7 +35,7 @@
       padding: 40px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 900px;  /* 修改：從 600px 擴大至 900px (1.5倍) */
+      max-width: 1350px;  /* 修改：從 900px 擴大至 1350px（再放大 1.5 倍） */
       animation: slideIn 0.5s ease-out;
     }
     
@@ -47,7 +47,7 @@
     h1 {
       color: #333;
       margin-bottom: 10px;
-      font-size: 28px;
+      font-size: 32px;  /* 稍微放大標題 */
       text-align: center;
     }
     
@@ -55,7 +55,7 @@
       color: #666;
       text-align: center;
       margin-bottom: 30px;
-      font-size: 14px;
+      font-size: 16px;  /* 稍微放大副標題 */
     }
     
     .input-group {
@@ -67,15 +67,15 @@
       margin-bottom: 8px;
       color: #555;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;  /* 稍微放大標籤 */
     }
     
     input[type="text"] {
       width: 100%;
-      padding: 15px;
+      padding: 18px;  /* 增加內邊距 */
       border: 2px solid #e0e0e0;
       border-radius: 12px;
-      font-size: 16px;
+      font-size: 18px;  /* 放大字體 */
       transition: all 0.3s;
       background: #f8f9fa;
     }
@@ -94,7 +94,7 @@
     
     .error-hint {
       color: #f44336;
-      font-size: 12px;
+      font-size: 13px;
       margin-top: 5px;
       display: none;
     }
@@ -105,12 +105,12 @@
     
     button {
       width: 100%;
-      padding: 15px;
+      padding: 18px;  /* 增加按鈕高度 */
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
       border-radius: 12px;
-      font-size: 16px;
+      font-size: 18px;  /* 放大按鈕字體 */
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
@@ -351,10 +351,13 @@
     .status-msg.success { color: #4caf50; }
     .status-msg.error { color: #f44336; }
     
-    /* 新增：強調新增項目輸入框 */
+    /* 強調新增項目輸入框 */
     #addInput {
       border: 2px solid #667eea;
       background: #f0f4ff;
+      font-family: 'Courier New', monospace;  /* 等寬字體顯示數字 */
+      font-size: 16px;
+      letter-spacing: 2px;  /* 數字間距 */
     }
     
     #addInput:focus {
@@ -365,7 +368,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- 左側：搜尋介面（純前端，透過 API 與 GAS 通信） -->
+    <!-- 左側：搜尋介面 -->
     <div class="left-panel">
       <div class="search-container">
         <h1>🔍 資料查詢</h1>
@@ -423,7 +426,7 @@
         </div>
         
         <div class="input-group">
-          <label>新增項目（搜索結果將自動填入）：</label>
+          <label>新增項目（搜索完成後自動填入14位數字）：</label>
           <input type="text" id="addInput" placeholder="搜索完成後自動填入...">
         </div>
         
@@ -509,11 +512,9 @@
           } else {
             displaySearchResults(data);
             showStatus(`✅ 共 ${data.rowCount} 筆結果`, 'success', true);
-            // 修改：自動將書名填入新增項目對話框
-            const bookTitle = data.bookInfo && data.bookInfo.title ? data.bookInfo.title : inputValue;
-            document.getElementById('addInput').value = bookTitle;
-            // 視覺提示
-            showStatus('✅ 已自動填入「新增項目」', 'success');
+            // 修改：自動將輸入的14位純數字填入新增項目對話框
+            document.getElementById('addInput').value = inputValue;
+            showStatus('✅ 已自動填入14位數字', 'success');
           }
         } else {
           showStatus('❌ ' + data.error, 'error', true);
