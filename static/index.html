@@ -18,17 +18,244 @@
       height: 100vh;
     }
     
-    /* 左側：原 GAS 查詢介面 */
+    /* 左側：搜尋介面（取代 iframe） */
     .left-panel {
       flex: 1;
-      position: relative;
-      border-right: 2px solid #ddd;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     
-    #gasFrame {
+    .search-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       width: 100%;
-      height: 100%;
+      max-width: 600px;
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      color: #666;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .input-group {
+      margin-bottom: 25px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s;
+      background: #f8f9fa;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    input[type="text"].error {
+      border-color: #f44336;
+      background: #ffebee;
+    }
+    
+    .error-hint {
+      color: #f44336;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .error-hint.show {
+      display: block;
+    }
+    
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
       border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 25px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    button.loading {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    
+    button.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .results-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .result-section {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 15px;
+    }
+    
+    .result-section h3 {
+      color: #333;
+      font-size: 16px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #667eea;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .result-section.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .result-box {
+      min-height: 100px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .empty-state {
+      color: #999;
+      text-align: center;
+      padding: 30px;
+      font-style: italic;
+    }
+    
+    .not-found {
+      color: #f44336;
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .book-info-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 12px;
+    }
+    
+    .book-info-label {
+      color: #666;
+      font-weight: 600;
+    }
+    
+    .book-info-value {
+      color: #333;
+    }
+    
+    .library-count {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .library-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    
+    .library-table th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .library-table td {
+      padding: 8px;
+      border-bottom: 1px solid #e0e0e0;
+      background: white;
+    }
+    
+    .library-table tr:hover td {
+      background: #f5f5f5;
+    }
+    
+    .text-muted {
+      color: #999;
+      font-style: italic;
     }
     
     /* 右側：ManualSelect 管理面板 */
@@ -58,7 +285,6 @@
       gap: 15px;
     }
     
-    /* 顯示區域 */
     .display-box {
       flex: 1;
       border: 2px solid #e0e0e0;
@@ -70,37 +296,6 @@
       background: #fafafa;
     }
     
-    .display-box:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    /* 輸入區域 */
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    
-    .input-group label {
-      font-size: 12px;
-      color: #666;
-      font-weight: 600;
-    }
-    
-    #addInput {
-      padding: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    
-    #addInput:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    /* 按鈕群組 */
     .button-group {
       display: flex;
       flex-direction: column;
@@ -136,17 +331,9 @@
       color: #333;
     }
     
-    .btn-secondary:hover {
-      background: #e0e0e0;
-    }
-    
     .btn-danger {
       background: #f44336;
       color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #d32f2f;
     }
     
     .btn-warning {
@@ -154,17 +341,6 @@
       color: white;
     }
     
-    .btn-warning:hover {
-      background: #f57c00;
-    }
-    
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    
-    /* 狀態提示 */
     .status-msg {
       font-size: 12px;
       text-align: center;
@@ -174,36 +350,51 @@
     
     .status-msg.success { color: #4caf50; }
     .status-msg.error { color: #f44336; }
-    
-    /* 載入動畫 */
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .panel-loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #999;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 左側：原 GAS 查詢介面 -->
+    <!-- 左側：搜尋介面（純前端，透過 API 與 GAS 通信） -->
     <div class="left-panel">
-      <iframe id="gasFrame" src="https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec"></iframe>
+      <div class="search-container">
+        <h1>🔍 資料查詢</h1>
+        <p class="subtitle">輸入關鍵字後按 Enter</p>
+        
+        <div class="input-group">
+          <label for="inputBox">輸入關鍵字（14位純數字）</label>
+          <input type="text" id="inputBox" placeholder="請輸入14位純數字..." autofocus maxlength="14">
+          <div class="error-hint" id="errorHint">格式不符，請重新輸入（必須是14位純數字）</div>
+        </div>
+        
+        <button id="queryBtn" onclick="submitQuery()">送出查詢</button>
+        
+        <div id="searchResults" style="display: none;">
+          <div class="results-container">
+            <div class="result-section">
+              <h3>📚 可選項目</h3>
+              <div class="result-box" id="libraryCountBox">
+                <div class="empty-state">等待查詢...</div>
+              </div>
+            </div>
+            
+            <div class="result-section">
+              <h3>📖 書本資料</h3>
+              <div class="result-box" id="bookInfoBox">
+                <div class="empty-state">等待查詢...</div>
+              </div>
+            </div>
+            
+            <div class="result-section full-width">
+              <h3>🏛️ 圖書館</h3>
+              <div class="result-box" id="librariesBox">
+                <div class="empty-state">等待查詢...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="status-msg" id="searchStatus"></div>
+      </div>
     </div>
     
     <!-- 右側：ManualSelect 管理面板 -->
@@ -213,7 +404,6 @@
       </div>
       
       <div class="panel-content">
-        <!-- 顯示目前內容 -->
         <div style="flex: 1; display: flex; flex-direction: column;">
           <label style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">
             目前內容（A欄）：
@@ -221,13 +411,11 @@
           <textarea id="manualSelectDisplay" class="display-box" readonly placeholder="載入中..."></textarea>
         </div>
         
-        <!-- 輸入區域 -->
         <div class="input-group">
-          <label>新增項目（將貼上至最後一列）：</label>
+          <label>新增項目：</label>
           <input type="text" id="addInput" placeholder="輸入資料後按複製...">
         </div>
         
-        <!-- 操作按鈕 -->
         <div class="button-group">
           <button class="btn btn-primary" id="btnCopy" onclick="addToManualSelect()">
             <span>📋</span> 複製（新增）
@@ -247,13 +435,13 @@
           </button>
         </div>
         
-        <div class="status-msg" id="statusMsg"></div>
+        <div class="status-msg" id="manualStatus"></div>
       </div>
     </div>
   </div>
 
   <script>
-    // GAS API 基礎網址（請確認與 iframe 中的網址一致）
+    // API 基礎網址
     const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
     
     // 頁面載入時自動載入 ManualSelect 資料
@@ -262,8 +450,8 @@
     };
     
     // 顯示狀態訊息
-    function showStatus(msg, type = '') {
-      const statusEl = document.getElementById('statusMsg');
+    function showStatus(msg, type = '', isSearch = false) {
+      const statusEl = isSearch ? document.getElementById('searchStatus') : document.getElementById('manualStatus');
       statusEl.textContent = msg;
       statusEl.className = 'status-msg ' + type;
       setTimeout(() => {
@@ -272,7 +460,125 @@
       }, 3000);
     }
     
-    // 1. 載入 ManualSelect 頁 A 欄內容
+    //========== 搜尋功能（左側） ==========
+    
+    function validateInput(value) {
+      return /^\d{14}$/.test(value);
+    }
+    
+    async function submitQuery() {
+      const inputBox = document.getElementById('inputBox');
+      const inputValue = inputBox.value.trim();
+      const btn = document.getElementById('queryBtn');
+      const errorHint = document.getElementById('errorHint');
+      
+      if (!validateInput(inputValue)) {
+        inputBox.classList.add('error');
+        errorHint.classList.add('show');
+        return;
+      }
+      
+      inputBox.classList.remove('error');
+      errorHint.classList.remove('show');
+      
+      btn.classList.add('loading');
+      btn.textContent = '執行中...';
+      
+      try {
+        const response = await fetch(`${GAS_API_URL}?action=query&input=${encodeURIComponent(inputValue)}`);
+        const data = await response.json();
+        
+        document.getElementById('searchResults').style.display = 'block';
+        
+        if (data.success) {
+          if (data.a1Value && data.a1Value.toString().includes('找不到相應值')) {
+            showNotFound(data.a1Value);
+          } else {
+            displaySearchResults(data);
+            showStatus(`✅ 共 ${data.rowCount} 筆結果`, 'success', true);
+          }
+        } else {
+          showStatus('❌ ' + data.error, 'error', true);
+        }
+      } catch (error) {
+        showStatus('❌ 連線錯誤：' + error.message, 'error', true);
+      } finally {
+        btn.classList.remove('loading');
+        btn.textContent = '送出查詢';
+      }
+    }
+    
+    function showNotFound(a1Value) {
+      const notFoundHtml = '<div class="not-found">❌ 找不到相應值</div>';
+      document.getElementById('libraryCountBox').innerHTML = notFoundHtml;
+      document.getElementById('bookInfoBox').innerHTML = notFoundHtml;
+      document.getElementById('librariesBox').innerHTML = notFoundHtml;
+      showStatus('❌ ' + a1Value, 'error', true);
+    }
+    
+    function displaySearchResults(data) {
+      const bookInfo = data.bookInfo || {};
+      const libraries = data.libraries || [];
+      const libraryCount = data.libraryCount || 0;
+      
+      // 顯示可選圖書館數量
+      document.getElementById('libraryCountBox').innerHTML = 
+        `<div class="library-count">${libraryCount}<div style="font-size: 14px; color: #666; margin-top: 5px;">個項目</div></div>`;
+      
+      // 顯示書本資料
+      document.getElementById('bookInfoBox').innerHTML = `
+        <div class="book-info-grid">
+          <div class="book-info-label">書名:</div><div class="book-info-value">${bookInfo.title || 'N/A'}</div>
+          <div class="book-info-label">館藏編目號碼:</div><div class="book-info-value">${bookInfo.catalogNo || 'N/A'}</div>
+          <div class="book-info-label">索書號:</div><div class="book-info-value">${bookInfo.callNo || 'N/A'}</div>
+          <div class="book-info-label">著者:</div><div class="book-info-value">${bookInfo.author || 'N/A'}</div>
+          <div class="book-info-label">著錄:</div><div class="book-info-value">${bookInfo.description || 'N/A'}</div>
+          <div class="book-info-label">出版地:</div><div class="book-info-value">${bookInfo.pubLoc || 'N/A'}</div>
+          <div class="book-info-label">出版者:</div><div class="book-info-value">${bookInfo.publisher || 'N/A'}</div>
+          <div class="book-info-label">出版年份:</div><div class="book-info-value">${bookInfo.pubYear || 'N/A'}</div>
+          <div class="book-info-label">叢書名:</div><div class="book-info-value">${bookInfo.series || 'N/A'}</div>
+        </div>
+      `;
+      
+      // 顯示圖書館列表
+      if (libraries.length > 0) {
+        let tableHtml = `
+          <table class="library-table">
+            <thead>
+              <tr>
+                <th>圖書館</th>
+                <th>索書號</th>
+                <th>期次</th>
+                <th>媒體碼</th>
+                <th>館藏現況</th>
+                <th>館藏</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        libraries.forEach((lib) => {
+          tableHtml += `
+            <tr>
+              <td>${lib.library || ''}</td>
+              <td>${lib.callNumber || ''}</td>
+              <td>${lib.issue || '<span class="text-muted">-</span>'}</td>
+              <td>${lib.mediaCode || '<span class="text-muted">-</span>'}</td>
+              <td>${lib.status || ''}</td>
+              <td>${lib.collection || ''}</td>
+            </tr>
+          `;
+        });
+        
+        tableHtml += '</tbody></table>';
+        document.getElementById('librariesBox').innerHTML = tableHtml;
+      } else {
+        document.getElementById('librariesBox').innerHTML = '<div class="empty-state">無圖書館資料</div>';
+      }
+    }
+    
+    //========== Manual Select 功能（右側） ==========
+    
     async function loadManualSelect() {
       try {
         const response = await fetch(`${GAS_API_URL}?action=getManualSelect`);
@@ -280,21 +586,15 @@
         
         if (data.success) {
           const display = document.getElementById('manualSelectDisplay');
-          if (Array.isArray(data.data) && data.data.length > 0) {
-            display.value = data.data.join('\n');
-          } else {
-            display.value = '(無資料)';
-          }
+          display.value = data.data && data.data.length > 0 ? data.data.join('\n') : '(無資料)';
         } else {
           showStatus('載入失敗：' + data.error, 'error');
         }
       } catch (error) {
         showStatus('載入錯誤：' + error.message, 'error');
-        console.error(error);
       }
     }
     
-    // 2. 複製（新增）功能：將輸入資料貼上到 A 欄最後一個非空白儲存格
     async function addToManualSelect() {
       const input = document.getElementById('addInput');
       const value = input.value.trim();
@@ -306,7 +606,7 @@
       
       const btn = document.getElementById('btnCopy');
       btn.disabled = true;
-      btn.innerHTML = '<span class="loading"></span> 處理中...';
+      btn.innerHTML = '處理中...';
       
       try {
         const response = await fetch(`${GAS_API_URL}?action=addToManualSelect&value=${encodeURIComponent(value)}`);
@@ -314,8 +614,8 @@
         
         if (data.success) {
           showStatus('✅ 已新增至 A 欄', 'success');
-          input.value = ''; // 清空輸入框
-          await loadManualSelect(); // 即時更新右邊顯示框
+          input.value = '';
+          await loadManualSelect();
         } else {
           showStatus('❌ ' + data.error, 'error');
         }
@@ -327,11 +627,8 @@
       }
     }
     
-    // 3. 清除全部：清除 ManualSelect 頁 A 欄所有資料
     async function clearAll() {
-      if (!confirm('確定要清除 A 欄所有資料嗎？此動作無法復原。')) {
-        return;
-      }
+      if (!confirm('確定要清除 A 欄所有資料嗎？此動作無法復原。')) return;
       
       try {
         const response = await fetch(`${GAS_API_URL}?action=clearManualSelect`);
@@ -339,7 +636,7 @@
         
         if (data.success) {
           showStatus('✅ 已清除全部資料', 'success');
-          await loadManualSelect(); // 更新顯示
+          await loadManualSelect();
         } else {
           showStatus('❌ ' + data.error, 'error');
         }
@@ -348,7 +645,6 @@
       }
     }
     
-    // 4. 清除最後一項：清除 A 欄最後一筆非空白資料
     async function removeLast() {
       try {
         const response = await fetch(`${GAS_API_URL}?action=removeLastManualSelect`);
@@ -356,7 +652,7 @@
         
         if (data.success) {
           showStatus('✅ 已清除最後一項', 'success');
-          await loadManualSelect(); // 更新顯示
+          await loadManualSelect();
         } else {
           showStatus('❌ ' + data.error, 'error');
         }
@@ -365,10 +661,8 @@
       }
     }
     
-    // 5. 匯出：將 ManualSelect 頁 A 欄資料匯出到 txt 檔
     async function exportToTxt() {
       try {
-        // 先取得最新資料
         const response = await fetch(`${GAS_API_URL}?action=getManualSelect`);
         const data = await response.json();
         
@@ -377,12 +671,10 @@
           return;
         }
         
-        // 建立 txt 內容
         const content = data.data.join('\n');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         
-        // 建立下載連結
         const a = document.createElement('a');
         a.href = url;
         a.download = `ManualSelect_${new Date().toISOString().slice(0,10)}.txt`;
@@ -399,6 +691,18 @@
     
     // 定期自動更新（每 30 秒）
     setInterval(loadManualSelect, 30000);
+    
+    // 輸入框即時驗證
+    document.getElementById('inputBox').addEventListener('input', function() {
+      const value = this.value.replace(/\D/g, '');
+      if (this.value !== value) this.value = value;
+      if (value.length > 14) this.value = value.substring(0, 14);
+    });
+    
+    // Enter 鍵提交
+    document.getElementById('inputBox').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') submitQuery();
+    });
   </script>
 </body>
 </html>
