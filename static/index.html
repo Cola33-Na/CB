@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+# 修正後的 HTML 代碼
+html_code = '''<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -171,6 +172,8 @@
       border: 2px solid #e0e0e0;
       border-radius: 12px;
       padding: 15px;
+      display: flex;
+      flex-direction: column;
     }
     
     .result-section h3 {
@@ -182,21 +185,27 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
     }
     
     .result-section.full-width {
       grid-column: 1 / -1;
     }
     
+    /* 修正：確保結果框可以滾動 */
     .result-box {
+      flex: 1;
       min-height: 100px;
       max-height: 300px;
       overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
       font-family: 'Courier New', monospace;
       font-size: 13px;
       line-height: 1.6;
       color: #333;
-      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
     
     .empty-state {
@@ -291,6 +300,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
     
     .panel-content {
@@ -314,6 +324,8 @@
       background: #fafafa;
       transition: all 0.3s;
       min-height: 100px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     
     .display-box.updating {
@@ -430,9 +442,14 @@
     
     /* ==================== 手機端適配 ==================== */
     @media screen and (max-width: 768px) {
+      body {
+        overflow-y: auto;
+        height: auto;
+      }
+      
       .container {
         flex-direction: column;
-        overflow-y: auto;
+        overflow-y: visible;
         height: auto;
         min-height: 100vh;
       }
@@ -441,14 +458,15 @@
         width: 100%;
         padding: 20px;
         min-height: 100vh;
+        height: auto;
+        overflow-y: visible;
         padding-bottom: 100px;
-        overflow-y: auto; /* 確保左側可滾動 */
-        -webkit-overflow-scrolling: touch;
       }
       
       .search-container {
         padding: 20px;
         max-width: 100%;
+        overflow: visible;
       }
       
       h1 {
@@ -471,22 +489,29 @@
       
       .results-container {
         grid-template-columns: 1fr;
+        gap: 15px;
       }
       
-      /* 關鍵修正：增加結果區域高度限制，確保可滾動 */
+      /* 修正：手機端圖書館資料區域可以正常滾動 */
+      .result-section {
+        max-height: none;
+        overflow: visible;
+      }
+      
       .result-box {
-        max-height: 60vh; /* 使用視口高度而非固定像素 */
+        max-height: 400px;
+        min-height: 150px;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
       }
       
-      /* 圖書館表格區域允許橫向滾動 */
-      .result-section.full-width .result-box {
-        overflow-x: auto;
-      }
-      
+      /* 確保表格可以橫向滾動 */
       .library-table {
-        min-width: 600px; /* 確保表格有最小寬度以觸發橫向滾動 */
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
       }
       
       /* 右側面板改為抽屜式 */
@@ -498,6 +523,7 @@
         height: 100vh;
         transform: translateX(100%);
         box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+        overflow-y: auto;
       }
       
       .right-panel.open {
@@ -599,7 +625,7 @@
       </div>
       
       <div class="panel-content">
-        <div style="flex: 1; display: flex; flex-direction: column;">
+        <div style="flex: 1; display: flex; flex-direction: column; min-height: 150px;">
           <label style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">
             目前內容（A欄）：
           </label>
@@ -678,7 +704,9 @@
       if (isPanelOpen) {
         panel.classList.add('open');
         overlay.classList.add('show');
-        toggleBtn.style.display = 'none'; // 打開時隱藏按鈕
+        toggleBtn.style.display = 'none';
+        // 禁止背景滾動
+        document.body.style.overflow = 'hidden';
       } else {
         closePanel();
       }
@@ -692,7 +720,11 @@
       panel.classList.remove('open');
       overlay.classList.remove('show');
       isPanelOpen = false;
-      toggleBtn.style.display = 'flex'; // 顯示浮動按鈕
+      toggleBtn.style.display = 'flex';
+      // 恢復背景滾動
+      if (window.innerWidth <= 768) {
+        document.body.style.overflow = 'auto';
+      }
     }
     
     // 顯示狀態訊息
@@ -711,7 +743,7 @@
     //========== 搜尋功能（左側） ==========
     
     function validateInput(value) {
-      return /^\d{14}$/.test(value);
+      return /^\\d{14}$/.test(value);
     }
     
     async function submitQuery() {
@@ -832,7 +864,7 @@
     
     function updateDisplay() {
       const display = document.getElementById('manualSelectDisplay');
-      display.value = manualSelectData.length > 0 ? manualSelectData.join('\n') : '(無資料)';
+      display.value = manualSelectData.length > 0 ? manualSelectData.join('\\n') : '(無資料)';
       display.classList.add('updating');
       setTimeout(() => display.classList.remove('updating'), 300);
     }
@@ -959,7 +991,7 @@
           return;
         }
         
-        const content = manualSelectData.join('\n');
+        const content = manualSelectData.join('\\n');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         
@@ -989,7 +1021,7 @@
     
     // 輸入框即時驗證
     document.getElementById('inputBox').addEventListener('input', function() {
-      const value = this.value.replace(/\D/g, '');
+      const value = this.value.replace(/\\D/g, '');
       if (this.value !== value) this.value = value;
       if (value.length > 14) this.value = value.substring(0, 14);
     });
@@ -998,6 +1030,22 @@
     document.getElementById('inputBox').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') submitQuery();
     });
+    
+    // 防止觸控事件衝突 - 允許結果區域正常滾動
+    document.querySelectorAll('.result-box').forEach(box => {
+      box.addEventListener('touchstart', function(e) {
+        // 允許默認行為，不干預滾動
+      }, { passive: true });
+    });
   </script>
 </body>
-</html>
+</html>'''
+
+print("已生成修正後的 HTML 代碼")
+print("主要修正點：")
+print("1. 手機端 body/left-panel 設為 overflow-y: visible/overflow-y: auto，允許自然滾動")
+print("2. .result-box 添加 touch-action: pan-y 和 overscroll-behavior: contain")
+print("3. 手機端 .result-section 移除 overflow 限制，.result-box 保持獨立滾動")
+print("4. 圖書館表格添加 overflow-x: auto 支持橫向滾動查看")
+print("5. 右側面板打開時禁止背景滾動，關閉時恢復")
+print("6. 添加 passive touchstart 事件監聽避免滾動卡頓")
