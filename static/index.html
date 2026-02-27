@@ -1,5 +1,4 @@
-# 修正後的 HTML 代碼
-html_code = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -12,7 +11,7 @@ html_code = '''<!DOCTYPE html>
       height: 100vh;
       overflow: hidden;
       background: #f5f5f5;
-      touch-action: manipulation;
+      touch-action: manipulation; /* 優化觸控 */
     }
     
     .container {
@@ -30,7 +29,7 @@ html_code = '''<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       align-items: center;
-      -webkit-overflow-scrolling: touch;
+      -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
     }
     
     .search-container {
@@ -82,7 +81,7 @@ html_code = '''<!DOCTYPE html>
       font-size: 18px;
       transition: all 0.3s;
       background: #f8f9fa;
-      -webkit-appearance: none;
+      -webkit-appearance: none; /* 移除 iOS 預設樣式 */
     }
     
     input[type="text"]:focus {
@@ -122,7 +121,7 @@ html_code = '''<!DOCTYPE html>
       margin-bottom: 25px;
       position: relative;
       overflow: hidden;
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
       touch-action: manipulation;
     }
     
@@ -172,8 +171,6 @@ html_code = '''<!DOCTYPE html>
       border: 2px solid #e0e0e0;
       border-radius: 12px;
       padding: 15px;
-      display: flex;
-      flex-direction: column;
     }
     
     .result-section h3 {
@@ -185,27 +182,21 @@ html_code = '''<!DOCTYPE html>
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-shrink: 0;
     }
     
     .result-section.full-width {
       grid-column: 1 / -1;
     }
     
-    /* 修正：確保結果框可以滾動 */
     .result-box {
-      flex: 1;
       min-height: 100px;
       max-height: 300px;
       overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
       font-family: 'Courier New', monospace;
       font-size: 13px;
       line-height: 1.6;
       color: #333;
-      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
     }
     
     .empty-state {
@@ -300,7 +291,6 @@ html_code = '''<!DOCTYPE html>
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-shrink: 0;
     }
     
     .panel-content {
@@ -324,8 +314,6 @@ html_code = '''<!DOCTYPE html>
       background: #fafafa;
       transition: all 0.3s;
       min-height: 100px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
     }
     
     .display-box.updating {
@@ -442,14 +430,9 @@ html_code = '''<!DOCTYPE html>
     
     /* ==================== 手機端適配 ==================== */
     @media screen and (max-width: 768px) {
-      body {
-        overflow-y: auto;
-        height: auto;
-      }
-      
       .container {
         flex-direction: column;
-        overflow-y: visible;
+        overflow-y: auto;
         height: auto;
         min-height: 100vh;
       }
@@ -458,15 +441,12 @@ html_code = '''<!DOCTYPE html>
         width: 100%;
         padding: 20px;
         min-height: 100vh;
-        height: auto;
-        overflow-y: visible;
-        padding-bottom: 100px;
+        padding-bottom: 100px; /* 預留空間給底部按鈕 */
       }
       
       .search-container {
         padding: 20px;
         max-width: 100%;
-        overflow: visible;
       }
       
       h1 {
@@ -479,7 +459,7 @@ html_code = '''<!DOCTYPE html>
       
       input[type="text"] {
         padding: 15px;
-        font-size: 16px;
+        font-size: 16px; /* 防止 iOS 縮放 */
       }
       
       button {
@@ -488,30 +468,7 @@ html_code = '''<!DOCTYPE html>
       }
       
       .results-container {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-      
-      /* 修正：手機端圖書館資料區域可以正常滾動 */
-      .result-section {
-        max-height: none;
-        overflow: visible;
-      }
-      
-      .result-box {
-        max-height: 400px;
-        min-height: 150px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
-      }
-      
-      /* 確保表格可以橫向滾動 */
-      .library-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
+        grid-template-columns: 1fr; /* 手機端單欄顯示 */
       }
       
       /* 右側面板改為抽屜式 */
@@ -519,19 +476,18 @@ html_code = '''<!DOCTYPE html>
         position: fixed;
         top: 0;
         right: 0;
-        width: 85%;
+        width: 85%; /* 佔據 85% 寬度，留出空間返回 */
         height: 100vh;
-        transform: translateX(100%);
+        transform: translateX(100%); /* 預設隱藏在右側 */
         box-shadow: -5px 0 25px rgba(0,0,0,0.3);
-        overflow-y: auto;
       }
       
       .right-panel.open {
-        transform: translateX(0);
+        transform: translateX(0); /* 打開時滑入 */
       }
       
       .mobile-toggle {
-        display: flex;
+        display: flex; /* 手機端顯示切換按鈕 */
       }
       
       .close-panel-btn {
@@ -625,7 +581,7 @@ html_code = '''<!DOCTYPE html>
       </div>
       
       <div class="panel-content">
-        <div style="flex: 1; display: flex; flex-direction: column; min-height: 150px;">
+        <div style="flex: 1; display: flex; flex-direction: column;">
           <label style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">
             目前內容（A欄）：
           </label>
@@ -668,7 +624,7 @@ html_code = '''<!DOCTYPE html>
 
   <script>
     // API 基礎網址
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec';
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxMmID7MyEb-Z-98RPUzpa4NjyuPp6B7rPrBNFJGJ_4d8BDlL-rRkoJq3iyzsZCDOhY8w/exec ';
     
     // 本地資料緩存
     let manualSelectData = [];
@@ -704,9 +660,7 @@ html_code = '''<!DOCTYPE html>
       if (isPanelOpen) {
         panel.classList.add('open');
         overlay.classList.add('show');
-        toggleBtn.style.display = 'none';
-        // 禁止背景滾動
-        document.body.style.overflow = 'hidden';
+        toggleBtn.style.display = 'none'; // 打開時隱藏按鈕
       } else {
         closePanel();
       }
@@ -720,11 +674,7 @@ html_code = '''<!DOCTYPE html>
       panel.classList.remove('open');
       overlay.classList.remove('show');
       isPanelOpen = false;
-      toggleBtn.style.display = 'flex';
-      // 恢復背景滾動
-      if (window.innerWidth <= 768) {
-        document.body.style.overflow = 'auto';
-      }
+      toggleBtn.style.display = 'flex'; // 顯示浮動按鈕
     }
     
     // 顯示狀態訊息
@@ -743,7 +693,7 @@ html_code = '''<!DOCTYPE html>
     //========== 搜尋功能（左側） ==========
     
     function validateInput(value) {
-      return /^\\d{14}$/.test(value);
+      return /^\d{14}$/.test(value);
     }
     
     async function submitQuery() {
@@ -864,7 +814,7 @@ html_code = '''<!DOCTYPE html>
     
     function updateDisplay() {
       const display = document.getElementById('manualSelectDisplay');
-      display.value = manualSelectData.length > 0 ? manualSelectData.join('\\n') : '(無資料)';
+      display.value = manualSelectData.length > 0 ? manualSelectData.join('\n') : '(無資料)';
       display.classList.add('updating');
       setTimeout(() => display.classList.remove('updating'), 300);
     }
@@ -991,7 +941,7 @@ html_code = '''<!DOCTYPE html>
           return;
         }
         
-        const content = manualSelectData.join('\\n');
+        const content = manualSelectData.join('\n');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         
@@ -1021,7 +971,7 @@ html_code = '''<!DOCTYPE html>
     
     // 輸入框即時驗證
     document.getElementById('inputBox').addEventListener('input', function() {
-      const value = this.value.replace(/\\D/g, '');
+      const value = this.value.replace(/\D/g, '');
       if (this.value !== value) this.value = value;
       if (value.length > 14) this.value = value.substring(0, 14);
     });
@@ -1030,22 +980,6 @@ html_code = '''<!DOCTYPE html>
     document.getElementById('inputBox').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') submitQuery();
     });
-    
-    // 防止觸控事件衝突 - 允許結果區域正常滾動
-    document.querySelectorAll('.result-box').forEach(box => {
-      box.addEventListener('touchstart', function(e) {
-        // 允許默認行為，不干預滾動
-      }, { passive: true });
-    });
   </script>
 </body>
-</html>'''
-
-print("已生成修正後的 HTML 代碼")
-print("主要修正點：")
-print("1. 手機端 body/left-panel 設為 overflow-y: visible/overflow-y: auto，允許自然滾動")
-print("2. .result-box 添加 touch-action: pan-y 和 overscroll-behavior: contain")
-print("3. 手機端 .result-section 移除 overflow 限制，.result-box 保持獨立滾動")
-print("4. 圖書館表格添加 overflow-x: auto 支持橫向滾動查看")
-print("5. 右側面板打開時禁止背景滾動，關閉時恢復")
-print("6. 添加 passive touchstart 事件監聽避免滾動卡頓")
+</html>
