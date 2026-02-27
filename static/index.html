@@ -3,402 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>資料查詢與管理</title>
+  <title>資料查詢</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Segoe UI', system-ui, sans-serif; 
-      height: 100vh;
-      overflow: hidden;
-      background: #f5f5f5;
-    }
+    body { font-family: system-ui, sans-serif; overflow: hidden; }
     
-    .container {
-      display: flex;
-      height: 100vh;
-    }
-    
-    /* 左側：原 GAS 查詢介面 */
-    .left-panel {
-      flex: 1;
-      position: relative;
-      border-right: 2px solid #ddd;
-    }
-    
-    #gasFrame {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    
-    /* 右側：ManualSelect 管理面板 */
-    .right-panel {
-      width: 350px;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-    }
-    
-    .panel-header {
+    #loading {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 15px;
-      font-size: 16px;
-      font-weight: bold;
-      text-align: center;
-    }
-    
-    .panel-content {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
       display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    /* 顯示區域 */
-    .display-box {
-      flex: 1;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      resize: none;
-      background: #fafafa;
-    }
-    
-    .display-box:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    /* 輸入區域 */
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    
-    .input-group label {
-      font-size: 12px;
-      color: #666;
-      font-weight: 600;
-    }
-    
-    #addInput {
-      padding: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    
-    #addInput:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    /* 按鈕群組 */
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    
-    .btn {
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      gap: 5px;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      align-items: center;
       color: white;
+      z-index: 100;
+      transition: opacity 0.5s;
     }
     
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
     
-    .btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-    }
-    
-    .btn-secondary:hover {
-      background: #e0e0e0;
-    }
-    
-    .btn-danger {
-      background: #f44336;
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #d32f2f;
-    }
-    
-    .btn-warning {
-      background: #ff9800;
-      color: white;
-    }
-    
-    .btn-warning:hover {
-      background: #f57c00;
-    }
-    
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    
-    /* 狀態提示 */
-    .status-msg {
-      font-size: 12px;
-      text-align: center;
-      color: #666;
-      min-height: 20px;
-    }
-    
-    .status-msg.success { color: #4caf50; }
-    .status-msg.error { color: #f44336; }
-    
-    /* 載入動畫 */
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,.3);
-      border-radius: 50%;
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,0.3);
       border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 15px;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      display: none;
     }
     
-    .panel-loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #999;
-    }
+    iframe.loaded { display: block; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- 左側：原 GAS 查詢介面 -->
-    <div class="left-panel">
-      <iframe id="gasFrame" src="https://script.google.com/macros/s/AKfycbzNaMOKgQMoGCsv0VSgU6o46WiDq1C8iHxuCzrFYHzIocRW2RYWESxmzpf2r4fLGXKZWA/exec"></iframe>
-    </div>
-    
-    <!-- 右側：ManualSelect 管理面板 -->
-    <div class="right-panel">
-      <div class="panel-header">
-        📋 Manual Select 管理
-      </div>
-      
-      <div class="panel-content">
-        <!-- 顯示目前內容 -->
-        <div style="flex: 1; display: flex; flex-direction: column;">
-          <label style="font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 600;">
-            目前內容（A欄）：
-          </label>
-          <textarea id="manualSelectDisplay" class="display-box" readonly placeholder="載入中..."></textarea>
-        </div>
-        
-        <!-- 輸入區域 -->
-        <div class="input-group">
-          <label>新增項目（將貼上至最後一列）：</label>
-          <input type="text" id="addInput" placeholder="輸入資料後按複製...">
-        </div>
-        
-        <!-- 操作按鈕 -->
-        <div class="button-group">
-          <button class="btn btn-primary" id="btnCopy" onclick="addToManualSelect()">
-            <span>📋</span> 複製（新增）
-          </button>
-          
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-danger" style="flex: 1;" onclick="clearAll()">
-              清除全部
-            </button>
-            <button class="btn btn-warning" style="flex: 1;" onclick="removeLast()">
-              清除最後一項
-            </button>
-          </div>
-          
-          <button class="btn btn-secondary" onclick="exportToTxt()">
-            <span>💾</span> 匯出 TXT
-          </button>
-        </div>
-        
-        <div class="status-msg" id="statusMsg"></div>
-      </div>
-    </div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <span>系統載入中...</span>
   </div>
+  
+  <iframe id="gasFrame" src="https://script.google.com/macros/s/AKfycbzNaMOKgQMoGCsv0VSgU6o46WiDq1C8iHxuCzrFYHzIocRW2RYWESxmzpf2r4fLGXKZWA/exec"></iframe>
 
   <script>
-    // GAS API 基礎網址（請確認與 iframe 中的網址一致）
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzNaMOKgQMoGCsv0VSgU6o46WiDq1C8iHxuCzrFYHzIocRW2RYWESxmzpf2r4fLGXKZWA/exec';
+    const frame = document.getElementById('gasFrame');
+    const loading = document.getElementById('loading');
     
-    // 頁面載入時自動載入 ManualSelect 資料
-    window.onload = function() {
-      loadManualSelect();
+    frame.onload = function() {
+      loading.classList.add('hidden');
+      frame.classList.add('loaded');
     };
     
-    // 顯示狀態訊息
-    function showStatus(msg, type = '') {
-      const statusEl = document.getElementById('statusMsg');
-      statusEl.textContent = msg;
-      statusEl.className = 'status-msg ' + type;
-      setTimeout(() => {
-        statusEl.textContent = '';
-        statusEl.className = 'status-msg';
-      }, 3000);
-    }
-    
-    // 1. 載入 ManualSelect 頁 A 欄內容
-    async function loadManualSelect() {
-      try {
-        const response = await fetch(`${GAS_API_URL}?action=getManualSelect`);
-        const data = await response.json();
-        
-        if (data.success) {
-          const display = document.getElementById('manualSelectDisplay');
-          if (Array.isArray(data.data) && data.data.length > 0) {
-            display.value = data.data.join('\n');
-          } else {
-            display.value = '(無資料)';
-          }
-        } else {
-          showStatus('載入失敗：' + data.error, 'error');
-        }
-      } catch (error) {
-        showStatus('載入錯誤：' + error.message, 'error');
-        console.error(error);
-      }
-    }
-    
-    // 2. 複製（新增）功能：將輸入資料貼上到 A 欄最後一個非空白儲存格
-    async function addToManualSelect() {
-      const input = document.getElementById('addInput');
-      const value = input.value.trim();
-      
-      if (!value) {
-        showStatus('請先輸入資料', 'error');
-        return;
-      }
-      
-      const btn = document.getElementById('btnCopy');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="loading"></span> 處理中...';
-      
-      try {
-        const response = await fetch(`${GAS_API_URL}?action=addToManualSelect&value=${encodeURIComponent(value)}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          showStatus('✅ 已新增至 A 欄', 'success');
-          input.value = ''; // 清空輸入框
-          await loadManualSelect(); // 即時更新右邊顯示框
-        } else {
-          showStatus('❌ ' + data.error, 'error');
-        }
-      } catch (error) {
-        showStatus('❌ 錯誤：' + error.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span>📋</span> 複製（新增）';
-      }
-    }
-    
-    // 3. 清除全部：清除 ManualSelect 頁 A 欄所有資料
-    async function clearAll() {
-      if (!confirm('確定要清除 A 欄所有資料嗎？此動作無法復原。')) {
-        return;
-      }
-      
-      try {
-        const response = await fetch(`${GAS_API_URL}?action=clearManualSelect`);
-        const data = await response.json();
-        
-        if (data.success) {
-          showStatus('✅ 已清除全部資料', 'success');
-          await loadManualSelect(); // 更新顯示
-        } else {
-          showStatus('❌ ' + data.error, 'error');
-        }
-      } catch (error) {
-        showStatus('❌ 錯誤：' + error.message, 'error');
-      }
-    }
-    
-    // 4. 清除最後一項：清除 A 欄最後一筆非空白資料
-    async function removeLast() {
-      try {
-        const response = await fetch(`${GAS_API_URL}?action=removeLastManualSelect`);
-        const data = await response.json();
-        
-        if (data.success) {
-          showStatus('✅ 已清除最後一項', 'success');
-          await loadManualSelect(); // 更新顯示
-        } else {
-          showStatus('❌ ' + data.error, 'error');
-        }
-      } catch (error) {
-        showStatus('❌ 錯誤：' + error.message, 'error');
-      }
-    }
-    
-    // 5. 匯出：將 ManualSelect 頁 A 欄資料匯出到 txt 檔
-    async function exportToTxt() {
-      try {
-        // 先取得最新資料
-        const response = await fetch(`${GAS_API_URL}?action=getManualSelect`);
-        const data = await response.json();
-        
-        if (!data.success || !data.data || data.data.length === 0) {
-          showStatus('無資料可匯出', 'error');
-          return;
-        }
-        
-        // 建立 txt 內容
-        const content = data.data.join('\n');
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        
-        // 建立下載連結
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `ManualSelect_${new Date().toISOString().slice(0,10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        showStatus('✅ 已匯出 TXT', 'success');
-      } catch (error) {
-        showStatus('❌ 匯出失敗：' + error.message, 'error');
-      }
-    }
-    
-    // 定期自動更新（每 30 秒）
-    setInterval(loadManualSelect, 30000);
+    // 5秒後強制隱藏載入畫面（防止無限載入）
+    setTimeout(() => {
+      loading.classList.add('hidden');
+      frame.classList.add('loaded');
+    }, 5000);
   </script>
 </body>
 </html>
