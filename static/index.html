@@ -175,6 +175,7 @@
       padding: 15px;
       display: flex;
       flex-direction: column;
+      width: 100%; /* 確保寬度填滿 */
     }
     
     .result-section h3 {
@@ -203,7 +204,7 @@
       line-height: 1.6;
       color: #333;
       -webkit-overflow-scrolling: touch;
-      word-break: break-all; /* 防止內容撐破 */
+      word-break: break-all;
     }
     
     .empty-state {
@@ -230,13 +231,13 @@
     .book-info-label {
       color: #666;
       font-weight: 600;
-      font-size: 12px;
+      font-size: 13px;
       white-space: nowrap;
     }
     
     .book-info-value {
       color: #333;
-      font-size: 12px;
+      font-size: 13px;
       word-break: break-all;
     }
     
@@ -487,45 +488,49 @@
         font-size: 16px;
       }
       
-      /* 關鍵修改：保持兩欄佈局，調整比例與按鈕一致 */
+      /* 關鍵修改：改為單欄上下排列，寬度與按鈕一致 */
       .results-container {
-        grid-template-columns: 1fr 1fr; /* 保持並排 */
-        gap: 12px; /* 調整間距 */
+        grid-template-columns: 1fr; /* 單欄：上下排列 */
+        gap: 15px; /* 調整間距 */
         width: 100%; /* 確保與按鈕同寬 */
       }
       
       .result-section {
-        padding: 12px; /* 統一內邊距 */
-        min-height: 0; /* 移除最小高度限制，讓兩框等高 */
+        padding: 15px;
+        width: 100%; /* 強制寬度100%，與送出按鈕對齊 */
+        min-height: 120px; /* 統一最小高度 */
       }
       
       .result-section h3 {
-        font-size: 14px; /* 稍小字體 */
-        margin-bottom: 8px;
-        padding-bottom: 6px;
+        font-size: 15px;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
       }
       
-      /* 調整兩個框的內容區域高度一致 */
+      /* 兩個框高度一致 */
       .result-box {
-        max-height: 200px; /* 統一最大高度 */
-        min-height: 120px; /* 統一最小高度 */
-        font-size: 12px; /* 較小字體適應手機 */
+        max-height: 250px; /* 統一最大高度 */
+        min-height: 100px; /* 統一最小高度 */
+        font-size: 13px;
         overflow-y: auto;
       }
       
       /* 書本資料網格調整 */
       .book-info-grid {
-        gap: 6px 8px;
+        gap: 6px 10px;
       }
       
-      .book-info-label,
+      .book-info-label {
+        font-size: 12px;
+      }
+      
       .book-info-value {
-        font-size: 11px; /* 手機端稍小字體 */
+        font-size: 12px;
       }
       
-      /* 圖書館表格容器 */
+      /* 圖書館表格容器（全寬） */
       .result-section.full-width {
-        grid-column: 1 / -1; /* 全寬 */
+        grid-column: 1 / -1;
       }
       
       .result-section.full-width .result-box {
@@ -599,26 +604,27 @@
     /* 超小屏幕手機（iPhone SE 等）進一步優化 */
     @media screen and (max-width: 380px) {
       .results-container {
-        gap: 8px;
+        gap: 12px;
       }
       
       .result-section {
-        padding: 8px;
+        padding: 12px;
+        min-height: 100px;
       }
       
       .result-section h3 {
-        font-size: 13px;
+        font-size: 14px;
       }
       
       .result-box {
-        max-height: 180px;
-        min-height: 100px;
-        font-size: 11px;
+        max-height: 200px;
+        min-height: 80px;
+        font-size: 12px;
       }
       
       .book-info-label,
       .book-info-value {
-        font-size: 10px;
+        font-size: 11px;
       }
     }
     
