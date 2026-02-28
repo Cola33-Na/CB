@@ -175,7 +175,6 @@
       padding: 15px;
       display: flex;
       flex-direction: column;
-      width: 100%; /* 確保寬度填滿 */
     }
     
     .result-section h3 {
@@ -486,19 +485,28 @@
       button {
         padding: 15px;
         font-size: 16px;
+        width: 100%; /* 確保按鈕寬度為100% */
+        margin-left: 0;
+        margin-right: 0;
       }
       
-      /* 關鍵修改：改為單欄上下排列，寬度與按鈕一致 */
+      /* 關鍵修改：使用 Flex 佈局確保寬度一致 */
       .results-container {
-        grid-template-columns: 1fr; /* 單欄：上下排列 */
-        gap: 15px; /* 調整間距 */
-        width: 100%; /* 確保與按鈕同寬 */
+        display: flex; /* 改為 Flex 佈局 */
+        flex-direction: column; /* 垂直排列 */
+        gap: 15px;
+        width: 100%; /* 確保容器寬度100% */
+        margin: 0 0 20px 0; /* 重置可能導致寬度減少的 margin */
+        padding: 0; /* 確保沒有 padding 影響寬度 */
       }
       
       .result-section {
+        width: 100%; /* 強制寬度100%，與按鈕一致 */
+        min-width: 100%; /* 防止收縮 */
+        max-width: 100%; /* 防止撐開 */
         padding: 15px;
-        width: 100%; /* 強制寬度100%，與送出按鈕對齊 */
-        min-height: 120px; /* 統一最小高度 */
+        margin: 0; /* 確保沒有左右 margin */
+        flex: none; /* 防止 flex 縮放影響寬度 */
       }
       
       .result-section h3 {
@@ -507,12 +515,12 @@
         padding-bottom: 8px;
       }
       
-      /* 兩個框高度一致 */
+      /* 統一內容框高度 */
       .result-box {
-        max-height: 250px; /* 統一最大高度 */
-        min-height: 100px; /* 統一最小高度 */
+        max-height: 250px;
+        min-height: 100px;
         font-size: 13px;
-        overflow-y: auto;
+        width: 100%; /* 確保內部也100% */
       }
       
       /* 書本資料網格調整 */
@@ -530,7 +538,9 @@
       
       /* 圖書館表格容器（全寬） */
       .result-section.full-width {
-        grid-column: 1 / -1;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
       }
       
       .result-section.full-width .result-box {
@@ -541,7 +551,7 @@
         border-radius: 8px;
         background: white;
         padding: 0;
-        max-height: none; /* 圖書館列表需要更多空間 */
+        max-height: none;
         min-height: 150px;
       }
       
@@ -609,7 +619,6 @@
       
       .result-section {
         padding: 12px;
-        min-height: 100px;
       }
       
       .result-section h3 {
