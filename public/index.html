@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>玩客雲控制台</title>
+  <title>控制台</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -183,8 +183,8 @@
   
   <div class="container">
     <div class="header">
-      <h1>🖥️ 玩客雲控制台</h1>
-      <p>通過 No-IP DDNS 遠程控制玩客雲服務</p>
+      <h1>🖥️ 控制台</h1>
+      <p>通過 No-IP DDNS 遠程控制服務</p>
     </div>
     
     <div class="controls">
@@ -246,7 +246,7 @@
     // API 1: 抓取 HKPL 資源
     async function callAPI1() {
       setLoading(true);
-      setStatus('正在連接玩客雲 :8000...', 'loading');
+      setStatus('正在連接 :8000...', 'loading');
       
       try {
         const res = await fetch(`/api/proxy?target=8000&endpoint=scrape`, {
