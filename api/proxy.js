@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // 設置 CORS
+  // CORS 設定（保持不變）
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
@@ -30,9 +30,8 @@ export default async function handler(req, res) {
       },
     };
 
-    // 根據端點構造 URL
+    // URL 建構邏輯（保持不變）
     if (target === '8000') {
-      // API 1: 爬蟲服務
       if (endpoint === 'scrape') {
         targetURL = `${baseURL}/scrape`;
         options.method = 'POST';
@@ -45,11 +44,9 @@ export default async function handler(req, res) {
         options.method = 'GET';
       }
     } else {
-      // API 2: 圖書查詢服務
       if (endpoint === 'check') {
         targetURL = `${baseURL}/PublicCheckStatus`;
         options.method = 'POST';
-        // 從請求體轉發 PH 參數
         const { ph } = req.body || {};
         options.body = JSON.stringify({ ph });
       } else {
@@ -58,9 +55,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // 發送請求到玩客雲
+    // 發送請求
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30秒超時
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     const response = await fetch(targetURL, {
       ...options,
@@ -71,15 +68,16 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     
-// 改為：直接展開玩客雲數據
-res.status(response.status).json({
-  ...data,  // 展開所有原始欄位（success, data, total_ebooks 等）
-  _proxy: {  // 保留代理資訊（可選）
-    target: target,
-    endpoint: endpoint,
-    timestamp: new Date().toISOString()
-  }
-});
+    // ✅ 關鍵修正：展開 data.data，讓前端直接取得 ebooks/edatabases
+    res.status(response.status).json({
+      ...data.data,  // 這裡才是電子書和資料庫數組！
+      success: data.success,
+      _proxy: {
+        target: target,
+        endpoint: endpoint,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
   } catch (error) {
     res.status(500).json({
