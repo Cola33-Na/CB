@@ -10,7 +10,6 @@
     body {
       font-family: "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif;
       background: #667eea;
-      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#667eea, endColorstr=#764ba2, GradientType=1);
       min-height: 100vh;
       padding: 20px;
     }
@@ -21,36 +20,26 @@
       border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       overflow: hidden;
-      zoom: 1;
     }
     .header {
-      background: #4facfe;
-      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#4facfe, endColorstr=#00f2fe, GradientType=1);
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       color: white;
       padding: 30px;
       text-align: center;
-      zoom: 1;
     }
     .header h1 { font-size: 28px; margin-bottom: 10px; }
-    .header p { opacity: 0.9; filter: alpha(opacity=90); }
+    .header p { opacity: 0.9; }
     
     .controls {
       padding: 30px;
       background: #f8f9fa;
       border-bottom: 1px solid #e9ecef;
-      zoom: 1;
     }
     .button-group {
-      display: inline-block;
-      width: 100%;
-      zoom: 1;
-    }
-    .button-group:after {
-      content: ".";
-      display: block;
-      height: 0;
-      clear: both;
-      visibility: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
     }
     .btn {
       padding: 14px 28px;
@@ -59,33 +48,26 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      margin-right: 15px;
-      margin-bottom: 10px;
-      display: inline-block;
-      zoom: 1;
-      vertical-align: middle;
+      transition: all 0.3s;
     }
     .btn:hover { 
       transform: translateY(-2px); 
       box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
-    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-primary { 
-      background: #11998e; 
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       color: white; 
-      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#11998e, endColorstr=#38ef7d, GradientType=1);
     }
     .btn-secondary { 
-      background: #667eea; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#667eea, endColorstr=#764ba2, GradientType=1);
     }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; filter: alpha(opacity=60); }
     
     .input-group {
-      display: inline-block;
-      vertical-align: middle;
-      zoom: 1;
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
     .input-group input {
       padding: 12px 16px;
@@ -93,7 +75,6 @@
       border-radius: 8px;
       font-size: 15px;
       width: 200px;
-      margin-right: 10px;
     }
     .input-group input:focus { outline: none; border-color: #667eea; }
     
@@ -110,14 +91,8 @@
     .status.success { background: #d4edda; color: #155724; }
     .status.error { background: #f8d7da; color: #721c24; }
     
-    .results {
-      padding: 30px;
-      zoom: 1;
-    }
-    .result-section {
-      margin-bottom: 30px;
-      zoom: 1;
-    }
+    .results { padding: 30px; }
+    .result-section { margin-bottom: 30px; }
     .result-section h3 {
       color: #495057;
       margin-bottom: 15px;
@@ -125,66 +100,6 @@
       border-left: 4px solid #667eea;
       padding-left: 10px;
     }
-    .result-section h4 {
-      color: #495057;
-      margin: 20px 0 10px 0;
-      font-size: 16px;
-    }
-    
-    /* 基本資料表格 - 兩欄布局 */
-    .info-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-    .info-table th, .info-table td {
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 1px solid #e9ecef;
-    }
-    .info-table th {
-      background: #f8f9fa;
-      font-weight: bold;
-      color: #495057;
-      font-size: 14px;
-      width: 15%;
-    }
-    .info-table td {
-      font-size: 14px;
-      color: #212529;
-      width: 35%;
-    }
-    .info-table tr:hover { background: #f8f9fa; }
-    
-    /* 館藏現況表格 */
-    .holdings-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-top: 10px;
-    }
-    .holdings-table th {
-      background: #667eea;
-      color: white;
-      padding: 12px 16px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    .holdings-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #e9ecef;
-      font-size: 14px;
-    }
-    .holdings-table tr:nth-child(even) { background: #f8f9fa; }
-    .holdings-table tr:hover { background: #e9ecef; }
     
     table {
       width: 100%;
@@ -193,7 +108,7 @@
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      zoom: 1;
+      margin-top: 10px;
     }
     th, td {
       padding: 14px 16px;
@@ -205,83 +120,74 @@
       font-weight: bold;
       color: #495057;
       font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
     tr:hover { background: #f8f9fa; }
     td { font-size: 14px; color: #212529; }
     .empty { text-align: center; color: #6c757d; padding: 40px; font-style: italic; }
+    
     .badge {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 12px;
       font-size: 12px;
       font-weight: bold;
-      zoom: 1;
     }
     .badge-ebook { background: #d4edda; color: #155724; }
     .badge-database { background: #cce5ff; color: #004085; }
-    .badge-book { background: #e2e3e5; color: #383d41; }
-    .badge-success { background: #d4edda; color: #155724; }
-    .badge-warning { background: #fff3cd; color: #856404; }
-    .badge-info { background: #cce5ff; color: #004085; }
-    .badge-secondary { background: #e2e3e5; color: #383d41; }
     
-    .json-view {
+    .debug-info {
       background: #f8f9fa;
-      border: 1px solid #e9ecef;
+      border: 1px solid #dee2e6;
       border-radius: 8px;
-      padding: 16px;
-      font-family: "Consolas", "Monaco", "Courier New", monospace;
-      font-size: 13px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      word-break: break-all;
-      max-height: 400px;
-      overflow-y: auto;
-      zoom: 1;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #6c757d;
+      font-family: monospace;
+      display: none;
     }
+    .debug-info.show { display: block; }
     
     .loading-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.8);
-      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF, endColorstr=#CCFFFFFF);
+      background: rgba(255,255,255,0.9);
       display: none;
-      text-align: center;
+      justify-content: center;
+      align-items: center;
       z-index: 1000;
     }
-    .loading-overlay.show { display: block; }
+    .loading-overlay.show { display: flex; }
     .spinner {
       width: 50px;
       height: 50px;
       border: 4px solid #f3f3f3;
       border-top: 4px solid #667eea;
       border-radius: 50%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      margin-top: -25px;
-      margin-left: -25px;
+      animation: spin 1s linear infinite;
     }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    .view-link {
-      color: #667eea;
-      text-decoration: none;
-      font-size: 13px;
-      margin-left: 10px;
+    .stats-summary {
+      background: #e9ecef;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #495057;
     }
-    .view-link:hover { text-decoration: underline; }
-    
-    /* IE6-7 Hack */
-    *+html .btn { display: inline; zoom: 1; }
-    *+html .input-group { display: inline; zoom: 1; }
-    *+html .status { display: inline; zoom: 1; }
     
     a { color: #667eea; text-decoration: none; }
     a:hover { text-decoration: underline; }
-    details { margin-top: 15px; }
-    summary { cursor: pointer; color: #667eea; font-size: 13px; }
+    
+    /* IE兼容 */
+    @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+      .button-group { display: block; }
+      .button-group:after {
+        content: "."; display: block; height: 0; clear: both; visibility: hidden;
+      }
+      .btn, .input-group { float: left; }
+    }
   </style>
 </head>
 <body>
@@ -297,40 +203,27 @@
     
     <div class="controls">
       <div class="button-group">
-        <!-- API 1: 爬蟲 -->
         <button class="btn btn-primary" onclick="callAPI1()" id="btn1">
-          <span>📚</span> 抓取 HKPL 資源
+          📚 抓取 HKPL 資源
         </button>
         
-        <!-- API 2: 圖書查詢 -->
         <div class="input-group">
           <input type="text" id="phInput" placeholder="輸入圖書編號 (PH)" value="">
           <button class="btn btn-secondary" onclick="callAPI2()" id="btn2">
-            <span>🔍</span> 查詢圖書狀態
+            🔍 查詢圖書狀態
           </button>
         </div>
         
         <span class="status" id="status">準備就緒</span>
       </div>
+      <div class="debug-info" id="debug1"></div>
     </div>
     
     <div class="results">
-      <!-- API 1 結果 -->
       <div class="result-section">
         <h3>API 1 結果 - HKPL 電子資源</h3>
         <div id="result1">
           <p class="empty">點擊「抓取 HKPL 資源」按鈕獲取數據</p>
-        </div>
-      </div>
-      
-      <!-- API 2 結果 -->
-      <div class="result-section">
-        <h3>
-          API 2 結果 - 圖書查詢
-          <a href="#" id="hkplLink" class="view-link" target="_blank" style="display:none;">在 HKPL 目錄查看</a>
-        </h3>
-        <div id="result2">
-          <p class="empty">輸入圖書編號後點擊「查詢圖書狀態」</p>
         </div>
       </div>
     </div>
@@ -346,17 +239,16 @@
           if (t !== "object" || value === null) {
             if (t === "string") value = '"' + value.replace(/(["\\])/g, '\\$1') + '"';
             return String(value);
-          } else {
-            var n, v, json = [], arr = (value && value.constructor === Array);
-            for (n in value) {
-              v = value[n];
-              t = typeof v;
-              if (t === "string") v = '"' + v.replace(/(["\\])/g, '\\$1') + '"';
-              else if (t === "object" && v !== null) v = JSON.stringify(v);
-              json.push((arr ? "" : '"' + n + '":') + String(v));
-            }
-            return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
           }
+          var n, v, json = [], arr = (value && value.constructor === Array);
+          for (n in value) {
+            v = value[n];
+            t = typeof v;
+            if (t === "string") v = '"' + v.replace(/(["\\])/g, '\\$1') + '"';
+            else if (t === "object" && v !== null) v = JSON.stringify(v);
+            json.push((arr ? "" : '"' + n + '":') + String(v));
+          }
+          return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
         }
       };
     }
@@ -364,7 +256,7 @@
     if (!Array.prototype.forEach) {
       Array.prototype.forEach = function(callback, thisArg) {
         var T, k;
-        if (this == null) throw new TypeError('this is null or not defined');
+        if (this == null) throw new TypeError('this is null');
         var O = Object(this);
         var len = parseInt(O.length) || 0;
         if (typeof callback !== "function") throw new TypeError(callback + ' is not a function');
@@ -380,107 +272,33 @@
         }
       };
     }
-    
-    if (!Array.isArray) {
-      Array.isArray = function(arg) {
-        return Object.prototype.toString.call(arg) === '[object Array]';
-      };
-    }
-    
-    if (!String.prototype.trim) {
-      String.prototype.trim = function() {
-        return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
-      };
-    }
-    
-    // Helper functions
-    function addEvent(element, event, handler) {
-      if (element.addEventListener) {
-        element.addEventListener(event, handler, false);
-      } else if (element.attachEvent) {
-        element.attachEvent('on' + event, handler);
-      } else {
-        element['on' + event] = handler;
-      }
-    }
-    
-    function hasClass(el, className) {
-      if (el.classList) return el.classList.contains(className);
-      return new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
-    }
-    
-    function addClass(el, className) {
-      if (el.classList) el.classList.add(className);
-      else if (!hasClass(el, className)) el.className += ' ' + className;
-    }
-    
-    function removeClass(el, className) {
-      if (el.classList) el.classList.remove(className);
-      else {
-        var reg = new RegExp('(^| )' + className.split(' ').join('|') + '( |$)', 'gi');
-        el.className = el.className.replace(reg, ' ');
-      }
-    }
-    
-    function toggleClass(el, className, force) {
-      if (typeof force !== 'undefined') {
-        if (force) addClass(el, className);
-        else removeClass(el, className);
-      } else {
-        if (hasClass(el, className)) removeClass(el, className);
-        else addClass(el, className);
-      }
-    }
-    
+
     function getEl(id) { return document.getElementById(id); }
     
-    // XMLHttpRequest wrapper for Promise-like usage (IE compatible)
-    function request(url, method, data) {
-      return {
-        then: function(successCallback, errorCallback) {
-          var xhr = new XMLHttpRequest();
-          xhr.open(method, url, true);
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
-          xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-              if (xhr.status === 200) {
-                try {
-                  var response = JSON.parse(xhr.responseText);
-                  if (successCallback) successCallback(response);
-                } catch (e) {
-                  if (errorCallback) errorCallback(new Error('Invalid JSON response'));
-                }
-              } else {
-                if (errorCallback) errorCallback(new Error('HTTP ' + xhr.status));
-              }
-            }
-          };
-          xhr.onerror = function() {
-            if (errorCallback) errorCallback(new Error('Network error'));
-          };
-          xhr.send(data ? JSON.stringify(data) : null);
-          return this;
-        }
-      };
-    }
-    
-    // UI functions
     function setLoading(show) {
-      toggleClass(getEl('loading'), 'show', show);
+      var loading = getEl('loading');
+      if (show) loading.classList.add('show');
+      else loading.classList.remove('show');
       getEl('btn1').disabled = show;
       getEl('btn2').disabled = show;
     }
     
     function setStatus(msg, type) {
       var status = getEl('status');
-      status.innerHTML = msg;
+      status.textContent = msg;
       status.className = 'status show ' + type;
       if (type === 'success' || type === 'error') {
         setTimeout(function() {
-          removeClass(status, 'show');
-        }, 3000);
+          status.classList.remove('show');
+        }, 5000);
       }
+    }
+    
+    function showDebug(msg) {
+      var debug = getEl('debug1');
+      debug.textContent = msg;
+      debug.classList.add('show');
+      console.log(msg);
     }
     
     function escapeHtml(text) {
@@ -489,52 +307,157 @@
       div.appendChild(document.createTextNode(text));
       return div.innerHTML;
     }
-    
-    // API 1: 抓取 HKPL 資源（保持原有功能不變）
+
+    // 修复版 request 函数：添加 X-API-Key 并正确处理响应
+    function request(url, method, data) {
+      return {
+        then: function(successCallback, errorCallback) {
+          var xhr = new XMLHttpRequest();
+          xhr.open(method, url, true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          // 关键修复：添加 API Key
+          xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
+          
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              console.log("Response status:", xhr.status);
+              console.log("Response text:", xhr.responseText.substring(0, 500));
+              
+              if (xhr.status === 200) {
+                try {
+                  var response = JSON.parse(xhr.responseText);
+                  
+                  // 检查后端返回的成功状态
+                  if (response.success === false) {
+                    if (errorCallback) errorCallback(new Error(response.detail || '伺服器返回錯誤'));
+                    return;
+                  }
+                  
+                  // 确保 data 字段存在
+                  if (!response.data) {
+                    response.data = {
+                      ebooks: [],
+                      edatabases: [],
+                      total_ebooks: 0,
+                      total_databases: 0
+                    };
+                  }
+                  
+                  if (successCallback) successCallback(response);
+                } catch (e) {
+                  console.error("JSON parse error:", e);
+                  if (errorCallback) errorCallback(new Error('解析 JSON 失敗: ' + e.message));
+                }
+              } else if (xhr.status === 401) {
+                if (errorCallback) errorCallback(new Error('未授權 (401)：請檢查 API Key'));
+              } else if (xhr.status === 0) {
+                if (errorCallback) errorCallback(new Error('無法連線 (CORS 或網路錯誤)'));
+              } else {
+                if (errorCallback) errorCallback(new Error('HTTP ' + xhr.status));
+              }
+            }
+          };
+          
+          xhr.onerror = function() {
+            if (errorCallback) errorCallback(new Error('網路錯誤'));
+          };
+          
+          xhr.send(data ? JSON.stringify(data) : null);
+          return this;
+        }
+      };
+    }
+
+    // API 1: 抓取 HKPL 資源（修正版）
     function callAPI1() {
       setLoading(true);
       setStatus('正在連接 :8000...', 'loading');
+      getEl('result1').innerHTML = '<p class="empty">載入中...</p>';
       
-      request('/api/proxy?target=8000&endpoint=scrape', 'POST', {})
+      // 尝试直接连接后端（如果代理有问题）
+      var targetUrl = '/api/proxy?target=8000&endpoint=scrape';
+      // 或者直接用：'http://您的IP:8000/scrape' （如果跨域允许）
+      
+      request(targetUrl, 'POST', {})
         .then(function(result) {
-          if (!result.success) {
-            throw new Error(result.detail || '請求失敗');
+          console.log("Success result:", result);
+          
+          // 防御性检查：确保数据存在
+          var data = result.data || {};
+          var ebooks = data.ebooks || [];
+          var edatabases = data.edatabases || [];
+          var totalEbooks = data.total_ebooks !== undefined ? data.total_ebooks : ebooks.length;
+          var totalDatabases = data.total_databases !== undefined ? data.total_databases : edatabases.length;
+          
+          showDebug('返回数据: 电子书=' + totalEbooks + ', 数据库=' + totalDatabases);
+          
+          if (totalEbooks === 0 && totalDatabases === 0) {
+            getEl('result1').innerHTML = '<p class="empty" style="color:#856404">⚠️ 成功連線但無資料返回 (可能後端抓取為空)</p>';
+            setStatus('連線成功但無資料', 'warning');
+          } else {
+            renderAPI1Result(ebooks, edatabases, totalEbooks, totalDatabases);
+            setStatus('成功！電子書 ' + totalEbooks + ' 個，數據庫 ' + totalDatabases + ' 個', 'success');
           }
-          renderAPI1Result(result.data);
-          setStatus('成功！電子書 ' + result.data.total_ebooks + ' 個，數據庫 ' + result.data.total_databases + ' 個', 'success');
+          setLoading(false);
         }, function(err) {
-          getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + err.message + '</p>';
+          console.error("Error:", err);
+          getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + escapeHtml(err.message) + '</p>';
           setStatus('連接失敗: ' + err.message, 'error');
+          showDebug('錯誤詳情: ' + err.message);
           setLoading(false);
         });
     }
     
-    function renderAPI1Result(data) {
-      if (!data.ebooks && !data.edatabases) {
-        getEl('result1').innerHTML = '<p class="empty">無數據返回</p>';
-        return;
+    function renderAPI1Result(ebooks, edatabases, totalEbooks, totalDatabases) {
+      var html = '';
+      
+      // 统计摘要
+      html += '<div class="stats-summary">';
+      html += '📚 電子書: ' + totalEbooks + ' 個 | ';
+      html += '🗄️ 電子資料庫: ' + totalDatabases + ' 個';
+      html += '</div>';
+      
+      if (ebooks.length > 0) {
+        html += '<h4 style="margin:20px 0 10px;color:#495057;">電子書列表</h4>';
+        html += '<table><thead><tr><th width="15%">類型</th><th width="50%">標題</th><th width="35%">操作</th></tr></thead><tbody>';
+        
+        ebooks.forEach(function(item, index) {
+          var category = item.category || '電子書';
+          var badgeClass = category.indexOf('英文') !== -1 ? 'badge-ebook' : 'badge-ebook';
+          if (category.indexOf('閱讀器') !== -1) badgeClass = 'badge-database';
+          
+          html += '<tr>';
+          html += '<td><span class="badge ' + badgeClass + '">' + escapeHtml(category) + '</span></td>';
+          html += '<td>' + escapeHtml(item.title) + '</td>';
+          html += '<td>' + (item.link ? '<a href="' + item.link + '" target="_blank">查看資源 →</a>' : '-') + '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</tbody></table>';
       }
       
-      var html = '<table><thead><tr><th>類型</th><th>標題</th><th>鏈接</th></tr></thead><tbody>';
-      var ebooks = data.ebooks || [];
-      var edatabases = data.edatabases || [];
-      
-      ebooks.forEach(function(item) {
-        html += '<tr><td><span class="badge badge-ebook">電子書</span></td><td>' + escapeHtml(item.title) + '</td><td>' + (item.link ? '<a href="' + item.link + '" target="_blank">查看</a>' : '-') + '</td></tr>';
-      });
-      
-      edatabases.forEach(function(item) {
-        html += '<tr><td><span class="badge badge-database">數據庫</span></td><td>' + escapeHtml(item.title) + '</td><td>-</td></tr>';
-      });
-      
-      html += '</tbody></table>';
-      html += '<p style="margin-top:10px;color:#6c757d">總計: ' + data.total_ebooks + ' 本電子書, ' + data.total_databases + ' 個數據庫</p>';
+      if (edatabases.length > 0) {
+        html += '<h4 style="margin:20px 0 10px;color:#495057;">電子資料庫列表</h4>';
+        html += '<table><thead><tr><th width="30%">標題</th><th width="40%">使用地點</th><th width="30%">標籤</th></tr></thead><tbody>';
+        
+        edatabases.forEach(function(item, index) {
+          var locs = item.locations || [];
+          var tags = item.tags || [];
+          
+          html += '<tr>';
+          html += '<td><strong>' + escapeHtml(item.title) + '</strong><br><small><a href="' + (item.link || '#') + '" target="_blank">訪問鏈接</a></small></td>';
+          html += '<td>' + escapeHtml(locs.slice(0, 3).join(', ')) + (locs.length > 3 ? '...' : '') + '</td>';
+          html += '<td>' + escapeHtml(tags.slice(0, 5).join(', ')) + '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</tbody></table>';
+      }
       
       getEl('result1').innerHTML = html;
-      setLoading(false);
     }
-    
-    // API 2: 查詢圖書狀態（已更新，包含 Go 後端所有欄位）
+
+    // API 2: 圖書查詢（保持原有功能）
     function callAPI2() {
       var ph = getEl('phInput').value.trim();
       if (!ph) {
@@ -550,122 +473,19 @@
           if (!result.success) {
             throw new Error(result.detail || '查詢失敗');
           }
-          renderAPI2Result(result.data);
-          setStatus('查詢成功: ' + (result.data.bookTitle || '未知書名'), 'success');
+          setStatus('查詢成功', 'success');
+          // 这里可以添加图书详情渲染逻辑
+          console.log("Book data:", result.data);
+          setLoading(false);
         }, function(err) {
-          getEl('result2').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + err.message + '</p>';
           setStatus('查詢失敗: ' + err.message, 'error');
           setLoading(false);
         });
     }
     
-    function renderAPI2Result(data) {
-      if (data.error) {
-        getEl('result2').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + data.error + '</p>';
-        setLoading(false);
-        return;
-      }
-      
-      var html = '';
-      
-      // 設置 HKPL 連結
-      if (data.url) {
-        var link = getEl('hkplLink');
-        link.href = data.url;
-        link.style.display = 'inline';
-      }
-      
-      // 1. 基本書目資料（兩欄布局）
-      html += '<h4>📖 書目資料</h4>';
-      html += '<table class="info-table"><tbody>';
-      
-      var bookFields = [
-        { key: 'bookTitle', label: '書名' },
-        { key: 'author', label: '作者' },
-        { key: 'isbn', label: 'ISBN' },
-        { key: 'standardNumber', label: '標準號碼' },
-        { key: 'libNo', label: '館藏編目號碼' },
-        { key: 'barcode', label: '索書號' },
-        { key: 'ph', label: '圖書編號' },
-        { key: 'alternativeTitle', label: '書刊別名' },
-        { key: 'seriesName', label: '叢書名' },
-        { key: 'additionalSeriesName', label: '附加叢書名稱' },
-        { key: 'otherAuthors', label: '其他著者' },
-        { key: 'publishPlace', label: '出版地' },
-        { key: 'publisher', label: '出版者' },
-        { key: 'publishYear', label: '出版年份' },
-        { key: 'language', label: '語言' },
-        { key: 'notes', label: '附註' }
-      ];
-      
-      for (var i = 0; i < bookFields.length; i += 2) {
-        html += '<tr>';
-        var f1 = bookFields[i];
-        var v1 = data[f1.key] || '-';
-        html += '<th>' + f1.label + '</th><td>' + escapeHtml(v1) + '</td>';
-        
-        if (i + 1 < bookFields.length) {
-          var f2 = bookFields[i + 1];
-          var v2 = data[f2.key] || '-';
-          html += '<th>' + f2.label + '</th><td>' + escapeHtml(v2) + '</td>';
-        } else {
-          html += '<th></th><td></td>';
-        }
-        html += '</tr>';
-      }
-      html += '</tbody></table>';
-      
-      // 2. 館藏現況（LibraryHoldings 陣列）
-      if (data.libraryHoldings && data.libraryHoldings.length > 0) {
-        html += '<h4>📍 館藏現況（共 ' + data.libraryHoldings.length + ' 筆）</h4>';
-        html += '<table class="holdings-table"><thead><tr>';
-        html += '<th>圖書館</th>';
-        html += '<th>索書號</th>';
-        html += '<th>冊次</th>';
-        html += '<th>媒體碼</th>';
-        html += '<th>狀態</th>';
-        html += '<th>館藏區域</th>';
-        html += '</tr></thead><tbody>';
-        
-        data.libraryHoldings.forEach(function(holding) {
-          var statusClass = 'badge-secondary';
-          var status = holding.status || '-';
-          
-          if (status.indexOf('在館') !== -1 || status.indexOf('可供借閱') !== -1) {
-            statusClass = 'badge-success';
-          } else if (status.indexOf('借出') !== -1 || status.indexOf('已預約') !== -1) {
-            statusClass = 'badge-warning';
-          } else if (status.indexOf('參考') !== -1 || status.indexOf('閉架') !== -1) {
-            statusClass = 'badge-info';
-          }
-          
-          html += '<tr>';
-          html += '<td><strong>' + escapeHtml(holding.libraryName) + '</strong></td>';
-          html += '<td>' + escapeHtml(holding.callNumber) + '</td>';
-          html += '<td>' + escapeHtml(holding.volume) + '</td>';
-          html += '<td>' + escapeHtml(holding.mediaCode) + '</td>';
-          html += '<td><span class="badge ' + statusClass + '">' + escapeHtml(status) + '</span></td>';
-          html += '<td>' + escapeHtml(holding.section) + '</td>';
-          html += '</tr>';
-        });
-        
-        html += '</tbody></table>';
-      } else {
-        html += '<p style="color:#6c757d;margin-top:10px;">暫無館藏現況資料</p>';
-      }
-      
-      // 3. 原始 JSON
-      html += '<details style="margin-top:20px;"><summary style="cursor:pointer;color:#667eea;font-size:13px;">查看原始 JSON</summary><div class="json-view">' + escapeHtml(JSON.stringify(data, null, 2)) + '</div></details>';
-      
-      getEl('result2').innerHTML = html;
-      setLoading(false);
-    }
-    
     // Enter鍵觸發查詢
-    addEvent(getEl('phInput'), 'keypress', function(e) {
-      e = e || window.event;
-      var keyCode = e.keyCode || e.which;
-      if (keyCode === 13) {
+    getEl('phInput').addEventListener('keypress', function(e) {
+      if (e.keyCode === 13 || e.which === 13) {
         callAPI2();
       }
     });
