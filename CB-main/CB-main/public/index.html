@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>玩客雲控制台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 { font-size: 28px; margin-bottom: 10px; }
+    .header p { opacity: 0.9; }
+    
+    .controls {
+      padding: 30px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .button-group {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(90deg, #11998e, #38ef7d); color: white; }
+    .btn-secondary { background: linear-gradient(90deg, #667eea, #764ba2); color: white; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .input-group input {
+      padding: 12px 16px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 15px;
+      width: 200px;
+      transition: border-color 0.3s;
+    }
+    .input-group input:focus { outline: none; border-color: #667eea; }
+    
+    .status {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+    }
+    .status.show { display: inline-block; }
+    .status.loading { background: #fff3cd; color: #856404; }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    
+    .results {
+      padding: 30px;
+    }
+    .result-section {
+      margin-bottom: 30px;
+    }
+    .result-section h3 {
+      color: #495057;
+      margin-bottom: 15px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .result-section h3::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: #667eea;
+      border-radius: 2px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tr:hover { background: #f8f9fa; }
+    td { font-size: 14px; color: #212529; }
+    .empty { text-align: center; color: #6c757d; padding: 40px; font-style: italic; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-ebook { background: #d4edda; color: #155724; }
+    .badge-database { background: #cce5ff; color: #004085; }
+    .badge-book { background: #e2e3e5; color: #383d41; }
+    
+    .json-view {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+  </div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🖥️ 玩客雲控制台</h1>
+      <p>通過 No-IP DDNS 遠程控制玩客雲服務</p>
+    </div>
+    
+    <div class="controls">
+      <div class="button-group">
+        <!-- API 1: 爬蟲 -->
+        <button class="btn btn-primary" onclick="callAPI1()" id="btn1">
+          <span>📚</span> 抓取 HKPL 資源
+        </button>
+        
+        <!-- API 2: 圖書查詢 -->
+        <div class="input-group">
+          <input type="text" id="phInput" placeholder="輸入圖書編號 (PH)" value="">
+          <button class="btn btn-secondary" onclick="callAPI2()" id="btn2">
+            <span>🔍</span> 查詢圖書狀態
+          </button>
+        </div>
+        
+        <span class="status" id="status">準備就緒</span>
+      </div>
+    </div>
+    
+    <div class="results">
+      <!-- API 1 結果 -->
+      <div class="result-section">
+        <h3>API 1 結果 - HKPL 電子資源</h3>
+        <div id="result1">
+          <p class="empty">點擊「抓取 HKPL 資源」按鈕獲取數據</p>
+        </div>
+      </div>
+      
+      <!-- API 2 結果 -->
+      <div class="result-section">
+        <h3>API 2 結果 - 圖書查詢</h3>
+        <div id="result2">
+          <p class="empty">輸入圖書編號後點擊「查詢圖書狀態」</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = ''; // 同域調用，Vercel 自動處理 /api/proxy
+    
+    function setLoading(show) {
+      document.getElementById('loading').classList.toggle('show', show);
+      document.getElementById('btn1').disabled = show;
+      document.getElementById('btn2').disabled = show;
+    }
+    
+    function setStatus(msg, type) {
+      const status = document.getElementById('status');
+      status.textContent = msg;
+      status.className = 'status show ' + type;
+      if (type === 'success' || type === 'error') {
+        setTimeout(() => status.classList.remove('show'), 3000);
+      }
+    }
+    
+    // API 1: 抓取 HKPL 資源
+    async function callAPI1() {
+      setLoading(true);
+      setStatus('正在連接玩客雲 :8000...', 'loading');
+      
+      try {
+        const res = await fetch(`/api/proxy?target=8000&endpoint=scrape`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        
+        const result = await res.json();
+        
+        if (!result.success) {
+          throw new Error(result.detail || '請求失敗');
+        }
+        
+        renderAPI1Result(result.data);
+        setStatus(`成功！電子書 ${result.data.total_ebooks} 個，數據庫 ${result.data.total_databases} 個`, 'success');
+        
+      } catch (err) {
+        document.getElementById('result1').innerHTML = 
+          `<p class="empty" style="color:#721c24">錯誤: ${err.message}</p>`;
+        setStatus('連接失敗: ' + err.message, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    function renderAPI1Result(data) {
+      if (!data.ebooks && !data.edatabases) {
+        document.getElementById('result1').innerHTML = '<p class="empty">無數據返回</p>';
+        return;
+      }
+      
+      let html = '<table><thead><tr><th>類型</th><th>標題</th><th>鏈接</th></tr></thead><tbody>';
+      
+      // 電子書
+      (data.ebooks || []).forEach(item => {
+        html += `<tr>
+          <td><span class="badge badge-ebook">電子書</span></td>
+          <td>${escapeHtml(item.title)}</td>
+          <td>${item.link ? `<a href="${item.link}" target="_blank">查看</a>` : '-'}</td>
+        </tr>`;
+      });
+      
+      // 數據庫
+      (data.edatabases || []).forEach(item => {
+        html += `<tr>
+          <td><span class="badge badge-database">數據庫</span></td>
+          <td>${escapeHtml(item.title)}</td>
+          <td>-</td>
+        </tr>`;
+      });
+      
+      html += '</tbody></table>';
+      html += `<p style="margin-top:10px;color:#6c757d">總計: ${data.total_ebooks} 本電子書, ${data.total_databases} 個數據庫</p>`;
+      
+      document.getElementById('result1').innerHTML = html;
+    }
+    
+    // API 2: 查詢圖書狀態
+    async function callAPI2() {
+      const ph = document.getElementById('phInput').value.trim();
+      if (!ph) {
+        alert('請輸入圖書編號 (PH)');
+        return;
+      }
+      
+      setLoading(true);
+      setStatus(`正在查詢 PH: ${ph}...`, 'loading');
+      
+      try {
+        const res = await fetch(`/api/proxy?target=8081&endpoint=check`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ph: ph })
+        });
+        
+        const result = await res.json();
+        
+        if (!result.success) {
+          throw new Error(result.detail || '查詢失敗');
+        }
+        
+        renderAPI2Result(result.data);
+        setStatus(`查詢成功: ${result.data.bookTitle || '未知書名'}`, 'success');
+        
+      } catch (err) {
+        document.getElementById('result2').innerHTML = 
+          `<p class="empty" style="color:#721c24">錯誤: ${err.message}</p>`;
+        setStatus('查詢失敗: ' + err.message, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    function renderAPI2Result(data) {
+      if (data.error) {
+        document.getElementById('result2').innerHTML = 
+          `<p class="empty" style="color:#721c24">錯誤: ${data.error}</p>`;
+        return;
+      }
+      
+      const fields = [
+        { key: 'bookTitle', label: '書名' },
+        { key: 'author', label: '作者' },
+        { key: 'isbn', label: 'ISBN' },
+        { key: 'libNo', label: '館藏編號' },
+        { key: 'barcode', label: '索書號' },
+        { key: 'publishPlace', label: '出版地' },
+        { key: 'publisher', label: '出版者' },
+        { key: 'publishYear', label: '出版年份' },
+        { key: 'copyCount', label: '館藏數量' },
+        { key: 'locationInfo', label: '館藏位置' },
+        { key: 'ph', label: '圖書編號' },
+      ];
+      
+      let html = '<table><tbody>';
+      fields.forEach(f => {
+        const val = data[f.key] || '-';
+        html += `<tr><th>${f.label}</th><td>${escapeHtml(val)}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      
+      // 原始 JSON 折疊顯示
+      html += `<details style="margin-top:15px;">
+        <summary style="cursor:pointer;color:#667eea;font-size:13px;">查看原始 JSON</summary>
+        <div class="json-view">${escapeHtml(JSON.stringify(data, null, 2))}</div>
+      </details>`;
+      
+      document.getElementById('result2').innerHTML = html;
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '-';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 回車鍵觸發查詢
+    document.getElementById('phInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') callAPI2();
+    });
+  </script>
+</body>
+</html>
