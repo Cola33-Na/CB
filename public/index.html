@@ -491,7 +491,7 @@
         return;
       }
       
-      // 原有欄位 + 新增 8 個欄位
+      // 完整欄位列表（包含 locationInfo）
       var fields = [
         { key: 'bookTitle', label: '書名' },
         { key: 'author', label: '作者' },
@@ -502,7 +502,7 @@
         { key: 'publisher', label: '出版者' },
         { key: 'publishYear', label: '出版年份' },
         { key: 'copyCount', label: '館藏數量' },
-        { key: 'locationInfo', label: '館藏位置' },
+        { key: 'locationInfo', label: '館藏位置' },  // 確保已加入
         { key: 'ph', label: '圖書編號' },
         // 新增欄位
         { key: 'collectionStatus', label: '提取館藏現況' },
@@ -518,7 +518,6 @@
       var html = '<table><tbody>';
       fields.forEach(function(f) {
         var val = data[f.key];
-        // 處理空值：null, undefined, 空字符串都顯示為 '-'
         if (val === null || val === undefined || val === '') {
           val = '-';
         }
