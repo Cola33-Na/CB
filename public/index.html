@@ -3,181 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>控制台 - 調試版</title>
+  <title>控制台 - 終極調試版</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif;
-      background: #667eea;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-    .header {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-      padding: 30px;
-      text-align: center;
-    }
-    .header h1 { font-size: 28px; margin-bottom: 10px; }
-    
-    .controls {
-      padding: 30px;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e9ecef;
-    }
-    .btn {
-      padding: 14px 28px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      color: white;
-      margin-right: 10px;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+    body { font-family: "Microsoft YaHei", sans-serif; background: #667eea; padding: 20px; margin: 0; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    .controls { padding: 30px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+    .btn { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; background: #11998e; color: white; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    
-    .status {
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: bold;
-      display: inline-block;
-      margin-left: 10px;
-    }
-    .status.loading { background: #fff3cd; color: #856404; }
-    .status.success { background: #d4edda; color: #155724; }
-    .status.error { background: #f8d7da; color: #721c24; }
-    
     .results { padding: 30px; }
-    .result-section { margin-bottom: 30px; }
-    .result-section h3 {
-      color: #495057;
-      margin-bottom: 15px;
-      font-size: 18px;
-      border-left: 4px solid #667eea;
-      padding-left: 10px;
-    }
     
-    /* 調試區域樣式 */
-    .debug-panel {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      border-radius: 8px;
-      padding: 15px;
-      margin: 15px 0;
-      font-family: "Consolas", "Monaco", monospace;
-      font-size: 12px;
-      max-height: 300px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
+    /* 調試面板 */
+    .debug-box { 
+      background: #1e1e1e; color: #d4d4d4; font-family: "Consolas", monospace; 
+      font-size: 12px; padding: 15px; border-radius: 8px; margin: 15px 0;
+      max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;
     }
-    .debug-label {
-      color: #569cd6;
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: block;
-    }
+    .debug-title { color: #569cd6; font-weight: bold; margin-bottom: 10px; }
     .debug-success { color: #4ec9b0; }
     .debug-error { color: #f44747; }
-    .debug-warning { color: #dcdcaa; }
+    .debug-warn { color: #dcdcaa; }
     
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-top: 10px;
+    .raw-response {
+      background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px;
+      padding: 15px; margin: 15px 0; font-family: monospace; font-size: 11px;
+      max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;
     }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #e9ecef;
-    }
-    th { background: #f8f9fa; font-weight: bold; font-size: 14px; }
-    tr:hover { background: #f8f9fa; }
     
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .data-table th, .data-table td { padding: 10px; border: 1px solid #dee2e6; text-align: left; }
+    .data-table th { background: #e9ecef; }
     .empty { text-align: center; color: #6c757d; padding: 40px; font-style: italic; }
     
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .badge-ebook { background: #d4edda; color: #155724; }
-    .badge-db { background: #cce5ff; color: #004085; }
-    
-    .stats-box {
-      background: #e9ecef;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 16px;
-    }
-    .stats-box strong { color: #155724; font-size: 20px; }
-    
-    .loading-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.9);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .loading-overlay.show { display: flex; }
-    .spinner {
-      width: 50px; height: 50px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .alert { padding: 15px; border-radius: 8px; margin: 10px 0; }
+    .alert-danger { background: #f8d7da; color: #721c24; }
+    .alert-success { background: #d4edda; color: #155724; }
+    .alert-warning { background: #fff3cd; color: #856404; }
   </style>
 </head>
 <body>
-  <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
-  
   <div class="container">
     <div class="header">
-      <h1>🖥️ 控制台 (調試版)</h1>
-      <p>實時顯示數據流動狀態</p>
+      <h1>🖥️ 控制台 (終極調試版)</h1>
+      <p>顯示原始響應數據流</p>
     </div>
     
     <div class="controls">
       <button class="btn" onclick="callAPI1()" id="btn1">📚 抓取 HKPL 資源</button>
-      <span class="status" id="status">就緒</span>
       
-      <!-- 調試輸出區域 -->
-      <div class="debug-panel" id="debugPanel" style="display:none;">
-        <span class="debug-label">📊 調試信息</span>
-        <div id="debugContent"></div>
+      <!-- 步驟 1: 原始響應 -->
+      <div class="raw-response" id="rawResponse" style="display:none;">
+        <strong>📄 原始響應文本 (Raw Response):</strong>
+        <div id="rawContent" style="margin-top:10px;"></div>
       </div>
+      
+      <!-- 步驟 2: 解析後結構 -->
+      <div class="debug-box" id="parsedBox" style="display:none;">
+        <div class="debug-title">🔍 解析後的結構 (Parsed Structure)</div>
+        <div id="parsedContent"></div>
+      </div>
+      
+      <!-- 步驟 3: 錯誤信息 -->
+      <div id="errorBox" style="display:none;"></div>
     </div>
     
     <div class="results">
-      <div class="result-section">
-        <h3>API 1 結果 - HKPL 電子資源</h3>
-        <div id="result1">
-          <p class="empty">點擊按鈕獲取數據</p>
-        </div>
+      <h3 style="border-left:4px solid #667eea; padding-left:10px; color:#495057;">API 1 結果</h3>
+      <div id="finalResult">
+        <p class="empty">點擊按鈕開始調試</p>
       </div>
     </div>
   </div>
@@ -185,156 +78,149 @@
   <script>
     function getEl(id) { return document.getElementById(id); }
     
-    function log(msg, type) {
-      var content = getEl('debugContent');
+    function log(containerId, msg, type) {
+      var el = getEl(containerId);
       var time = new Date().toLocaleTimeString();
-      var colorClass = type === 'error' ? 'debug-error' : type === 'success' ? 'debug-success' : 'debug-warning';
-      content.innerHTML += '<div class="' + colorClass + ">[" + time + "] " + msg + '</div>';
-      getEl('debugPanel').style.display = 'block';
+      var colorClass = type === 'error' ? 'debug-error' : type === 'success' ? 'debug-success' : 'debug-warn';
+      el.innerHTML += '<div class="' + colorClass + ">[" + time + "] " + msg + '</div>';
       console.log("[" + time + "]", msg);
-    }
-    
-    function setLoading(show) {
-      var loading = getEl('loading');
-      loading.style.display = show ? 'flex' : 'none';
-      getEl('btn1').disabled = show;
-    }
-    
-    function setStatus(msg, type) {
-      var status = getEl('status');
-      status.textContent = msg;
-      status.className = 'status ' + type;
-    }
-    
-    function escapeHtml(text) {
-      if (!text) return '-';
-      var div = document.createElement('div');
-      div.appendChild(document.createTextNode(text));
-      return div.innerHTML;
     }
 
     function callAPI1() {
-      setLoading(true);
-      setStatus('請求中...', 'loading');
-      getEl('debugContent').innerHTML = '';
-      getEl('result1').innerHTML = '<p class="empty">載入中...</p>';
+      getEl('btn1').disabled = true;
+      getEl('finalResult').innerHTML = '<p class="empty">載入中...</p>';
+      getEl('rawResponse').style.display = 'none';
+      getEl('parsedBox').style.display = 'none';
+      getEl('errorBox').style.display = 'none';
+      getEl('rawContent').innerHTML = '';
+      getEl('parsedContent').innerHTML = '';
       
       var xhr = new XMLHttpRequest();
-      var url = '/api/proxy?target=8000&endpoint=scrape';
-      
-      log("發送請求到: " + url, 'warning');
-      log("Method: POST", 'warning');
-      log("Headers: Content-Type=application/json, X-API-Key=HKPL2024SecureKey", 'warning');
-      
-      xhr.open('POST', url, true);
+      xhr.open('POST', '/api/proxy?target=8000&endpoint=scrape', true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
       
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-          log("收到響應! Status: " + xhr.status, xhr.status === 200 ? 'success' : 'error');
-          log("Content-Type: " + (xhr.getResponseHeader('Content-Type') || 'unknown'), 'warning');
-          log("原始響應長度: " + xhr.responseText.length + " 字符", 'warning');
+          // 顯示原始響應
+          getEl('rawResponse').style.display = 'block';
+          getEl('rawContent').textContent = xhr.responseText || '(空響應)';
           
-          if (xhr.status === 200) {
-            try {
-              var rawText = xhr.responseText;
-              log("原始響應前200字符: " + rawText.substring(0, 200), 'warning');
-              
-              var result = JSON.parse(rawText);
-              log("JSON 解析成功", 'success');
-              log("result.success = " + result.success, result.success ? 'success' : 'error');
-              log("result.data 存在 = " + (result.data ? 'YES' : 'NO'), result.data ? 'success' : 'error');
-              
-              if (result.data) {
-                log("result.data.ebooks 長度 = " + (result.data.ebooks ? result.data.ebooks.length : 'undefined'), 'warning');
-                log("result.data.edatabases 長度 = " + (result.data.edatabases ? result.data.edatabases.length : 'undefined'), 'warning');
-                log("result.data.total_ebooks = " + result.data.total_ebooks, 'warning');
-                log("result.data.total_databases = " + result.data.total_databases, 'warning');
-                
-                renderResult(result.data);
-                setStatus('完成 (電子書:' + result.data.total_ebooks + ', 數據庫:' + result.data.total_databases + ')', 'success');
-              } else {
-                log("錯誤: result.data 為空!", 'error');
-                getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">錯誤: 響應中缺少 data 欄位</p>';
-                setStatus('數據結構錯誤', 'error');
-              }
-            } catch (e) {
-              log("JSON 解析錯誤: " + e.message, 'error');
-              log("收到的原始數據: " + xhr.responseText.substring(0, 500), 'error');
-              getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">JSON 解析失敗</p>';
-              setStatus('解析錯誤', 'error');
-            }
-          } else {
-            log("HTTP 錯誤: " + xhr.status, 'error');
-            getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">HTTP ' + xhr.status + '</p>';
-            setStatus('連接失敗', 'error');
+          if (xhr.status !== 200) {
+            getEl('errorBox').style.display = 'block';
+            getEl('errorBox').innerHTML = '<div class="alert alert-danger">HTTP 錯誤: ' + xhr.status + '</div>';
+            getEl('finalResult').innerHTML = '<p class="empty">連接失敗</p>';
+            getEl('btn1').disabled = false;
+            return;
           }
-          setLoading(false);
+          
+          try {
+            var result = JSON.parse(xhr.responseText);
+            getEl('parsedBox').style.display = 'block';
+            
+            // 詳細分析結構
+            var analysis = '';
+            analysis += 'result 類型: ' + typeof result + '\n';
+            analysis += 'result 為 null: ' + (result === null) + '\n';
+            analysis += 'result 有 success: ' + ('success' in result) + ' = ' + result.success + '\n';
+            analysis += 'result 有 data: ' + ('data' in result) + '\n';
+            
+            if (result.data) {
+              analysis += '  → data 類型: ' + typeof result.data + '\n';
+              analysis += '  → data 為 null: ' + (result.data === null) + '\n';
+              analysis += '  → data 有 ebooks: ' + ('ebooks' in result.data) + '\n';
+              analysis += '  → data 有 edatabases: ' + ('edatabases' in result.data) + '\n';
+              analysis += '  → data 有 total_ebooks: ' + ('total_ebooks' in result.data) + ' = ' + result.data.total_ebooks + '\n';
+              analysis += '  → data 有 total_databases: ' + ('total_databases' in result.data) + ' = ' + result.data.total_databases + '\n';
+              
+              // 檢查 ebooks 數組
+              if (result.data.ebooks) {
+                analysis += '  → ebooks 長度: ' + result.data.ebooks.length + '\n';
+                if (result.data.ebooks.length > 0) {
+                  analysis += '  → ebooks[0].title = ' + result.data.ebooks[0].title + '\n';
+                }
+              }
+            }
+            
+            log('parsedContent', analysis, 'warn');
+            
+            // 嘗試渲染
+            if (result.success && result.data) {
+              renderData(result.data);
+            } else {
+              getEl('errorBox').style.display = 'block';
+              getEl('errorBox').innerHTML = '<div class="alert alert-warning">響應結構異常: success=' + result.success + ', data=' + result.data + '</div>';
+            }
+            
+          } catch (e) {
+            getEl('parsedBox').style.display = 'block';
+            log('parsedContent', 'JSON 解析錯誤: ' + e.message, 'error');
+            getEl('errorBox').style.display = 'block';
+            getEl('errorBox').innerHTML = '<div class="alert alert-danger">JSON 解析失敗: ' + e.message + '</div>';
+          }
+          
+          getEl('btn1').disabled = false;
         }
       };
       
-      xhr.onerror = function(e) {
-        log("網絡錯誤: " + e, 'error');
-        getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">網絡錯誤</p>';
-        setStatus('網絡錯誤', 'error');
-        setLoading(false);
+      xhr.onerror = function() {
+        getEl('errorBox').style.display = 'block';
+        getEl('errorBox').innerHTML = '<div class="alert alert-danger">網絡錯誤 (CORS 或連接失敗)</div>';
+        getEl('btn1').disabled = false;
       };
       
       xhr.send(JSON.stringify({}));
     }
     
-    function renderResult(data) {
+    function renderData(data) {
       var html = '';
       
-      // 顯示統計
-      html += '<div class="stats-box">';
-      html += '📚 電子書: <strong>' + (data.total_ebooks || 0) + '</strong> 個 | ';
-      html += '🗄️ 數據庫: <strong>' + (data.total_databases || 0) + '</strong> 個';
+      // 統計卡片
+      var ebookCount = data.total_ebooks !== undefined ? data.total_ebooks : (data.ebooks ? data.ebooks.length : 0);
+      var dbCount = data.total_databases !== undefined ? data.total_databases : (data.edatabases ? data.edatabases.length : 0);
+      
+      html += '<div class="alert alert-success">';
+      html += '📚 電子書: <strong>' + ebookCount + '</strong> 個 | ';
+      html += '🗄️ 數據庫: <strong>' + dbCount + '</strong> 個';
       html += '</div>';
       
       // 電子書表格
       if (data.ebooks && data.ebooks.length > 0) {
-        html += '<h4 style="margin:20px 0 10px;">📖 電子書 (' + data.ebooks.length + ')</h4>';
-        html += '<table><thead><tr><th width="15%">類型</th><th width="45%">標題</th><th width="40%">鏈接</th></tr></thead><tbody>';
+        html += '<h4>電子書列表 (' + data.ebooks.length + ')</h4>';
+        html += '<table class="data-table"><thead><tr><th>#</th><th>類型</th><th>標題</th><th>鏈接</th></tr></thead><tbody>';
         
-        data.ebooks.forEach(function(item, i) {
-          var cat = item.category || '電子書';
-          var badge = cat.indexOf('英文') !== -1 ? 'badge-db' : 'badge-ebook';
-          
+        data.ebooks.forEach(function(item, idx) {
           html += '<tr>';
-          html += '<td><span class="badge ' + badge + '">' + escapeHtml(cat) + '</span></td>';
-          html += '<td>' + escapeHtml(item.title) + '</td>';
-          html += '<td><a href="' + (item.link || '#') + '" target="_blank">訪問</a></td>';
+          html += '<td>' + (idx + 1) + '</td>';
+          html += '<td>' + (item.category || '-') + '</td>';
+          html += '<td>' + item.title + '</td>';
+          html += '<td><a href="' + (item.link || '#') + '" target="_blank">查看</a></td>';
           html += '</tr>';
         });
         
         html += '</tbody></table>';
       } else {
-        html += '<p class="empty" style="color:#856404">⚠️ 無電子書數據</p>';
+        html += '<p class="empty">無電子書數據</p>';
       }
       
       // 數據庫表格
       if (data.edatabases && data.edatabases.length > 0) {
-        html += '<h4 style="margin:20px 0 10px;">🗄️ 數據庫 (' + data.edatabases.length + ')</h4>';
-        html += '<table><thead><tr><th>標題</th><th>使用地點</th><th>標籤</th></tr></thead><tbody>';
+        html += '<h4 style="margin-top:20px;">數據庫列表 (' + data.edatabases.length + ')</h4>';
+        html += '<table class="data-table"><thead><tr><th>標題</th><th>使用地點</th></tr></thead><tbody>';
         
         data.edatabases.forEach(function(item) {
-          var locs = item.locations || [];
-          var tags = item.tags || [];
           html += '<tr>';
-          html += '<td>' + escapeHtml(item.title) + '</td>';
-          html += '<td>' + escapeHtml(locs.join(', ').substring(0, 50)) + '</td>';
-          html += '<td>' + escapeHtml(tags.slice(0, 3).join(', ')) + '</td>';
+          html += '<td>' + item.title + '</td>';
+          html += '<td>' + (item.locations ? item.locations.slice(0, 2).join(', ') : '-') + '</td>';
           html += '</tr>';
         });
         
         html += '</tbody></table>';
       } else {
-        html += '<p class="empty" style="color:#856404; margin-top:10px;">⚠️ 無數據庫數據 (抓取邏輯需修正)</p>';
+        html += '<p class="empty" style="margin-top:20px;">無數據庫數據 (後端抓取邏輯需修正)</p>';
       }
       
-      getEl('result1').innerHTML = html;
+      getEl('finalResult').innerHTML = html;
     }
   </script>
 </body>
