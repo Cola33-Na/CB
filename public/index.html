@@ -147,6 +147,7 @@
       font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      width: 25%;
     }
     tr:hover { background: #f8f9fa; }
     td { font-size: 14px; color: #212529; }
@@ -490,6 +491,7 @@
         return;
       }
       
+      // 原有欄位 + 新增 8 個欄位
       var fields = [
         { key: 'bookTitle', label: '書名' },
         { key: 'author', label: '作者' },
@@ -502,6 +504,7 @@
         { key: 'copyCount', label: '館藏數量' },
         { key: 'locationInfo', label: '館藏位置' },
         { key: 'ph', label: '圖書編號' },
+        // 新增欄位
         { key: 'collectionStatus', label: '提取館藏現況' },
         { key: 'seriesName', label: '叢書名' },
         { key: 'otherAuthors', label: '其他著者' },
@@ -514,7 +517,11 @@
       
       var html = '<table><tbody>';
       fields.forEach(function(f) {
-        var val = data[f.key] || '-';
+        var val = data[f.key];
+        // 處理空值：null, undefined, 空字符串都顯示為 '-'
+        if (val === null || val === undefined || val === '') {
+          val = '-';
+        }
         html += '<tr><th>' + f.label + '</th><td>' + escapeHtml(val) + '</td></tr>';
       });
       html += '</tbody></table>';
