@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>控制台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif;
+      background: #667eea;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#667eea, endColorstr=#764ba2, GradientType=1);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+      zoom: 1;
+    }
+    .header {
+      background: #4facfe;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#4facfe, endColorstr=#00f2fe, GradientType=1);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      zoom: 1;
+    }
+    .header h1 { font-size: 28px; margin-bottom: 10px; }
+    .header p { opacity: 0.9; filter: alpha(opacity=90); }
+    
+    .controls {
+      padding: 30px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      zoom: 1;
+    }
+    .button-group {
+      display: inline-block;
+      width: 100%;
+      zoom: 1;
+    }
+    .button-group:after {
+      content: ".";
+      display: block;
+      height: 0;
+      clear: both;
+      visibility: hidden;
+    }
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 15px;
+      margin-bottom: 10px;
+      display: inline-block;
+      zoom: 1;
+      vertical-align: middle;
+    }
+    .btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { 
+      background: #11998e; 
+      color: white; 
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#11998e, endColorstr=#38ef7d, GradientType=1);
+    }
+    .btn-secondary { 
+      background: #667eea; 
+      color: white;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#667eea, endColorstr=#764ba2, GradientType=1);
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; filter: alpha(opacity=60); }
+    
+    .input-group {
+      display: inline-block;
+      vertical-align: middle;
+      zoom: 1;
+    }
+    .input-group input {
+      padding: 12px 16px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 15px;
+      width: 200px;
+      margin-right: 10px;
+    }
+    .input-group input:focus { outline: none; border-color: #667eea; }
+    
+    .status {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      display: none;
+      margin-left: 10px;
+    }
+    .status.show { display: inline-block; }
+    .status.loading { background: #fff3cd; color: #856404; }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    
+    .results {
+      padding: 30px;
+      zoom: 1;
+    }
+    .result-section {
+      margin-bottom: 30px;
+      zoom: 1;
+    }
+    .result-section h3 {
+      color: #495057;
+      margin-bottom: 15px;
+      font-size: 18px;
+      border-left: 4px solid #667eea;
+      padding-left: 10px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      zoom: 1;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: bold;
+      color: #495057;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tr:hover { background: #f8f9fa; }
+    td { font-size: 14px; color: #212529; }
+    .empty { text-align: center; color: #6c757d; padding: 40px; font-style: italic; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      zoom: 1;
+    }
+    .badge-ebook { background: #d4edda; color: #155724; }
+    .badge-database { background: #cce5ff; color: #004085; }
+    .badge-book { background: #e2e3e5; color: #383d41; }
+    
+    .json-view {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
+      zoom: 1;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8);
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#CCFFFFFF, endColorstr=#CCFFFFFF);
+      display: none;
+      text-align: center;
+      z-index: 1000;
+    }
+    .loading-overlay.show { display: block; }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -25px;
+      margin-left: -25px;
+    }
+    
+    /* IE6-7 Hack */
+    *+html .btn { display: inline; zoom: 1; }
+    *+html .input-group { display: inline; zoom: 1; }
+    *+html .status { display: inline; zoom: 1; }
+    
+    a { color: #667eea; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    details { margin-top: 15px; }
+    summary { cursor: pointer; color: #667eea; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+  </div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🖥️ 控制台</h1>
+      <p>通過 No-IP DDNS 遠程控制服務</p>
+    </div>
+    
+    <div class="controls">
+      <div class="button-group">
+        <!-- API 1: 爬蟲 -->
+        <button class="btn btn-primary" onclick="callAPI1()" id="btn1">
+          <span>📚</span> 抓取 HKPL 資源
+        </button>
+        
+        <!-- API 2: 圖書查詢 -->
+        <div class="input-group">
+          <input type="text" id="phInput" placeholder="輸入圖書編號 (PH)" value="">
+          <button class="btn btn-secondary" onclick="callAPI2()" id="btn2">
+            <span>🔍</span> 查詢圖書狀態
+          </button>
+        </div>
+        
+        <span class="status" id="status">準備就緒</span>
+      </div>
+    </div>
+    
+    <div class="results">
+      <!-- API 1 結果 -->
+      <div class="result-section">
+        <h3>API 1 結果 - HKPL 電子資源</h3>
+        <div id="result1">
+          <p class="empty">點擊「抓取 HKPL 資源」按鈕獲取數據</p>
+        </div>
+      </div>
+      
+      <!-- API 2 結果 -->
+      <div class="result-section">
+        <h3>API 2 結果 - 圖書查詢</h3>
+        <div id="result2">
+          <p class="empty">輸入圖書編號後點擊「查詢圖書狀態」</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // IE Polyfills
+    if (!window.JSON) {
+      window.JSON = {
+        parse: function(text) { return eval('(' + text + ')'); },
+        stringify: function(value) {
+          var t = typeof value;
+          if (t !== "object" || value === null) {
+            if (t === "string") value = '"' + value.replace(/(["\\])/g, '\\$1') + '"';
+            return String(value);
+          } else {
+            var n, v, json = [], arr = (value && value.constructor === Array);
+            for (n in value) {
+              v = value[n];
+              t = typeof v;
+              if (t === "string") v = '"' + v.replace(/(["\\])/g, '\\$1') + '"';
+              else if (t === "object" && v !== null) v = JSON.stringify(v);
+              json.push((arr ? "" : '"' + n + '":') + String(v));
+            }
+            return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
+          }
+        }
+      };
+    }
+    
+    if (!Array.prototype.forEach) {
+      Array.prototype.forEach = function(callback, thisArg) {
+        var T, k;
+        if (this == null) throw new TypeError('this is null or not defined');
+        var O = Object(this);
+        var len = parseInt(O.length) || 0;
+        if (typeof callback !== "function") throw new TypeError(callback + ' is not a function');
+        if (arguments.length > 1) T = thisArg;
+        k = 0;
+        while (k < len) {
+          var kValue;
+          if (k in O) {
+            kValue = O[k];
+            callback.call(T, kValue, k, O);
+          }
+          k++;
+        }
+      };
+    }
+    
+    if (!Array.isArray) {
+      Array.isArray = function(arg) {
+        return Object.prototype.toString.call(arg) === '[object Array]';
+      };
+    }
+    
+    if (!String.prototype.trim) {
+      String.prototype.trim = function() {
+        return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+      };
+    }
+    
+    // Helper functions
+    function addEvent(element, event, handler) {
+      if (element.addEventListener) {
+        element.addEventListener(event, handler, false);
+      } else if (element.attachEvent) {
+        element.attachEvent('on' + event, handler);
+      } else {
+        element['on' + event] = handler;
+      }
+    }
+    
+    function hasClass(el, className) {
+      if (el.classList) return el.classList.contains(className);
+      return new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
+    }
+    
+    function addClass(el, className) {
+      if (el.classList) el.classList.add(className);
+      else if (!hasClass(el, className)) el.className += ' ' + className;
+    }
+    
+    function removeClass(el, className) {
+      if (el.classList) el.classList.remove(className);
+      else {
+        var reg = new RegExp('(^| )' + className.split(' ').join('|') + '( |$)', 'gi');
+        el.className = el.className.replace(reg, ' ');
+      }
+    }
+    
+    function toggleClass(el, className, force) {
+      if (typeof force !== 'undefined') {
+        if (force) addClass(el, className);
+        else removeClass(el, className);
+      } else {
+        if (hasClass(el, className)) removeClass(el, className);
+        else addClass(el, className);
+      }
+    }
+    
+    function getEl(id) { return document.getElementById(id); }
+    
+    // XMLHttpRequest wrapper for Promise-like usage (IE compatible)
+    function request(url, method, data) {
+      return {
+        then: function(successCallback, errorCallback) {
+          var xhr = new XMLHttpRequest();
+          xhr.open(method, url, true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              if (xhr.status === 200) {
+                try {
+                  var response = JSON.parse(xhr.responseText);
+                  if (successCallback) successCallback(response);
+                } catch (e) {
+                  if (errorCallback) errorCallback(new Error('Invalid JSON response'));
+                }
+              } else {
+                if (errorCallback) errorCallback(new Error('HTTP ' + xhr.status));
+              }
+            }
+          };
+          xhr.onerror = function() {
+            if (errorCallback) errorCallback(new Error('Network error'));
+          };
+          xhr.send(data ? JSON.stringify(data) : null);
+          return this;
+        }
+      };
+    }
+    
+    // UI functions
+    function setLoading(show) {
+      toggleClass(getEl('loading'), 'show', show);
+      getEl('btn1').disabled = show;
+      getEl('btn2').disabled = show;
+    }
+    
+    function setStatus(msg, type) {
+      var status = getEl('status');
+      status.innerHTML = msg;
+      status.className = 'status show ' + type;
+      if (type === 'success' || type === 'error') {
+        setTimeout(function() {
+          removeClass(status, 'show');
+        }, 3000);
+      }
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '-';
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+    
+    // API 1: 抓取 HKPL 資源
+    function callAPI1() {
+      setLoading(true);
+      setStatus('正在連接 :8000...', 'loading');
+      
+      request('/api/proxy?target=8000&endpoint=scrape', 'POST', {})
+        .then(function(result) {
+          if (!result.success) {
+            throw new Error(result.detail || '請求失敗');
+          }
+          renderAPI1Result(result.data);
+          setStatus('成功！電子書 ' + result.data.total_ebooks + ' 個，數據庫 ' + result.data.total_databases + ' 個', 'success');
+        }, function(err) {
+          getEl('result1').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + err.message + '</p>';
+          setStatus('連接失敗: ' + err.message, 'error');
+          setLoading(false);
+        });
+    }
+    
+    function renderAPI1Result(data) {
+      if (!data.ebooks && !data.edatabases) {
+        getEl('result1').innerHTML = '<p class="empty">無數據返回</p>';
+        return;
+      }
+      
+      var html = '<table><thead><tr><th>類型</th><th>標題</th><th>鏈接</th></tr></thead><tbody>';
+      var ebooks = data.ebooks || [];
+      var edatabases = data.edatabases || [];
+      
+      ebooks.forEach(function(item) {
+        html += '<tr><td><span class="badge badge-ebook">電子書</span></td><td>' + escapeHtml(item.title) + '</td><td>' + (item.link ? '<a href="' + item.link + '" target="_blank">查看</a>' : '-') + '</td></tr>';
+      });
+      
+      edatabases.forEach(function(item) {
+        html += '<tr><td><span class="badge badge-database">數據庫</span></td><td>' + escapeHtml(item.title) + '</td><td>-</td></tr>';
+      });
+      
+      html += '</tbody></table>';
+      html += '<p style="margin-top:10px;color:#6c757d">總計: ' + data.total_ebooks + ' 本電子書, ' + data.total_databases + ' 個數據庫</p>';
+      
+      getEl('result1').innerHTML = html;
+      setLoading(false);
+    }
+    
+    // API 2: 查詢圖書狀態
+    function callAPI2() {
+      var ph = getEl('phInput').value.trim();
+      if (!ph) {
+        alert('請輸入圖書編號 (PH)');
+        return;
+      }
+      
+      setLoading(true);
+      setStatus('正在查詢 PH: ' + ph + '...', 'loading');
+      
+      request('/api/proxy?target=8081&endpoint=check', 'POST', { ph: ph })
+        .then(function(result) {
+          if (!result.success) {
+            throw new Error(result.detail || '查詢失敗');
+          }
+          renderAPI2Result(result.data);
+          setStatus('查詢成功: ' + (result.data.bookTitle || '未知書名'), 'success');
+        }, function(err) {
+          getEl('result2').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + err.message + '</p>';
+          setStatus('查詢失敗: ' + err.message, 'error');
+          setLoading(false);
+        });
+    }
+    
+    function renderAPI2Result(data) {
+      if (data.error) {
+        getEl('result2').innerHTML = '<p class="empty" style="color:#721c24">錯誤: ' + data.error + '</p>';
+        setLoading(false);
+        return;
+      }
+      
+      var fields = [
+        { key: 'bookTitle', label: '書名' },
+        { key: 'author', label: '作者' },
+        { key: 'isbn', label: 'ISBN' },
+        { key: 'libNo', label: '館藏編號' },
+        { key: 'barcode', label: '索書號' },
+        { key: 'publishPlace', label: '出版地' },
+        { key: 'publisher', label: '出版者' },
+        { key: 'publishYear', label: '出版年份' },
+        { key: 'copyCount', label: '館藏數量' },
+        { key: 'locationInfo', label: '館藏位置' },
+        { key: 'ph', label: '圖書編號' },
+        { key: 'collectionStatus', label: '提取館藏現況' },
+        { key: 'seriesName', label: '叢書名' },
+        { key: 'otherAuthors', label: '其他著者' },
+        { key: 'alternativeTitle', label: '書刊別名' },
+        { key: 'standardNumber', label: '標準號碼' },
+        { key: 'additionalSeries', label: '附加叢書名稱' },
+        { key: 'notes', label: '附註' },
+        { key: 'language', label: '語言' }
+      ];
+      
+      var html = '<table><tbody>';
+      fields.forEach(function(f) {
+        var val = data[f.key] || '-';
+        html += '<tr><th>' + f.label + '</th><td>' + escapeHtml(val) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      
+      html += '<details style="margin-top:15px;"><summary style="cursor:pointer;color:#667eea;font-size:13px;">查看原始 JSON</summary><div class="json-view">' + escapeHtml(JSON.stringify(data, null, 2)) + '</div></details>';
+      
+      getEl('result2').innerHTML = html;
+      setLoading(false);
+    }
+    
+    // Enter 鍵觸發查詢
+    addEvent(getEl('phInput'), 'keypress', function(e) {
+      e = e || window.event;
+      var keyCode = e.keyCode || e.which;
+      if (keyCode === 13) {
+        callAPI2();
+      }
+    });
+  </script>
+</body>
+</html>
