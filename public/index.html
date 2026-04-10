@@ -441,6 +441,7 @@
           var xhr = new XMLHttpRequest();
           xhr.open(method, url, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
           xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
               if (xhr.status === 200) {
