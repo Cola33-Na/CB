@@ -71,13 +71,15 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     
-    res.status(response.status).json({
-      success: response.ok,
-      target: target,
-      endpoint: endpoint,
-      data: data,
-      timestamp: new Date().toISOString(),
-    });
+// 改為：直接展開玩客雲數據
+res.status(response.status).json({
+  ...data,  // 展開所有原始欄位（success, data, total_ebooks 等）
+  _proxy: {  // 保留代理資訊（可選）
+    target: target,
+    endpoint: endpoint,
+    timestamp: new Date().toISOString()
+  }
+});
 
   } catch (error) {
     res.status(500).json({
