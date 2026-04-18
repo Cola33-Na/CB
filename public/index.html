@@ -1051,7 +1051,7 @@
       html += `
         <div class="height-control-panel">
           <label>行高調整:</label>
-          <input type="range" class="height-slider" min="16" max="100" value="${currentRowHeight}" 
+          <input type="range" class="height-slider" min="5" max="100" value="${currentRowHeight}" 
                  oninput="updateRowHeight(this.value)" onchange="updateRowHeight(this.value)">
           <span class="height-value" id="heightValue">${currentRowHeight}px</span>
           <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">拖曳滑塊調整行高</span>
