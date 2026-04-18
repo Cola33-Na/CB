@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v2.2</title>
+  <title>HKPL 資源控制台 v2.3</title>
   
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -40,7 +40,7 @@
     }
     
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
       background: var(--card-bg);
       border-radius: 16px;
@@ -161,10 +161,9 @@
       padding: 16px 20px;
       margin-bottom: 24px;
       border-radius: 8px;
-      display: flex;
+      display: none;
       justify-content: space-between;
       align-items: center;
-      display: none;
     }
     
     .auto-fetch-banner.show {
@@ -333,10 +332,6 @@
       background: #f8fafc;
     }
     
-    tr:nth-child(even) {
-      background: #fafafa;
-    }
-    
     .status-badge {
       padding: 4px 10px;
       border-radius: 12px;
@@ -361,7 +356,7 @@
     /* Tab 2: Book Search Layout */
     .search-layout {
       display: grid;
-      grid-template-columns: 400px 1fr;
+      grid-template-columns: 350px 1fr;
       gap: 24px;
       height: calc(100vh - 200px);
       min-height: 600px;
@@ -416,32 +411,43 @@
       background: white;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px;
-      overflow-y: auto;
+      padding: 20px;
+      overflow: auto;
     }
     
-    /* Excel-style Table for Books */
+    /* Resizable Excel Table */
     .excel-book-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       border: 1px solid var(--border);
+      table-layout: fixed; /* Important for resizable columns */
     }
     
     .excel-book-table th {
       background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
       color: var(--text);
       font-weight: 700;
-      padding: 12px 8px;
+      padding: 10px 8px;
       border: 1px solid var(--border);
       text-align: center;
+      position: relative;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
+      user-select: none;
+    }
+    
+    .excel-book-table th:hover {
+      background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e0 100%);
     }
     
     .excel-book-table td {
-      padding: 10px 8px;
+      padding: 8px;
       border: 1px solid var(--border);
       vertical-align: top;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .excel-book-table tr:nth-child(even) {
@@ -452,107 +458,73 @@
       background: #e0e7ff;
     }
     
-    /* Column specific styles */
-    .col-seq {
-      width: 40px;
-      text-align: center;
-      background: #f0f4f8;
-      font-weight: 600;
+    /* Column Resizer Handle */
+    .resizer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 5px;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 10;
     }
     
-    .col-title {
-      min-width: 200px;
-      max-width: 300px;
-      font-weight: 600;
-      color: var(--primary-dark);
+    .resizer:hover,
+    .resizer.resizing {
+      background: var(--primary);
+      width: 3px;
     }
     
-    .col-callno {
-      width: 120px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-    }
-    
-    .col-author {
-      width: 100px;
-    }
-    
-    .col-publisher {
-      width: 120px;
-    }
-    
-    .col-year {
-      width: 60px;
-      text-align: center;
-    }
-    
-    .col-count {
-      width: 80px;
-      text-align: center;
-    }
-    
-    .col-available {
-      width: 80px;
-      text-align: center;
-    }
-    
-    .col-locations {
-      min-width: 300px;
-      max-width: 400px;
-    }
+    /* Column specific default widths */
+    .col-seq { width: 50px; text-align: center; background: #f0f4f8; font-weight: 600; }
+    .col-title { width: 200px; font-weight: 600; color: var(--primary-dark); }
+    .col-author { width: 100px; }
+    .col-isbn { width: 120px; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-catalog { width: 100px; }
+    .col-callno { width: 120px; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-place { width: 80px; }
+    .col-publisher { width: 120px; }
+    .col-year { width: 70px; text-align: center; }
+    .col-bookid { width: 90px; text-align: center; font-family: 'Courier New', monospace; }
+    .col-series { width: 120px; }
+    .col-other-authors { width: 100px; }
+    .col-alias { width: 100px; }
+    .col-standard { width: 120px; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-add-series { width: 120px; }
+    .col-notes { width: 150px; font-size: 12px; }
+    .col-lang { width: 70px; text-align: center; }
+    .col-count { width: 70px; text-align: center; font-weight: 600; }
+    .col-locations { width: 350px; min-width: 300px; } /* Wider for combined info */
     
     /* Location combined cell styles */
+    .location-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
     .location-item {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 6px;
-      margin-bottom: 6px;
-      padding: 4px;
+      padding: 3px 6px;
       background: white;
       border-radius: 4px;
       border-left: 3px solid var(--border);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    
-    .location-item.available {
-      border-left-color: var(--success);
-      background: #f0fff4;
-    }
-    
-    .location-item.loaned {
-      border-left-color: var(--warning);
-      background: #fffaf0;
-    }
-    
-    .location-item.reserved {
-      border-left-color: var(--danger);
-      background: #fff5f5;
-    }
-    
-    .location-library {
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-    }
-    
-    .location-callno {
-      font-family: 'Courier New', monospace;
-      color: var(--primary);
       font-size: 11px;
+      line-height: 1.3;
+      flex-wrap: wrap;
     }
     
-    .location-status {
-      font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
+    .location-item.available { border-left-color: var(--success); background: #f0fff4; }
+    .location-item.loaned { border-left-color: var(--warning); background: #fffaf0; }
+    .location-item.reserved { border-left-color: var(--danger); background: #fff5f5; }
     
-    .location-shelf {
-      color: var(--text-muted);
-      font-size: 11px;
-    }
+    .location-library { font-weight: 600; color: var(--text); white-space: nowrap; }
+    .location-callno { font-family: 'Courier New', monospace; color: var(--primary); font-size: 10px; }
+    .location-status { font-size: 10px; padding: 1px 4px; border-radius: 8px; font-weight: 600; }
+    .location-shelf { color: var(--text-muted); font-size: 10px; }
     
     .stats-summary {
       background: #f0fff4;
@@ -563,6 +535,7 @@
       display: flex;
       gap: 32px;
       font-size: 14px;
+      flex-wrap: wrap;
     }
     
     .stat-box {
@@ -631,6 +604,26 @@
       to { transform: rotate(360deg); }
     }
     
+    /* Text truncation with tooltip on hover */
+    .cell-content {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+      display: block;
+    }
+    
+    .cell-content:hover {
+      white-space: normal;
+      overflow: visible;
+      position: relative;
+      z-index: 5;
+      background: inherit;
+      padding: 2px;
+      border-radius: 3px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
     /* Responsive */
     @media (max-width: 1200px) {
       .search-layout {
@@ -639,12 +632,12 @@
       }
       
       .excel-book-table {
-        font-size: 12px;
+        font-size: 11px;
       }
       
       .excel-book-table th,
       .excel-book-table td {
-        padding: 8px 4px;
+        padding: 6px 4px;
       }
     }
     
@@ -671,12 +664,6 @@
         flex-direction: column;
         align-items: stretch;
       }
-      
-      .auto-fetch-banner {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-      }
     }
   </style>
 </head>
@@ -689,7 +676,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v2.2</h1>
+          <h1>HKPL 資源控制台 v2.3</h1>
           <p>香港公共圖書館電子資源 & 館藏查詢系統</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -804,7 +791,7 @@
           </div>
         </div>
         
-        <!-- Right: Results (Excel Style) -->
+        <!-- Right: Results (Excel Style with Resizable Columns) -->
         <div class="search-results" id="bookResults">
           <div class="empty-state">
             <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
@@ -829,6 +816,10 @@
     let currentBookData = [];
     let currentScrapeData = null;
     let isFirstLoad = true;
+    let isResizing = false;
+    let currentCol = null;
+    let startX = 0;
+    let startWidth = 0;
     
     // Tab Switching
     function switchTab(tabName, btnElement) {
@@ -912,7 +903,7 @@
     // Parse Book IDs from input
     function parseBookIds() {
       const input = document.getElementById('bookInput').value;
-      const ids = input.split(/[\n\r,，\s\t]+/)
+      const ids = input.split(/[\n\r,،\s\t]+/)
         .map(id => id.trim())
         .filter(id => id.length > 0 && /^\d+$/.test(id));
       return [...new Set(ids)];
@@ -929,6 +920,64 @@
       `;
       document.getElementById('btnExport').style.display = 'none';
       currentBookData = [];
+    }
+    
+    // Column Resize Logic
+    function initResizableColumns() {
+      const resizers = document.querySelectorAll('.resizer');
+      resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', initResize);
+      });
+    }
+    
+    function initResize(e) {
+      isResizing = true;
+      currentCol = e.target.parentElement;
+      startX = e.pageX;
+      startWidth = currentCol.offsetWidth;
+      
+      // Add resizing class for visual feedback
+      e.target.classList.add('resizing');
+      
+      // Prevent text selection while resizing
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+      
+      // Attach event listeners
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('mouseup', stopResize);
+      
+      e.preventDefault();
+    }
+    
+    function doResize(e) {
+      if (!isResizing || !currentCol) return;
+      
+      const diff = e.pageX - startX;
+      const newWidth = Math.max(50, startWidth + diff); // Minimum 50px
+      
+      // Set width on current column
+      currentCol.style.width = newWidth + 'px';
+      currentCol.style.minWidth = newWidth + 'px';
+    }
+    
+    function stopResize(e) {
+      if (!isResizing) return;
+      
+      isResizing = false;
+      if (currentCol) {
+        const resizer = currentCol.querySelector('.resizer');
+        if (resizer) resizer.classList.remove('resizing');
+      }
+      currentCol = null;
+      
+      // Restore styles
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      
+      // Remove event listeners
+      document.removeEventListener('mousemove', doResize);
+      document.removeEventListener('mouseup', stopResize);
     }
     
     // Fetch Book Data (Single or Batch) - Excel Style Display
@@ -969,7 +1018,6 @@
           }
         } catch (err) {
           console.error(`Error fetching book ${id}:`, err);
-          // Add error entry to maintain sequence
           currentBookData.push({ 
             id, 
             error: err.message,
@@ -993,6 +1041,7 @@
       
       // Final render
       renderExcelTable();
+      initResizableColumns(); // Initialize resizers after table is built
       
       if (currentBookData.length > 0) {
         const successCount = currentBookData.filter(b => !b.error).length;
@@ -1035,7 +1084,7 @@
       });
     }
     
-    // Render Excel-style Table (Main Function)
+    // Render Excel-style Table with All Fields
     function renderExcelTable() {
       const container = document.getElementById('bookResults');
       
@@ -1073,25 +1122,33 @@
         </div>
       `;
       
-      // Excel-style table
-      html += '<div style="overflow-x: auto;">';
-      html += '<table class="excel-book-table">';
+      // Excel-style table with resizable columns
+      html += '<div style="overflow-x: auto; border: 1px solid var(--border); border-radius: 8px;">';
+      html += '<table class="excel-book-table" id="excelTable">';
       
-      // Header
+      // Header with resizers - 按用户要求的顺序
       html += `
         <thead>
           <tr>
-            <th class="col-seq">序號</th>
-            <th class="col-title">書本名稱</th>
-            <th>館藏編目號碼</th>
-            <th class="col-callno">索書號</th>
-            <th class="col-author">著者</th>
-            <th class="col-publisher">出版者</th>
-            <th class="col-year">出版年</th>
-            <th>語言</th>
-            <th class="col-count">館藏數</th>
-            <th class="col-available">可借閱</th>
-            <th class="col-locations">館藏分佈 (圖書館/索書號/現況/位置)</th>
+            <th class="col-seq"><div class="resizer"></div>序號</th>
+            <th class="col-title"><div class="resizer"></div>書名</th>
+            <th class="col-author"><div class="resizer"></div>作者</th>
+            <th class="col-isbn"><div class="resizer"></div>ISBN</th>
+            <th class="col-catalog"><div class="resizer"></div>館藏編號</th>
+            <th class="col-callno"><div class="resizer"></div>索書號</th>
+            <th class="col-place"><div class="resizer"></div>出版地</th>
+            <th class="col-publisher"><div class="resizer"></div>出版者</th>
+            <th class="col-year"><div class="resizer"></div>出版年份</th>
+            <th class="col-bookid"><div class="resizer"></div>圖書編號</th>
+            <th class="col-series"><div class="resizer"></div>叢書名</th>
+            <th class="col-other-authors"><div class="resizer"></div>其他著者</th>
+            <th class="col-alias"><div class="resizer"></div>書刊別名</th>
+            <th class="col-standard"><div class="resizer"></div>標準號碼</th>
+            <th class="col-add-series"><div class="resizer"></div>附加叢書名稱</th>
+            <th class="col-notes"><div class="resizer"></div>附註</th>
+            <th class="col-lang"><div class="resizer"></div>語言</th>
+            <th class="col-count"><div class="resizer"></div>館藏數量</th>
+            <th class="col-locations"><div class="resizer"></div>館藏分佈</th>
           </tr>
         </thead>
         <tbody>
@@ -1101,16 +1158,15 @@
       currentBookData.forEach((book, index) => {
         const details = book['書目詳情'] || {};
         const libraries = book['館藏列表'] || [];
-        const availableCount = libraries.filter(l => l['館藏現況'] && l['館藏現況'].includes('可供借閱')).length;
         
         // Build combined location string
         let locationHtml = '';
         if (book.error) {
-          locationHtml = `<span style="color: var(--danger);">錯誤: ${escapeHtml(book.error)}</span>`;
+          locationHtml = `<span style="color: var(--danger); font-size: 12px;">錯誤: ${escapeHtml(book.error)}</span>`;
         } else if (libraries.length === 0) {
-          locationHtml = '<span style="color: var(--text-muted);">無館藏資料</span>';
+          locationHtml = '<span style="color: var(--text-muted); font-size: 12px;">無館藏資料</span>';
         } else {
-          locationHtml = '<div style="display: flex; flex-direction: column; gap: 4px;">';
+          locationHtml = '<div class="location-list">';
           libraries.forEach(lib => {
             const status = lib['館藏現況'] || '--';
             let statusClass = 'status-processing';
@@ -1130,28 +1186,39 @@
               <div class="location-item ${itemClass}">
                 <span class="location-library">${escapeHtml(lib['圖書館'])}</span>
                 <span class="location-callno">${escapeHtml(lib['索書號'])}</span>
-                <span class="status-badge ${statusClass}">${escapeHtml(status)}</span>
-                ${lib['館藏'] ? `<span class="location-shelf">@ ${escapeHtml(lib['館藏'])}</span>` : ''}
+                <span class="location-status ${statusClass}">${escapeHtml(status)}</span>
+                ${lib['館藏'] ? `<span class="location-shelf">[${escapeHtml(lib['館藏'])}]</span>` : ''}
               </div>
             `;
           });
           locationHtml += '</div>';
         }
         
+        // 按用户要求的字段顺序显示
         html += `
           <tr ${book.error ? 'style="background: #fff5f5;"' : ''}>
             <td class="col-seq">${index + 1}</td>
-            <td class="col-title">${book.error ? '<span style="color: var(--danger);">查詢失敗</span>' : escapeHtml(book['書本名稱'] || '未知書名')}</td>
-            <td>${escapeHtml(details['館藏編目號碼'] || '--')}</td>
-            <td class="col-callno"><code>${escapeHtml(details['索書號'] || '--')}</code></td>
-            <td class="col-author">${escapeHtml(details['著者'] || '--')}</td>
-            <td class="col-publisher">${escapeHtml(details['出版者'] || '--')}</td>
-            <td class="col-year">${escapeHtml(details['出版年份'] || '--')}</td>
-            <td>${escapeHtml(details['語言'] || '--')}</td>
-            <td class="col-count"><strong>${libraries.length}</strong></td>
-            <td class="col-available" style="color: ${availableCount > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: 600;">
-              ${availableCount}
+            <td class="col-title">
+              <span class="cell-content" title="${escapeHtml(book['書本名稱'] || '')}">
+                ${book.error ? '<span style="color: var(--danger);">查詢失敗</span>' : escapeHtml(book['書本名稱'] || '--')}
+              </span>
             </td>
+            <td class="col-author"><span class="cell-content">${escapeHtml(details['著者'] || '--')}</span></td>
+            <td class="col-isbn"><span class="cell-content">${escapeHtml(details['標準號碼'] || '--')}</span></td>
+            <td class="col-catalog"><span class="cell-content">${escapeHtml(details['館藏編目號碼'] || '--')}</span></td>
+            <td class="col-callno"><span class="cell-content" style="font-family: monospace;">${escapeHtml(details['索書號'] || '--')}</span></td>
+            <td class="col-place"><span class="cell-content">${escapeHtml(details['出版地'] || '--')}</span></td>
+            <td class="col-publisher"><span class="cell-content">${escapeHtml(details['出版者'] || '--')}</span></td>
+            <td class="col-year"><span class="cell-content">${escapeHtml(details['出版年份'] || '--')}</span></td>
+            <td class="col-bookid"><span class="cell-content" style="font-family: monospace;">${book.id}</span></td>
+            <td class="col-series"><span class="cell-content">${escapeHtml(details['叢書名'] || '--')}</span></td>
+            <td class="col-other-authors"><span class="cell-content">${escapeHtml(details['其他著者'] || '--')}</span></td>
+            <td class="col-alias"><span class="cell-content">${escapeHtml(details['書刊別名'] || '--')}</span></td>
+            <td class="col-standard"><span class="cell-content">${escapeHtml(details['標準號碼'] || '--')}</span></td>
+            <td class="col-add-series"><span class="cell-content">${escapeHtml(details['附加叢書名稱'] || '--')}</span></td>
+            <td class="col-notes"><span class="cell-content" title="${escapeHtml(details['附註'] || '')}">${escapeHtml(details['附註'] || '--')}</span></td>
+            <td class="col-lang"><span class="cell-content">${escapeHtml(details['語言'] || '--')}</span></td>
+            <td class="col-count">${libraries.length}</td>
             <td class="col-locations">${locationHtml}</td>
           </tr>
         `;
@@ -1159,6 +1226,7 @@
       
       html += '</tbody></table>';
       html += '</div>';
+      html += '<div style="margin-top: 10px; font-size: 12px; color: var(--text-muted);">提示：拖曳欄位標題右側邊界可調整欄寬</div>';
       
       container.innerHTML = html;
     }
@@ -1170,36 +1238,38 @@
         return;
       }
       
-      // Format data for Excel - Flat structure for Excel filtering
+      // Format data for Excel - 按用户要求的字段顺序
       const rows = [];
       
       currentBookData.forEach((book, idx) => {
         const details = book['書目詳情'] || {};
         const libraries = book['館藏列表'] || [];
         
-        // Base info
-        const baseInfo = {
+        // 按用户要求的字段顺序构建数据
+        const rowData = {
           '序號': idx + 1,
-          '書籍ID': book.id,
-          '書本名稱': book['書本名稱'] || (book.error ? '查詢失敗' : ''),
-          '館藏編目號碼': details['館藏編目號碼'] || '',
+          '書名': book['書本名稱'] || (book.error ? '查詢失敗' : ''),
+          '作者': details['著者'] || '',
+          'ISBN': details['標準號碼'] || '',
+          '館藏編號': details['館藏編目號碼'] || '',
           '索書號': details['索書號'] || '',
-          '著者': details['著者'] || '',
-          '著錄': details['著錄'] || '',
           '出版地': details['出版地'] || '',
           '出版者': details['出版者'] || '',
           '出版年份': details['出版年份'] || '',
+          '圖書編號': book.id,
           '叢書名': details['叢書名'] || '',
+          '其他著者': details['其他著者'] || '',
           '書刊別名': details['書刊別名'] || '',
           '標準號碼': details['標準號碼'] || '',
+          '附加叢書名稱': details['附加叢書名稱'] || '',
+          '附註': details['附註'] || '',
           '語言': details['語言'] || '',
           '館藏數量': libraries.length,
-          '可借閱數': libraries.filter(l => l['館藏現況'] && l['館藏現況'].includes('可供借閱')).length,
           '館藏分佈': book.error ? `錯誤: ${book.error}` : 
-            libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']}) ${l['館藏'] ? '@' + l['館藏'] : ''}`).join('; ')
+            libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']}) ${l['館藏'] ? '['+l['館藏']+']' : ''}`).join('; ')
         };
         
-        rows.push(baseInfo);
+        rows.push(rowData);
       });
       
       // Create worksheet
@@ -1213,7 +1283,7 @@
           key.length,
           ...rows.map(r => String(r[key] || '').length)
         );
-        colWidths[i] = { wch: Math.min(maxLength + 2, 80) };
+        colWidths[i] = { wch: Math.min(maxLength + 2, 100) };
       });
       ws['!cols'] = colWidths;
       
