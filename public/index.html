@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v2.3</title>
+  <title>HKPL 資源控制台 v2.4</title>
   
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -29,6 +29,7 @@
       --text: #2d3748;
       --text-muted: #718096;
       --border: #e2e8f0;
+      --row-height: 20px; /* Default row height */
     }
     
     body {
@@ -415,20 +416,71 @@
       overflow: auto;
     }
     
+    /* Row Height Control Panel */
+    .height-control-panel {
+      background: #f0f4f8;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    
+    .height-control-panel label {
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    
+    .height-slider {
+      flex: 1;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #cbd5e0;
+      border-radius: 3px;
+      outline: none;
+    }
+    
+    .height-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .height-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    
+    .height-value {
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 40px;
+      text-align: center;
+    }
+    
     /* Resizable Excel Table */
     .excel-book-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       border: 1px solid var(--border);
-      table-layout: fixed; /* Important for resizable columns */
+      table-layout: fixed;
     }
     
     .excel-book-table th {
       background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
       color: var(--text);
       font-weight: 700;
-      padding: 10px 8px;
+      padding: 6px 4px;
       border: 1px solid var(--border);
       text-align: center;
       position: relative;
@@ -436,6 +488,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       user-select: none;
+      height: 24px;
     }
     
     .excel-book-table th:hover {
@@ -443,11 +496,15 @@
     }
     
     .excel-book-table td {
-      padding: 8px;
+      padding: 2px 4px;
       border: 1px solid var(--border);
       vertical-align: top;
       overflow: hidden;
       text-overflow: ellipsis;
+      height: var(--row-height);
+      max-height: var(--row-height);
+      font-size: 12px;
+      line-height: calc(var(--row-height) - 4px);
     }
     
     .excel-book-table tr:nth-child(even) {
@@ -477,84 +534,56 @@
     }
     
     /* Column specific default widths */
-    .col-seq { width: 50px; text-align: center; background: #f0f4f8; font-weight: 600; }
-    .col-title { width: 200px; font-weight: 600; color: var(--primary-dark); }
-    .col-author { width: 100px; }
-    .col-isbn { width: 120px; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-catalog { width: 100px; }
-    .col-callno { width: 120px; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-place { width: 80px; }
-    .col-publisher { width: 120px; }
-    .col-year { width: 70px; text-align: center; }
-    .col-bookid { width: 90px; text-align: center; font-family: 'Courier New', monospace; }
-    .col-series { width: 120px; }
-    .col-other-authors { width: 100px; }
-    .col-alias { width: 100px; }
-    .col-standard { width: 120px; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-add-series { width: 120px; }
-    .col-notes { width: 150px; font-size: 12px; }
-    .col-lang { width: 70px; text-align: center; }
-    .col-count { width: 70px; text-align: center; font-weight: 600; }
-    .col-locations { width: 350px; min-width: 300px; } /* Wider for combined info */
+    .col-seq { width: 40px; text-align: center; background: #f0f4f8; font-weight: 600; }
+    .col-title { width: 180px; font-weight: 600; color: var(--primary-dark); }
+    .col-author { width: 90px; }
+    .col-isbn { width: 110px; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-catalog { width: 90px; font-size: 11px; }
+    .col-callno { width: 110px; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-place { width: 70px; }
+    .col-publisher { width: 110px; }
+    .col-year { width: 60px; text-align: center; }
+    .col-bookid { width: 80px; text-align: center; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-series { width: 110px; }
+    .col-other-authors { width: 90px; }
+    .col-alias { width: 90px; }
+    .col-standard { width: 110px; font-family: 'Courier New', monospace; font-size: 11px; }
+    .col-add-series { width: 110px; }
+    .col-notes { width: 130px; font-size: 11px; }
+    .col-lang { width: 60px; text-align: center; font-size: 11px; }
+    .col-count { width: 60px; text-align: center; font-weight: 600; }
+    .col-locations { width: 320px; min-width: 280px; }
     
-    /* Location combined cell styles */
+    /* Location combined cell styles - compact for 20px height */
     .location-list {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 1px;
     }
     
     .location-item {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 6px;
+      gap: 4px;
+      padding: 1px 3px;
       background: white;
-      border-radius: 4px;
-      border-left: 3px solid var(--border);
-      font-size: 11px;
-      line-height: 1.3;
-      flex-wrap: wrap;
+      border-radius: 2px;
+      border-left: 2px solid var(--border);
+      font-size: 10px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .location-item.available { border-left-color: var(--success); background: #f0fff4; }
     .location-item.loaned { border-left-color: var(--warning); background: #fffaf0; }
     .location-item.reserved { border-left-color: var(--danger); background: #fff5f5; }
     
-    .location-library { font-weight: 600; color: var(--text); white-space: nowrap; }
+    .location-library { font-weight: 600; color: var(--text); }
     .location-callno { font-family: 'Courier New', monospace; color: var(--primary); font-size: 10px; }
-    .location-status { font-size: 10px; padding: 1px 4px; border-radius: 8px; font-weight: 600; }
-    .location-shelf { color: var(--text-muted); font-size: 10px; }
-    
-    .stats-summary {
-      background: #f0fff4;
-      border: 1px solid #9ae6b4;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: flex;
-      gap: 32px;
-      font-size: 14px;
-      flex-wrap: wrap;
-    }
-    
-    .stat-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .stat-number {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--success);
-    }
-    
-    .stat-label {
-      color: var(--text-muted);
-      font-size: 12px;
-      margin-top: 4px;
-    }
+    .location-status { font-size: 9px; padding: 0px 3px; border-radius: 6px; font-weight: 600; }
+    .location-shelf { color: var(--text-muted); font-size: 9px; }
     
     /* Progress bar */
     .progress-bar {
@@ -604,24 +633,14 @@
       to { transform: rotate(360deg); }
     }
     
-    /* Text truncation with tooltip on hover */
+    /* Text truncation with tooltip */
     .cell-content {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       max-width: 100%;
       display: block;
-    }
-    
-    .cell-content:hover {
-      white-space: normal;
-      overflow: visible;
-      position: relative;
-      z-index: 5;
-      background: inherit;
-      padding: 2px;
-      border-radius: 3px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: 100%;
     }
     
     /* Responsive */
@@ -629,15 +648,6 @@
       .search-layout {
         grid-template-columns: 1fr;
         height: auto;
-      }
-      
-      .excel-book-table {
-        font-size: 11px;
-      }
-      
-      .excel-book-table th,
-      .excel-book-table td {
-        padding: 6px 4px;
       }
     }
     
@@ -653,18 +663,6 @@
         justify-content: center;
       }
     }
-    
-    @media (max-width: 640px) {
-      .tab-btn {
-        font-size: 14px;
-        padding: 14px 16px;
-      }
-      
-      .control-panel {
-        flex-direction: column;
-        align-items: stretch;
-      }
-    }
   </style>
 </head>
 <body>
@@ -676,7 +674,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v2.3</h1>
+          <h1>HKPL 資源控制台 v2.4</h1>
           <p>香港公共圖書館電子資源 & 館藏查詢系統</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -791,7 +789,7 @@
           </div>
         </div>
         
-        <!-- Right: Results (Excel Style with Resizable Columns) -->
+        <!-- Right: Results -->
         <div class="search-results" id="bookResults">
           <div class="empty-state">
             <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
@@ -800,7 +798,7 @@
         </div>
       </div>
       
-      <!-- Export Button (Floating) -->
+      <!-- Export Button -->
       <button class="btn btn-export" onclick="exportToExcel()" id="btnExport" style="display: none;">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
           <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
@@ -812,7 +810,7 @@
   </div>
 
   <script>
-    // Global storage for current data
+    // Global storage
     let currentBookData = [];
     let currentScrapeData = null;
     let isFirstLoad = true;
@@ -820,6 +818,7 @@
     let currentCol = null;
     let startX = 0;
     let startWidth = 0;
+    let currentRowHeight = 20;
     
     // Tab Switching
     function switchTab(tabName, btnElement) {
@@ -827,18 +826,10 @@
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       
       document.getElementById('tab-' + tabName).classList.add('active');
-      if (btnElement) {
-        btnElement.classList.add('active');
-      } else {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-          if (btn.getAttribute('onclick').includes(tabName)) {
-            btn.classList.add('active');
-          }
-        });
-      }
+      if (btnElement) btnElement.classList.add('active');
     }
     
-    // Network Status Monitoring
+    // Network Status
     function updateNetworkStatus() {
       const statusEl = document.getElementById('networkStatus');
       const textEl = document.getElementById('networkText');
@@ -854,8 +845,7 @@
     
     window.addEventListener('online', () => {
       updateNetworkStatus();
-      const scrapeTab = document.getElementById('tab-scrape');
-      if (scrapeTab && scrapeTab.classList.contains('active')) {
+      if (document.getElementById('tab-scrape').classList.contains('active')) {
         setStatus('網絡已恢復，正在自動刷新...', 'loading');
         setTimeout(() => fetchData(), 1000);
       }
@@ -881,26 +871,19 @@
       el.className = 'status show ' + type;
       
       if (type === 'success' || type === 'error') {
-        setTimeout(() => {
-          if (el) el.className = 'status';
-        }, 5000);
+        setTimeout(() => { if (el) el.className = 'status'; }, 5000);
       }
     }
     
     // Auto Fetch on Page Load
     window.addEventListener('DOMContentLoaded', function() {
       updateNetworkStatus();
-      
       if (navigator.onLine) {
-        document.getElementById('autoFetchMsg').textContent = '系統正在自動連接 API...';
         setTimeout(() => fetchData(true), 1000);
-      } else {
-        document.getElementById('autoFetchMsg').textContent = '等待網絡連線...';
-        setStatus('離線狀態，請檢查網絡後手動刷新', 'error');
       }
     });
     
-    // Parse Book IDs from input
+    // Parse Book IDs
     function parseBookIds() {
       const input = document.getElementById('bookInput').value;
       const ids = input.split(/[\n\r,،\s\t]+/)
@@ -922,10 +905,16 @@
       currentBookData = [];
     }
     
+    // Update Row Height
+    function updateRowHeight(height) {
+      currentRowHeight = parseInt(height);
+      document.documentElement.style.setProperty('--row-height', currentRowHeight + 'px');
+      document.getElementById('heightValue').textContent = currentRowHeight + 'px';
+    }
+    
     // Column Resize Logic
     function initResizableColumns() {
-      const resizers = document.querySelectorAll('.resizer');
-      resizers.forEach(resizer => {
+      document.querySelectorAll('.resizer').forEach(resizer => {
         resizer.addEventListener('mousedown', initResize);
       });
     }
@@ -936,88 +925,63 @@
       startX = e.pageX;
       startWidth = currentCol.offsetWidth;
       
-      // Add resizing class for visual feedback
       e.target.classList.add('resizing');
-      
-      // Prevent text selection while resizing
       document.body.style.userSelect = 'none';
       document.body.style.cursor = 'col-resize';
       
-      // Attach event listeners
       document.addEventListener('mousemove', doResize);
       document.addEventListener('mouseup', stopResize);
-      
       e.preventDefault();
     }
     
     function doResize(e) {
       if (!isResizing || !currentCol) return;
-      
       const diff = e.pageX - startX;
-      const newWidth = Math.max(50, startWidth + diff); // Minimum 50px
-      
-      // Set width on current column
+      const newWidth = Math.max(50, startWidth + diff);
       currentCol.style.width = newWidth + 'px';
       currentCol.style.minWidth = newWidth + 'px';
     }
     
-    function stopResize(e) {
+    function stopResize() {
       if (!isResizing) return;
-      
       isResizing = false;
       if (currentCol) {
         const resizer = currentCol.querySelector('.resizer');
         if (resizer) resizer.classList.remove('resizing');
       }
       currentCol = null;
-      
-      // Restore styles
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
-      
-      // Remove event listeners
       document.removeEventListener('mousemove', doResize);
       document.removeEventListener('mouseup', stopResize);
     }
     
-    // Fetch Book Data (Single or Batch) - Excel Style Display
+    // Fetch Book Data
     async function fetchBookData() {
       const ids = parseBookIds();
-      
       if (ids.length === 0) {
-        setStatus('請輸入有效的書籍 ID（數字格式）', 'error', 'bookStatus');
+        setStatus('請輸入有效的書籍 ID', 'error', 'bookStatus');
         return;
       }
       
       currentBookData = [];
       setLoading(true);
-      setStatus(`準備查詢 ${ids.length} 個書籍...`, 'loading', 'bookStatus');
+      setStatus(`查詢中...`, 'loading', 'bookStatus');
       
-      const resultsDiv = document.getElementById('bookResults');
-      resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;">載入中...</div>';
-      
-      // Show progress bar for batch
       if (ids.length > 1) {
         document.getElementById('progressBar').style.display = 'block';
       }
       
-      // Process sequentially
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i];
-        
         if (ids.length > 1) {
-          const progress = ((i / ids.length) * 100).toFixed(0);
-          document.getElementById('progressFill').style.width = progress + '%';
-          setStatus(`查詢中... (${i + 1}/${ids.length}) ID: ${id}`, 'loading', 'bookStatus');
+          document.getElementById('progressFill').style.width = ((i / ids.length) * 100).toFixed(0) + '%';
         }
         
         try {
           const data = await fetchSingleBook(id);
-          if (data) {
-            currentBookData.push({ id, ...data });
-          }
+          if (data) currentBookData.push({ id, ...data });
         } catch (err) {
-          console.error(`Error fetching book ${id}:`, err);
           currentBookData.push({ 
             id, 
             error: err.message,
@@ -1027,34 +991,25 @@
           });
         }
         
-        // Update table in real-time for multiple books
         if (ids.length > 1 && currentBookData.length > 0) {
           renderExcelTable();
+          initResizableColumns();
         }
         
         if (i < ids.length - 1) await new Promise(r => setTimeout(r, 300));
       }
       
-      // Complete
       document.getElementById('progressBar').style.display = 'none';
-      document.getElementById('progressFill').style.width = '0%';
-      
-      // Final render
       renderExcelTable();
-      initResizableColumns(); // Initialize resizers after table is built
+      initResizableColumns();
       
-      if (currentBookData.length > 0) {
-        const successCount = currentBookData.filter(b => !b.error).length;
-        setStatus(`查詢完成！成功獲取 ${successCount}/${ids.length} 本書籍資料`, successCount > 0 ? 'success' : 'error', 'bookStatus');
-        document.getElementById('btnExport').style.display = 'inline-flex';
-      } else {
-        setStatus('查詢完成，但未獲取到任何資料', 'error', 'bookStatus');
-      }
-      
+      const successCount = currentBookData.filter(b => !b.error).length;
+      setStatus(`完成！${successCount}/${ids.length}`, successCount > 0 ? 'success' : 'error', 'bookStatus');
+      document.getElementById('btnExport').style.display = 'inline-flex';
       setLoading(false);
     }
     
-    // API Call for Single Book
+    // API Call
     function fetchSingleBook(id) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -1066,67 +1021,48 @@
             if (xhr.status === 200) {
               try {
                 const result = JSON.parse(xhr.responseText);
-                const bookData = result.data || result;
-                resolve(bookData);
+                resolve(result.data || result);
               } catch (e) {
-                reject(new Error('數據解析失敗'));
+                reject(new Error('解析失敗'));
               }
             } else if (xhr.status === 404) {
-              reject(new Error('找不到書籍'));
+              reject(new Error('找不到'));
             } else {
               reject(new Error(`HTTP ${xhr.status}`));
             }
           }
         };
-        
         xhr.onerror = () => reject(new Error('網絡錯誤'));
         xhr.send();
       });
     }
     
-    // Render Excel-style Table with All Fields
+    // Render Excel Table - No Stats Summary, Height Adjustable
     function renderExcelTable() {
       const container = document.getElementById('bookResults');
-      
       if (currentBookData.length === 0) {
         container.innerHTML = '<div class="empty-state">無資料</div>';
         return;
       }
       
-      // Calculate totals
-      const totalBooks = currentBookData.length;
-      const totalLibraries = currentBookData.reduce((sum, book) => sum + (book['館藏列表'] || []).length, 0);
-      const totalAvailable = currentBookData.reduce((sum, book) => {
-        const libs = book['館藏列表'] || [];
-        return sum + libs.filter(l => l['館藏現況'] && l['館藏現況'].includes('可供借閱')).length;
-      }, 0);
-      
-      // Build table HTML
       let html = '';
       
-      // Summary stats
+      // Height Control Panel
       html += `
-        <div class="stats-summary">
-          <div class="stat-box">
-            <div class="stat-number">${totalBooks}</div>
-            <div class="stat-label">查詢書籍</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number">${totalLibraries}</div>
-            <div class="stat-label">總館藏數</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number" style="color: var(--success);">${totalAvailable}</div>
-            <div class="stat-label">可借閱</div>
-          </div>
+        <div class="height-control-panel">
+          <label>行高調整:</label>
+          <input type="range" class="height-slider" min="16" max="100" value="${currentRowHeight}" 
+                 oninput="updateRowHeight(this.value)" onchange="updateRowHeight(this.value)">
+          <span class="height-value" id="heightValue">${currentRowHeight}px</span>
+          <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">拖曳滑塊調整行高</span>
         </div>
       `;
       
-      // Excel-style table with resizable columns
+      // Table
       html += '<div style="overflow-x: auto; border: 1px solid var(--border); border-radius: 8px;">';
       html += '<table class="excel-book-table" id="excelTable">';
       
-      // Header with resizers - 按用户要求的顺序
+      // Header
       html += `
         <thead>
           <tr>
@@ -1159,28 +1095,20 @@
         const details = book['書目詳情'] || {};
         const libraries = book['館藏列表'] || [];
         
-        // Build combined location string
         let locationHtml = '';
         if (book.error) {
-          locationHtml = `<span style="color: var(--danger); font-size: 12px;">錯誤: ${escapeHtml(book.error)}</span>`;
+          locationHtml = `<span style="color: var(--danger); font-size: 10px;">錯誤: ${escapeHtml(book.error)}</span>`;
         } else if (libraries.length === 0) {
-          locationHtml = '<span style="color: var(--text-muted); font-size: 12px;">無館藏資料</span>';
+          locationHtml = '<span style="color: var(--text-muted); font-size: 10px;">無</span>';
         } else {
           locationHtml = '<div class="location-list">';
           libraries.forEach(lib => {
             const status = lib['館藏現況'] || '--';
             let statusClass = 'status-processing';
             let itemClass = '';
-            if (status.includes('可供借閱')) {
-              statusClass = 'status-available';
-              itemClass = 'available';
-            } else if (status.includes('已借出')) {
-              statusClass = 'status-loaned';
-              itemClass = 'loaned';
-            } else if (status.includes('預約')) {
-              statusClass = 'status-reserve';
-              itemClass = 'reserved';
-            }
+            if (status.includes('可供借閱')) { statusClass = 'status-available'; itemClass = 'available'; }
+            else if (status.includes('已借出')) { statusClass = 'status-loaned'; itemClass = 'loaned'; }
+            else if (status.includes('預約')) { statusClass = 'status-reserve'; itemClass = 'reserved'; }
             
             locationHtml += `
               <div class="location-item ${itemClass}">
@@ -1194,39 +1122,35 @@
           locationHtml += '</div>';
         }
         
-        // 按用户要求的字段顺序显示
         html += `
           <tr ${book.error ? 'style="background: #fff5f5;"' : ''}>
             <td class="col-seq">${index + 1}</td>
-            <td class="col-title">
-              <span class="cell-content" title="${escapeHtml(book['書本名稱'] || '')}">
-                ${book.error ? '<span style="color: var(--danger);">查詢失敗</span>' : escapeHtml(book['書本名稱'] || '--')}
-              </span>
+            <td class="col-title" title="${escapeHtml(book['書本名稱'] || '')}">
+              ${book.error ? '<span style="color: var(--danger);">查詢失敗</span>' : escapeHtml(book['書本名稱'] || '--')}
             </td>
-            <td class="col-author"><span class="cell-content">${escapeHtml(details['著者'] || '--')}</span></td>
-            <td class="col-isbn"><span class="cell-content">${escapeHtml(details['標準號碼'] || '--')}</span></td>
-            <td class="col-catalog"><span class="cell-content">${escapeHtml(details['館藏編目號碼'] || '--')}</span></td>
-            <td class="col-callno"><span class="cell-content" style="font-family: monospace;">${escapeHtml(details['索書號'] || '--')}</span></td>
-            <td class="col-place"><span class="cell-content">${escapeHtml(details['出版地'] || '--')}</span></td>
-            <td class="col-publisher"><span class="cell-content">${escapeHtml(details['出版者'] || '--')}</span></td>
-            <td class="col-year"><span class="cell-content">${escapeHtml(details['出版年份'] || '--')}</span></td>
-            <td class="col-bookid"><span class="cell-content" style="font-family: monospace;">${book.id}</span></td>
-            <td class="col-series"><span class="cell-content">${escapeHtml(details['叢書名'] || '--')}</span></td>
-            <td class="col-other-authors"><span class="cell-content">${escapeHtml(details['其他著者'] || '--')}</span></td>
-            <td class="col-alias"><span class="cell-content">${escapeHtml(details['書刊別名'] || '--')}</span></td>
-            <td class="col-standard"><span class="cell-content">${escapeHtml(details['標準號碼'] || '--')}</span></td>
-            <td class="col-add-series"><span class="cell-content">${escapeHtml(details['附加叢書名稱'] || '--')}</span></td>
-            <td class="col-notes"><span class="cell-content" title="${escapeHtml(details['附註'] || '')}">${escapeHtml(details['附註'] || '--')}</span></td>
-            <td class="col-lang"><span class="cell-content">${escapeHtml(details['語言'] || '--')}</span></td>
+            <td class="col-author">${escapeHtml(details['著者'] || '--')}</td>
+            <td class="col-isbn">${escapeHtml(details['標準號碼'] || '--')}</td>
+            <td class="col-catalog">${escapeHtml(details['館藏編目號碼'] || '--')}</td>
+            <td class="col-callno" style="font-family: monospace;">${escapeHtml(details['索書號'] || '--')}</td>
+            <td class="col-place">${escapeHtml(details['出版地'] || '--')}</td>
+            <td class="col-publisher">${escapeHtml(details['出版者'] || '--')}</td>
+            <td class="col-year">${escapeHtml(details['出版年份'] || '--')}</td>
+            <td class="col-bookid" style="font-family: monospace; font-size: 11px;">${book.id}</td>
+            <td class="col-series">${escapeHtml(details['叢書名'] || '--')}</td>
+            <td class="col-other-authors">${escapeHtml(details['其他著者'] || '--')}</td>
+            <td class="col-alias">${escapeHtml(details['書刊別名'] || '--')}</td>
+            <td class="col-standard">${escapeHtml(details['標準號碼'] || '--')}</td>
+            <td class="col-add-series">${escapeHtml(details['附加叢書名稱'] || '--')}</td>
+            <td class="col-notes" title="${escapeHtml(details['附註'] || '')}">${escapeHtml(details['附註'] || '--')}</td>
+            <td class="col-lang">${escapeHtml(details['語言'] || '--')}</td>
             <td class="col-count">${libraries.length}</td>
             <td class="col-locations">${locationHtml}</td>
           </tr>
         `;
       });
       
-      html += '</tbody></table>';
-      html += '</div>';
-      html += '<div style="margin-top: 10px; font-size: 12px; color: var(--text-muted);">提示：拖曳欄位標題右側邊界可調整欄寬</div>';
+      html += '</tbody></table></div>';
+      html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 使用上方滑塊調整行高</div>';
       
       container.innerHTML = html;
     }
@@ -1238,15 +1162,12 @@
         return;
       }
       
-      // Format data for Excel - 按用户要求的字段顺序
       const rows = [];
-      
       currentBookData.forEach((book, idx) => {
         const details = book['書目詳情'] || {};
         const libraries = book['館藏列表'] || [];
         
-        // 按用户要求的字段顺序构建数据
-        const rowData = {
+        rows.push({
           '序號': idx + 1,
           '書名': book['書本名稱'] || (book.error ? '查詢失敗' : ''),
           '作者': details['著者'] || '',
@@ -1267,49 +1188,31 @@
           '館藏數量': libraries.length,
           '館藏分佈': book.error ? `錯誤: ${book.error}` : 
             libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']}) ${l['館藏'] ? '['+l['館藏']+']' : ''}`).join('; ')
-        };
-        
-        rows.push(rowData);
+        });
       });
       
-      // Create worksheet
       const ws = XLSX.utils.json_to_sheet(rows);
-      
-      // Auto-width
       const colWidths = [];
       const keys = Object.keys(rows[0] || {});
       keys.forEach((key, i) => {
-        const maxLength = Math.max(
-          key.length,
-          ...rows.map(r => String(r[key] || '').length)
-        );
+        const maxLength = Math.max(key.length, ...rows.map(r => String(r[key] || '').length));
         colWidths[i] = { wch: Math.min(maxLength + 2, 100) };
       });
       ws['!cols'] = colWidths;
       
-      // Create workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'HKPL館藏查詢');
       
-      // Generate filename with timestamp
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const filename = `HKPL_Books_${date}_${currentBookData.length}本.xlsx`;
+      XLSX.writeFile(wb, `HKPL_Books_${date}_${currentBookData.length}本.xlsx`);
       
-      // Download
-      XLSX.writeFile(wb, filename);
-      
-      setStatus(`已滙出 ${currentBookData.length} 本書籍資料到 ${filename}`, 'success', 'bookStatus');
+      setStatus(`已滙出 ${currentBookData.length} 本`, 'success', 'bookStatus');
     }
     
     // Fetch Scrape Data (Tab 1)
     function fetchData(isAuto = false) {
       setLoading(true);
-      
-      if (isAuto) {
-        setStatus('頁面載入，自動連接 API 中...', 'loading');
-      } else {
-        setStatus('連接中...', 'loading');
-      }
+      setStatus(isAuto ? '自動連接中...' : '連接中...', 'loading');
       
       document.getElementById('ebookResult').innerHTML = '<div class="empty-state">載入中...</div>';
       document.getElementById('dbResult').innerHTML = '<div class="empty-state">載入中...</div>';
@@ -1328,41 +1231,24 @@
                 currentScrapeData = result.data;
                 renderScrapeData(result.data);
                 setStatus(isAuto ? '自動抓取成功！' : '抓取成功！', 'success');
-                
-                const now = new Date();
-                document.getElementById('lastUpdate').textContent = 
-                  '最後更新: ' + now.toLocaleTimeString();
-                
+                document.getElementById('lastUpdate').textContent = '最後更新: ' + new Date().toLocaleTimeString();
                 if (isAuto && isFirstLoad) {
-                  setTimeout(() => {
-                    document.getElementById('autoFetchBanner').classList.remove('show');
-                  }, 3000);
+                  setTimeout(() => document.getElementById('autoFetchBanner').classList.remove('show'), 3000);
                   isFirstLoad = false;
                 }
               } else {
                 setStatus('數據格式錯誤', 'error');
               }
             } catch (e) {
-              setStatus('解析失敗: ' + e.message, 'error');
+              setStatus('解析失敗', 'error');
             }
           } else {
             setStatus('連接失敗 (' + xhr.status + ')', 'error');
-            if (isAuto) {
-              document.getElementById('autoFetchMsg').textContent = '自動連接失敗，請點擊手動刷新';
-            }
           }
           setLoading(false);
         }
       };
-      
-      xhr.onerror = function() {
-        setStatus('網絡錯誤，請檢查 Proxy 服務', 'error');
-        if (isAuto) {
-          document.getElementById('autoFetchMsg').textContent = '自動連接失敗，請檢查網絡後點擊手動刷新';
-        }
-        setLoading(false);
-      };
-      
+      xhr.onerror = () => { setStatus('網絡錯誤', 'error'); setLoading(false); };
       xhr.send('{}');
     }
     
@@ -1373,75 +1259,44 @@
       document.getElementById('ebookCount').textContent = ebooks.length + ' 個';
       document.getElementById('dbCount').textContent = databases.length + ' 個';
       
-      // Render Ebooks
       if (ebooks.length > 0) {
-        const html = `
+        document.getElementById('ebookResult').innerHTML = `
           <table>
-            <thead>
-              <tr>
-                <th width="15%">類型</th>
-                <th width="55%">標題</th>
-                <th width="30%">鏈接</th>
-              </tr>
-            </thead>
+            <thead><tr><th>類型</th><th>標題</th><th>鏈接</th></tr></thead>
             <tbody>
-              ${ebooks.map(item => {
-                const cat = item.category || '電子書';
-                const badgeClass = cat.includes('英文') ? 'badge-db' : 'badge-ebook';
-                return `
-                  <tr>
-                    <td><span class="badge ${badgeClass}">${escapeHtml(cat)}</span></td>
-                    <td>${escapeHtml(item.title)}</td>
-                    <td><a href="${item.link || '#'}" target="_blank" style="color: var(--primary);">查看資源 →</a></td>
-                  </tr>
-                `;
-              }).join('')}
+              ${ebooks.map(item => `
+                <tr>
+                  <td><span class="badge ${item.category?.includes('英文') ? 'badge-db' : 'badge-ebook'}">${escapeHtml(item.category || '電子書')}</span></td>
+                  <td>${escapeHtml(item.title)}</td>
+                  <td><a href="${item.link || '#'}" target="_blank" style="color: var(--primary);">查看 →</a></td>
+                </tr>
+              `).join('')}
             </tbody>
-          </table>
-        `;
-        document.getElementById('ebookResult').innerHTML = html;
+          </table>`;
       } else {
         document.getElementById('ebookResult').innerHTML = '<div class="empty-state">無電子書數據</div>';
       }
       
-      // Render Databases
       if (databases.length > 0) {
-        const html = `
+        document.getElementById('dbResult').innerHTML = `
           <table>
-            <thead>
-              <tr>
-                <th width="30%">標題</th>
-                <th width="50%">使用地點</th>
-                <th width="20%">標籤</th>
-              </tr>
-            </thead>
+            <thead><tr><th>標題</th><th>使用地點</th><th>標籤</th></tr></thead>
             <tbody>
-              ${databases.map(db => {
-                const locs = db.locations || [];
-                const tags = db.tags || [];
-                const locHtml = locs.length > 0 
-                  ? locs.map(l => `<span class="badge" style="background: #e2e8f0; color: var(--text); margin: 2px; display: inline-block;">${escapeHtml(l)}</span>`).join('')
-                  : '<span style="color: var(--text-muted);">-</span>';
-                const tagStr = tags.slice(0, 5).join(', ') + (tags.length > 5 ? '...' : '');
-                
-                return `
-                  <tr>
-                    <td><strong>${escapeHtml(db.title)}</strong></td>
-                    <td>${locHtml}</td>
-                    <td>${escapeHtml(tagStr)}</td>
-                  </tr>
-                `;
-              }).join('')}
+              ${databases.map(db => `
+                <tr>
+                  <td><strong>${escapeHtml(db.title)}</strong></td>
+                  <td>${(db.locations || []).map(l => `<span class="badge" style="background: #e2e8f0; color: var(--text); margin: 2px;">${escapeHtml(l)}</span>`).join('')}</td>
+                  <td>${(db.tags || []).slice(0, 5).join(', ')}${(db.tags || []).length > 5 ? '...' : ''}</td>
+                </tr>
+              `).join('')}
             </tbody>
-          </table>
-        `;
-        document.getElementById('dbResult').innerHTML = html;
+          </table>`;
       } else {
         document.getElementById('dbResult').innerHTML = '<div class="empty-state">無數據庫數據</div>';
       }
     }
     
-    // Utility: Escape HTML
+    // Utility
     function escapeHtml(text) {
       if (!text) return '--';
       const div = document.createElement('div');
