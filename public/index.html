@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v2.4</title>
+  <title>HKPL 資源控制台 v3.1</title>
   
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -29,7 +29,7 @@
       --text: #2d3748;
       --text-muted: #718096;
       --border: #e2e8f0;
-      --row-height: 20px; /* Default row height */
+      --row-height: 20px;
     }
     
     body {
@@ -104,6 +104,25 @@
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
+    }
+    
+    /* Storage Info Banner */
+    .storage-info {
+      background: linear-gradient(90deg, #f0fff4 0%, #c6f6d5 100%);
+      border-left: 4px solid var(--success);
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #22543d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .storage-info .time {
+      font-weight: 600;
+      color: var(--success);
     }
     
     /* Tabs */
@@ -230,6 +249,16 @@
       z-index: 100;
     }
     
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    
+    .btn-info {
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -299,6 +328,53 @@
     .badge-db {
       background: #dbeafe;
       color: #1e40af;
+    }
+    
+    /* Excel Extract Panel - For "From Web" extraction */
+    .extract-panel {
+      background: #fffaf0;
+      border: 2px dashed var(--warning);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    .extract-panel.show {
+      display: block;
+    }
+    
+    .extract-panel h4 {
+      color: #92400e;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    
+    .extract-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .extract-textarea {
+      width: 100%;
+      min-height: 200px;
+      max-height: 400px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      resize: vertical;
+      background: #fff;
+    }
+    
+    .extract-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
     }
     
     table {
@@ -467,7 +543,7 @@
       text-align: center;
     }
     
-    /* Resizable Excel Table */
+    /* Resizable Excel Table - Excel-like text truncation */
     .excel-book-table {
       width: 100%;
       border-collapse: collapse;
@@ -495,16 +571,18 @@
       background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e0 100%);
     }
     
+    /* Excel-like cell: truncate with ellipsis when row height is small */
     .excel-book-table td {
       padding: 2px 4px;
       border: 1px solid var(--border);
-      vertical-align: top;
+      vertical-align: middle;
       overflow: hidden;
       text-overflow: ellipsis;
       height: var(--row-height);
       max-height: var(--row-height);
       font-size: 12px;
       line-height: calc(var(--row-height) - 4px);
+      white-space: nowrap;
     }
     
     .excel-book-table tr:nth-child(even) {
@@ -513,6 +591,14 @@
     
     .excel-book-table tr:hover {
       background: #e0e7ff;
+    }
+    
+    .excel-book-table tr:hover td {
+      overflow: visible;
+      white-space: normal;
+      background: #e0e7ff;
+      z-index: 10;
+      position: relative;
     }
     
     /* Column Resizer Handle */
@@ -633,16 +719,6 @@
       to { transform: rotate(360deg); }
     }
     
-    /* Text truncation with tooltip */
-    .cell-content {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
-      display: block;
-      height: 100%;
-    }
-    
     /* Responsive */
     @media (max-width: 1200px) {
       .search-layout {
@@ -662,6 +738,10 @@
         margin-top: 10px;
         justify-content: center;
       }
+      
+      .extract-controls {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -674,7 +754,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v2.4</h1>
+          <h1>HKPL 資源控制台 v3.1</h1>
           <p>香港公共圖書館電子資源 & 館藏查詢系統</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -696,12 +776,56 @@
     
     <!-- Tab 1: Scrape -->
     <div id="tab-scrape" class="tab-content active">
+      <div class="storage-info" id="storageInfo" style="display: none;">
+        <span>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/>
+          </svg>
+          上次自動抓取時間：<span class="time" id="lastScrapeTime">--</span>
+        </span>
+        <span style="color: var(--text-muted);">每日 09:00 自動更新 | 
+          <a href="#" onclick="showExtractPanel(); return false;" style="color: var(--primary); text-decoration: underline;">顯示Excel可提取資料</a>
+        </span>
+      </div>
+
+      <!-- Excel Extract Panel - Visible data for "From Web" extraction -->
+      <div class="extract-panel" id="extractPanel">
+        <h4>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+            <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l2.233-2.68a.5.5 0 0 0-.768-.64L7 8.781 5.884 6.68z"/>
+            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+          </svg>
+          Excel「從Web」提取專區 - 可直接複製或供Excel Power Query抓取
+        </h4>
+        <div class="extract-controls">
+          <button class="btn btn-sm btn-primary" onclick="copyToClipboard('csv')">
+            📋 複製CSV到剪貼簿
+          </button>
+          <button class="btn btn-sm btn-info" onclick="copyToClipboard('json')">
+            📋 複製JSON到剪貼簿
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="downloadFile('csv')">
+            💾 下載CSV檔案
+          </button>
+          <button class="btn btn-sm" onclick="downloadFile('json')" style="background: #e2e8f0; color: var(--text);">
+            💾 下載JSON檔案
+          </button>
+          <button class="btn btn-sm" onclick="hideExtractPanel()" style="background: var(--border); color: var(--text); margin-left: auto;">
+            ✕ 關閉
+          </button>
+        </div>
+        <textarea class="extract-textarea" id="extractDataArea" readonly placeholder="點擊「顯示可提取資料」後，此處將顯示可供Excel複製的資料..."></textarea>
+        <div class="extract-hint">
+          提示：Excel可使用「資料」→「從Web」功能抓取此頁面表格，或直接複製上方CSV文字貼到Excel。若需自動化，可使用Power Query連接此JSON資料。
+        </div>
+      </div>
+
       <div class="auto-fetch-banner show" id="autoFetchBanner">
         <div class="message">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
           </svg>
-          <span id="autoFetchMsg">系統正在自動連接 API...</span>
+          <span id="autoFetchMsg">檢查排程中...</span>
         </div>
         <button class="btn btn-primary" onclick="fetchData()" style="padding: 8px 16px; font-size: 13px;">
           立即手動刷新
@@ -717,7 +841,7 @@
           抓取 HKPL 電子資源 (API 1)
         </button>
         <span class="status" id="status">就緒</span>
-        <span id="lastUpdate" style="margin-left: auto; font-size: 12px; color: var(--text-muted);"></span>
+        <span id="nextUpdate" style="margin-left: auto; font-size: 12px; color: var(--text-muted);"></span>
       </div>
       
       <div class="result-section">
@@ -729,7 +853,7 @@
           <span class="badge badge-ebook" id="ebookCount">0 個</span>
         </div>
         <div id="ebookResult">
-          <div class="empty-state">等待數據載入...<br><small>頁面載入後將自動連接 API</small></div>
+          <div class="empty-state">載入中...<br><small>檢查本地儲存資料</small></div>
         </div>
       </div>
       
@@ -742,7 +866,7 @@
           <span class="badge badge-db" id="dbCount">0 個</span>
         </div>
         <div id="dbResult">
-          <div class="empty-state">等待數據載入...<br><small>即將自動抓取</small></div>
+          <div class="empty-state">載入中...</div>
         </div>
       </div>
     </div>
@@ -819,6 +943,11 @@
     let startX = 0;
     let startWidth = 0;
     let currentRowHeight = 20;
+    let autoScrapeTimer = null;
+    
+    // Constants for storage keys
+    const STORAGE_KEY_DATA = 'hkpl_scrape_data';
+    const STORAGE_KEY_TIME = 'hkpl_scrape_time';
     
     // Tab Switching
     function switchTab(tabName, btnElement) {
@@ -846,8 +975,7 @@
     window.addEventListener('online', () => {
       updateNetworkStatus();
       if (document.getElementById('tab-scrape').classList.contains('active')) {
-        setStatus('網絡已恢復，正在自動刷新...', 'loading');
-        setTimeout(() => fetchData(), 1000);
+        setStatus('網絡已恢復', 'success');
       }
     });
     
@@ -875,12 +1003,184 @@
       }
     }
     
-    // Auto Fetch on Page Load
+    // Show/Hide Extract Panel
+    function showExtractPanel() {
+      const panel = document.getElementById('extractPanel');
+      const textarea = document.getElementById('extractDataArea');
+      
+      // Generate CSV data
+      const csv = generateCSV();
+      textarea.value = csv;
+      
+      panel.classList.add('show');
+      textarea.select();
+    }
+    
+    function hideExtractPanel() {
+      document.getElementById('extractPanel').classList.remove('show');
+    }
+    
+    // Generate CSV from current data
+    function generateCSV() {
+      if (!currentScrapeData) return '無資料';
+      
+      const ebooks = currentScrapeData.ebooks || [];
+      const databases = currentScrapeData.edatabases || [];
+      
+      let csv = '類型,標題,連結,分類,說明\n';
+      
+      ebooks.forEach(item => {
+        csv += `電子書,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${(item.category || '').replace(/"/g, '""')}","${(item.description || '').replace(/"/g, '""')}"\n`;
+      });
+      
+      databases.forEach(item => {
+        const locations = (item.locations || []).join('; ');
+        const tags = (item.tags || []).join('; ');
+        csv += `資料庫,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${locations}","${tags}"\n`;
+      });
+      
+      return csv;
+    }
+    
+    // Generate JSON from current data
+    function generateJSON() {
+      if (!currentScrapeData) return '{}';
+      return JSON.stringify(currentScrapeData, null, 2);
+    }
+    
+    // Copy to clipboard
+    function copyToClipboard(format) {
+      const textarea = document.getElementById('extractDataArea');
+      const content = format === 'csv' ? generateCSV() : generateJSON();
+      textarea.value = content;
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
+      } catch (err) {
+        // Fallback
+        navigator.clipboard.writeText(content).then(() => {
+          setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
+        }).catch(() => {
+          setStatus('複製失敗，請手動複製', 'error');
+        });
+      }
+    }
+    
+    // Download file
+    function downloadFile(format) {
+      const content = format === 'csv' ? generateCSV() : generateJSON();
+      const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.download = `HKPL_Data_${date}.${format}`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success');
+    }
+    
+    // Storage Functions
+    function saveToStorage(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEY_TIME, new Date().toISOString());
+        updateStorageInfo();
+      } catch (e) {
+        console.error('Storage failed:', e);
+      }
+    }
+    
+    function loadFromStorage() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY_DATA);
+        const time = localStorage.getItem(STORAGE_KEY_TIME);
+        if (data && time) {
+          return { data: JSON.parse(data), time: new Date(time) };
+        }
+      } catch (e) {
+        console.error('Load failed:', e);
+      }
+      return null;
+    }
+    
+    function updateStorageInfo() {
+      const timeStr = localStorage.getItem(STORAGE_KEY_TIME);
+      if (timeStr) {
+        const date = new Date(timeStr);
+        const timeDisplay = date.toLocaleString('zh-HK', {
+          month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+        });
+        document.getElementById('lastScrapeTime').textContent = timeDisplay;
+        document.getElementById('storageInfo').style.display = 'flex';
+      }
+    }
+    
+    // Schedule next 9:00 AM scrape
+    function scheduleNextScrape() {
+      const now = new Date();
+      const next9AM = new Date(now);
+      next9AM.setHours(9, 0, 0, 0);
+      
+      if (now.getHours() >= 9) {
+        next9AM.setDate(next9AM.getDate() + 1);
+      }
+      
+      const msUntil9AM = next9AM - now;
+      const hoursUntil = Math.floor(msUntil9AM / (1000 * 60 * 60));
+      const minutesUntil = Math.floor((msUntil9AM % (1000 * 60 * 60)) / (1000 * 60));
+      
+      document.getElementById('nextUpdate').textContent = 
+        `下次自動更新: ${next9AM.getMonth()+1}/${next9AM.getDate()} 09:00 (還有 ${hoursUntil}小時${minutesUntil}分)`;
+      
+      if (autoScrapeTimer) clearTimeout(autoScrapeTimer);
+      
+      autoScrapeTimer = setTimeout(() => {
+        console.log('[Auto] 09:00 觸發自動抓取');
+        fetchData(true, true);
+        scheduleNextScrape();
+      }, msUntil9AM);
+      
+      console.log(`[Schedule] 已設定 ${next9AM.toLocaleString()} 自動抓取`);
+    }
+    
+    // Check if we need to scrape now
+    function checkAndScrape() {
+      const stored = loadFromStorage();
+      const now = new Date();
+      
+      if (stored && stored.data) {
+        currentScrapeData = stored.data;
+        renderScrapeData(stored.data);
+        updateStorageInfo();
+        setStatus('已載入本地儲存資料', 'success');
+        
+        const lastUpdate = stored.time;
+        const today9AM = new Date();
+        today9AM.setHours(9, 0, 0, 0);
+        
+        if (lastUpdate < today9AM && now >= today9AM) {
+          console.log('[Check] 資料過期，立即更新');
+          setTimeout(() => fetchData(true, true), 1000);
+        }
+      } else {
+        setTimeout(() => fetchData(true, true), 1000);
+      }
+      
+      scheduleNextScrape();
+    }
+    
+    // Page Load
     window.addEventListener('DOMContentLoaded', function() {
       updateNetworkStatus();
-      if (navigator.onLine) {
-        setTimeout(() => fetchData(true), 1000);
-      }
+      checkAndScrape();
     });
     
     // Parse Book IDs
@@ -905,11 +1205,17 @@
       currentBookData = [];
     }
     
-    // Update Row Height
+    // Update Row Height - Excel-like truncation
     function updateRowHeight(height) {
       currentRowHeight = parseInt(height);
       document.documentElement.style.setProperty('--row-height', currentRowHeight + 'px');
       document.getElementById('heightValue').textContent = currentRowHeight + 'px';
+      
+      const cells = document.querySelectorAll('.excel-book-table td');
+      cells.forEach(cell => {
+        cell.style.height = currentRowHeight + 'px';
+        cell.style.maxHeight = currentRowHeight + 'px';
+      });
     }
     
     // Column Resize Logic
@@ -1037,7 +1343,7 @@
       });
     }
     
-    // Render Excel Table - No Stats Summary, Height Adjustable
+    // Render Excel Table
     function renderExcelTable() {
       const container = document.getElementById('bookResults');
       if (currentBookData.length === 0) {
@@ -1047,22 +1353,19 @@
       
       let html = '';
       
-      // Height Control Panel
       html += `
         <div class="height-control-panel">
           <label>行高調整:</label>
-          <input type="range" class="height-slider" min="5" max="100" value="${currentRowHeight}" 
+          <input type="range" class="height-slider" min="16" max="100" value="${currentRowHeight}" 
                  oninput="updateRowHeight(this.value)" onchange="updateRowHeight(this.value)">
           <span class="height-value" id="heightValue">${currentRowHeight}px</span>
-          <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">拖曳滑塊調整行高</span>
+          <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">內容過長時自動顯示「...」</span>
         </div>
       `;
       
-      // Table
       html += '<div style="overflow-x: auto; border: 1px solid var(--border); border-radius: 8px;">';
       html += '<table class="excel-book-table" id="excelTable">';
       
-      // Header
       html += `
         <thead>
           <tr>
@@ -1090,7 +1393,6 @@
         <tbody>
       `;
       
-      // Data rows
       currentBookData.forEach((book, index) => {
         const details = book['書目詳情'] || {};
         const libraries = book['館藏列表'] || [];
@@ -1111,7 +1413,7 @@
             else if (status.includes('預約')) { statusClass = 'status-reserve'; itemClass = 'reserved'; }
             
             locationHtml += `
-              <div class="location-item ${itemClass}">
+              <div class="location-item ${itemClass}" title="${escapeHtml(lib['圖書館'])} - ${escapeHtml(lib['索書號'])} - ${escapeHtml(status)}">
                 <span class="location-library">${escapeHtml(lib['圖書館'])}</span>
                 <span class="location-callno">${escapeHtml(lib['索書號'])}</span>
                 <span class="location-status ${statusClass}">${escapeHtml(status)}</span>
@@ -1128,19 +1430,19 @@
             <td class="col-title" title="${escapeHtml(book['書本名稱'] || '')}">
               ${book.error ? '<span style="color: var(--danger);">查詢失敗</span>' : escapeHtml(book['書本名稱'] || '--')}
             </td>
-            <td class="col-author">${escapeHtml(details['著者'] || '--')}</td>
-            <td class="col-isbn">${escapeHtml(details['標準號碼'] || '--')}</td>
-            <td class="col-catalog">${escapeHtml(details['館藏編目號碼'] || '--')}</td>
-            <td class="col-callno" style="font-family: monospace;">${escapeHtml(details['索書號'] || '--')}</td>
-            <td class="col-place">${escapeHtml(details['出版地'] || '--')}</td>
-            <td class="col-publisher">${escapeHtml(details['出版者'] || '--')}</td>
+            <td class="col-author" title="${escapeHtml(details['著者'] || '')}">${escapeHtml(details['著者'] || '--')}</td>
+            <td class="col-isbn" title="${escapeHtml(details['標準號碼'] || '')}">${escapeHtml(details['標準號碼'] || '--')}</td>
+            <td class="col-catalog" title="${escapeHtml(details['館藏編目號碼'] || '')}">${escapeHtml(details['館藏編目號碼'] || '--')}</td>
+            <td class="col-callno" title="${escapeHtml(details['索書號'] || '')}">${escapeHtml(details['索書號'] || '--')}</td>
+            <td class="col-place" title="${escapeHtml(details['出版地'] || '')}">${escapeHtml(details['出版地'] || '--')}</td>
+            <td class="col-publisher" title="${escapeHtml(details['出版者'] || '')}">${escapeHtml(details['出版者'] || '--')}</td>
             <td class="col-year">${escapeHtml(details['出版年份'] || '--')}</td>
-            <td class="col-bookid" style="font-family: monospace; font-size: 11px;">${book.id}</td>
-            <td class="col-series">${escapeHtml(details['叢書名'] || '--')}</td>
-            <td class="col-other-authors">${escapeHtml(details['其他著者'] || '--')}</td>
-            <td class="col-alias">${escapeHtml(details['書刊別名'] || '--')}</td>
-            <td class="col-standard">${escapeHtml(details['標準號碼'] || '--')}</td>
-            <td class="col-add-series">${escapeHtml(details['附加叢書名稱'] || '--')}</td>
+            <td class="col-bookid">${book.id}</td>
+            <td class="col-series" title="${escapeHtml(details['叢書名'] || '')}">${escapeHtml(details['叢書名'] || '--')}</td>
+            <td class="col-other-authors" title="${escapeHtml(details['其他著者'] || '')}">${escapeHtml(details['其他著者'] || '--')}</td>
+            <td class="col-alias" title="${escapeHtml(details['書刊別名'] || '')}">${escapeHtml(details['書刊別名'] || '--')}</td>
+            <td class="col-standard" title="${escapeHtml(details['標準號碼'] || '')}">${escapeHtml(details['標準號碼'] || '--')}</td>
+            <td class="col-add-series" title="${escapeHtml(details['附加叢書名稱'] || '')}">${escapeHtml(details['附加叢書名稱'] || '--')}</td>
             <td class="col-notes" title="${escapeHtml(details['附註'] || '')}">${escapeHtml(details['附註'] || '--')}</td>
             <td class="col-lang">${escapeHtml(details['語言'] || '--')}</td>
             <td class="col-count">${libraries.length}</td>
@@ -1150,7 +1452,7 @@
       });
       
       html += '</tbody></table></div>';
-      html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 使用上方滑塊調整行高</div>';
+      html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 滑鼠懸停可查看完整內容</div>';
       
       container.innerHTML = html;
     }
@@ -1187,7 +1489,7 @@
           '語言': details['語言'] || '',
           '館藏數量': libraries.length,
           '館藏分佈': book.error ? `錯誤: ${book.error}` : 
-            libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']}) ${l['館藏'] ? '['+l['館藏']+']' : ''}`).join('; ')
+            libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']})`).join('; ')
         });
       });
       
@@ -1209,13 +1511,15 @@
       setStatus(`已滙出 ${currentBookData.length} 本`, 'success', 'bookStatus');
     }
     
-    // Fetch Scrape Data (Tab 1)
-    function fetchData(isAuto = false) {
+    // Fetch Scrape Data
+    function fetchData(isAuto = false, saveToStorageFlag = false) {
       setLoading(true);
-      setStatus(isAuto ? '自動連接中...' : '連接中...', 'loading');
+      setStatus(isAuto ? '自動抓取中...' : '連接中...', 'loading');
       
-      document.getElementById('ebookResult').innerHTML = '<div class="empty-state">載入中...</div>';
-      document.getElementById('dbResult').innerHTML = '<div class="empty-state">載入中...</div>';
+      if (!isAuto) {
+        document.getElementById('ebookResult').innerHTML = '<div class="empty-state">載入中...</div>';
+        document.getElementById('dbResult').innerHTML = '<div class="empty-state">載入中...</div>';
+      }
       
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/api/proxy?target=8000&endpoint=scrape', true);
@@ -1230,8 +1534,13 @@
               if (result.success && result.data) {
                 currentScrapeData = result.data;
                 renderScrapeData(result.data);
+                
+                if (saveToStorageFlag) {
+                  saveToStorage(result.data);
+                }
+                
                 setStatus(isAuto ? '自動抓取成功！' : '抓取成功！', 'success');
-                document.getElementById('lastUpdate').textContent = '最後更新: ' + new Date().toLocaleTimeString();
+                
                 if (isAuto && isFirstLoad) {
                   setTimeout(() => document.getElementById('autoFetchBanner').classList.remove('show'), 3000);
                   isFirstLoad = false;
