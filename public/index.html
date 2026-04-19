@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v3.1</title>
+  <title>HKPL 資源控制台 v3.2 (全自動)</title>
   
-  <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <style>
@@ -49,7 +48,6 @@
       overflow: hidden;
     }
     
-    /* Header */
     .header {
       background: linear-gradient(90deg, var(--accent-blue) 0%, #00f2fe 100%);
       color: white;
@@ -64,12 +62,6 @@
       font-weight: 700;
     }
     
-    .header p {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    
-    /* Network Status Indicator */
     .network-status {
       position: absolute;
       top: 20px;
@@ -96,17 +88,11 @@
       animation: pulse 2s infinite;
     }
     
-    .network-status.offline .status-dot {
-      background: var(--danger);
-      animation: none;
-    }
-    
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
     
-    /* Storage Info Banner */
     .storage-info {
       background: linear-gradient(90deg, #f0fff4 0%, #c6f6d5 100%);
       border-left: 4px solid var(--success);
@@ -125,7 +111,6 @@
       color: var(--success);
     }
     
-    /* Tabs */
     .tab-nav {
       display: flex;
       background: #f8fafc;
@@ -142,7 +127,6 @@
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.3s;
-      position: relative;
     }
     
     .tab-btn:hover {
@@ -153,16 +137,7 @@
     .tab-btn.active {
       color: var(--primary);
       background: white;
-    }
-    
-    .tab-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--primary);
+      box-shadow: inset 0 -3px 0 var(--primary);
     }
     
     .tab-content {
@@ -174,40 +149,37 @@
       display: block;
     }
     
-    /* Auto-fetch Banner */
-    .auto-fetch-banner {
-      background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%);
-      border-left: 4px solid var(--primary);
-      padding: 16px 20px;
-      margin-bottom: 24px;
+    /* 自動狀態指示器（取代手動按鈕） */
+    .auto-status-bar {
+      background: #e0e7ff;
       border-radius: 8px;
-      display: none;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .auto-fetch-banner.show {
-      display: flex;
-    }
-    
-    .auto-fetch-banner .message {
+      padding: 12px 20px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      font-size: 13px;
       color: #3730a3;
-      font-size: 14px;
+    }
+    
+    .auto-status-bar .indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: white;
+      border-radius: 12px;
       font-weight: 600;
     }
     
     .control-panel {
       background: #f8fafc;
-      padding: 24px;
+      padding: 20px 24px;
       border-radius: 12px;
       margin-bottom: 24px;
       display: flex;
       align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
     }
     
     .btn {
@@ -226,12 +198,6 @@
     .btn-primary {
       background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
-    }
-    
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
     }
     
     .btn-secondary {
@@ -262,7 +228,6 @@
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      transform: none !important;
     }
     
     .status {
@@ -285,12 +250,6 @@
       color: #065f46;
     }
     
-    .status.error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-    
-    /* Results */
     .result-section {
       margin-bottom: 32px;
     }
@@ -320,28 +279,16 @@
       font-weight: 600;
     }
     
-    .badge-ebook {
-      background: #d1fae5;
-      color: #065f46;
-    }
+    .badge-ebook { background: #d1fae5; color: #065f46; }
+    .badge-db { background: #dbeafe; color: #1e40af; }
     
-    .badge-db {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-    
-    /* Excel Extract Panel - For "From Web" extraction */
+    /* Excel Extract Panel - 自動顯示，無需點擊連結 */
     .extract-panel {
       background: #fffaf0;
       border: 2px dashed var(--warning);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 20px;
-      display: none;
-    }
-    
-    .extract-panel.show {
-      display: block;
     }
     
     .extract-panel h4 {
@@ -359,8 +306,8 @@
     
     .extract-textarea {
       width: 100%;
-      min-height: 200px;
-      max-height: 400px;
+      min-height: 150px;
+      max-height: 300px;
       padding: 12px;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -395,7 +342,6 @@
       color: var(--text-muted);
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
       border-bottom: 2px solid var(--border);
     }
     
@@ -430,7 +376,6 @@
       border: 2px dashed var(--border);
     }
     
-    /* Tab 2: Book Search Layout */
     .search-layout {
       display: grid;
       grid-template-columns: 350px 1fr;
@@ -470,7 +415,6 @@
       font-size: 14px;
       font-family: 'Courier New', monospace;
       resize: none;
-      transition: border-color 0.3s;
     }
     
     .book-input:focus {
@@ -481,7 +425,6 @@
     .input-hint {
       font-size: 12px;
       color: var(--text-muted);
-      line-height: 1.4;
     }
     
     .search-results {
@@ -492,7 +435,6 @@
       overflow: auto;
     }
     
-    /* Row Height Control Panel */
     .height-control-panel {
       background: #f0f4f8;
       border: 1px solid var(--border);
@@ -505,12 +447,6 @@
       font-size: 13px;
     }
     
-    .height-control-panel label {
-      font-weight: 600;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-    
     .height-slider {
       flex: 1;
       height: 6px;
@@ -518,7 +454,6 @@
       appearance: none;
       background: #cbd5e0;
       border-radius: 3px;
-      outline: none;
     }
     
     .height-slider::-webkit-slider-thumb {
@@ -529,11 +464,6 @@
       background: var(--primary);
       border-radius: 50%;
       cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .height-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
     }
     
     .height-value {
@@ -543,7 +473,6 @@
       text-align: center;
     }
     
-    /* Resizable Excel Table - Excel-like text truncation */
     .excel-book-table {
       width: 100%;
       border-collapse: collapse;
@@ -567,11 +496,6 @@
       height: 24px;
     }
     
-    .excel-book-table th:hover {
-      background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e0 100%);
-    }
-    
-    /* Excel-like cell: truncate with ellipsis when row height is small */
     .excel-book-table td {
       padding: 2px 4px;
       border: 1px solid var(--border);
@@ -583,10 +507,6 @@
       font-size: 12px;
       line-height: calc(var(--row-height) - 4px);
       white-space: nowrap;
-    }
-    
-    .excel-book-table tr:nth-child(even) {
-      background: #f8fafc;
     }
     
     .excel-book-table tr:hover {
@@ -601,7 +521,6 @@
       position: relative;
     }
     
-    /* Column Resizer Handle */
     .resizer {
       position: absolute;
       right: 0;
@@ -613,13 +532,11 @@
       z-index: 10;
     }
     
-    .resizer:hover,
-    .resizer.resizing {
+    .resizer:hover {
       background: var(--primary);
       width: 3px;
     }
     
-    /* Column specific default widths */
     .col-seq { width: 40px; text-align: center; background: #f0f4f8; font-weight: 600; }
     .col-title { width: 180px; font-weight: 600; color: var(--primary-dark); }
     .col-author { width: 90px; }
@@ -640,7 +557,6 @@
     .col-count { width: 60px; text-align: center; font-weight: 600; }
     .col-locations { width: 320px; min-width: 280px; }
     
-    /* Location combined cell styles - compact for 20px height */
     .location-list {
       display: flex;
       flex-direction: column;
@@ -666,12 +582,6 @@
     .location-item.loaned { border-left-color: var(--warning); background: #fffaf0; }
     .location-item.reserved { border-left-color: var(--danger); background: #fff5f5; }
     
-    .location-library { font-weight: 600; color: var(--text); }
-    .location-callno { font-family: 'Courier New', monospace; color: var(--primary); font-size: 10px; }
-    .location-status { font-size: 9px; padding: 0px 3px; border-radius: 6px; font-weight: 600; }
-    .location-shelf { color: var(--text-muted); font-size: 9px; }
-    
-    /* Progress bar */
     .progress-bar {
       width: 100%;
       height: 4px;
@@ -687,7 +597,6 @@
       transition: width 0.3s;
     }
     
-    /* Loading Overlay */
     .loading-overlay {
       position: fixed;
       top: 0;
@@ -699,7 +608,6 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      backdrop-filter: blur(4px);
     }
     
     .loading-overlay.show {
@@ -719,7 +627,6 @@
       to { transform: rotate(360deg); }
     }
     
-    /* Responsive */
     @media (max-width: 1200px) {
       .search-layout {
         grid-template-columns: 1fr;
@@ -736,11 +643,11 @@
       .network-status {
         position: static;
         margin-top: 10px;
-        justify-content: center;
       }
       
-      .extract-controls {
+      .auto-status-bar {
         flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -754,8 +661,8 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v3.1</h1>
-          <p>香港公共圖書館電子資源 & 館藏查詢系統</p>
+          <h1>HKPL 資源控制台 v3.2</h1>
+          <p>全自動抓取系統 - 每日 09:00 自動更新</p>
         </div>
         <div class="network-status" id="networkStatus">
           <span class="status-dot"></span>
@@ -764,17 +671,16 @@
       </div>
     </div>
     
-    <!-- Tab Navigation -->
     <div class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('scrape', this)">
-        📡 抓取 HKPL 電子資源
+        📡 電子資源
       </button>
       <button class="tab-btn" onclick="switchTab('books', this)">
         📚 查詢書籍
       </button>
     </div>
     
-    <!-- Tab 1: Scrape -->
+    <!-- Tab 1: Scrape (全自動，無手動按鈕) -->
     <div id="tab-scrape" class="tab-content active">
       <div class="storage-info" id="storageInfo" style="display: none;">
         <span>
@@ -783,67 +689,50 @@
           </svg>
           上次自動抓取時間：<span class="time" id="lastScrapeTime">--</span>
         </span>
-        <span style="color: var(--text-muted);">每日 09:00 自動更新 | 
-          <a href="#" onclick="showExtractPanel(); return false;" style="color: var(--primary); text-decoration: underline;">顯示Excel可提取資料</a>
-        </span>
+        <span id="nextUpdateTime" style="color: var(--text-muted);"></span>
       </div>
 
-      <!-- Excel Extract Panel - Visible data for "From Web" extraction -->
+      <!-- 自動狀態指示器（取代手動刷新按鈕） -->
+      <div class="auto-status-bar" id="autoStatusBar">
+        <span class="indicator">
+          <span style="color: var(--success);">●</span>
+          自動更新已啟用
+        </span>
+        <span style="color: var(--text-muted);">
+          系統將於每日 09:00 自動抓取最新資料 | 頁面開啟時自動檢查更新
+        </span>
+        <span class="status" id="status" style="margin-left: auto;">就緒</span>
+      </div>
+
+      <!-- Excel提取區域（自動顯示，無需點擊連結） -->
       <div class="extract-panel" id="extractPanel">
         <h4>
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
             <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l2.233-2.68a.5.5 0 0 0-.768-.64L7 8.781 5.884 6.68z"/>
             <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
           </svg>
-          Excel「從Web」提取專區 - 可直接複製或供Excel Power Query抓取
+          Excel 可提取資料（CSV格式）
         </h4>
         <div class="extract-controls">
           <button class="btn btn-sm btn-primary" onclick="copyToClipboard('csv')">
-            📋 複製CSV到剪貼簿
+            📋 複製CSV
           </button>
           <button class="btn btn-sm btn-info" onclick="copyToClipboard('json')">
-            📋 複製JSON到剪貼簿
+            📋 複製JSON
           </button>
           <button class="btn btn-sm btn-secondary" onclick="downloadFile('csv')">
-            💾 下載CSV檔案
+            💾 下載CSV
           </button>
           <button class="btn btn-sm" onclick="downloadFile('json')" style="background: #e2e8f0; color: var(--text);">
-            💾 下載JSON檔案
-          </button>
-          <button class="btn btn-sm" onclick="hideExtractPanel()" style="background: var(--border); color: var(--text); margin-left: auto;">
-            ✕ 關閉
+            💾 下載JSON
           </button>
         </div>
-        <textarea class="extract-textarea" id="extractDataArea" readonly placeholder="點擊「顯示可提取資料」後，此處將顯示可供Excel複製的資料..."></textarea>
+        <textarea class="extract-textarea" id="extractDataArea" readonly placeholder="資料載入中..."></textarea>
         <div class="extract-hint">
-          提示：Excel可使用「資料」→「從Web」功能抓取此頁面表格，或直接複製上方CSV文字貼到Excel。若需自動化，可使用Power Query連接此JSON資料。
+          提示：可直接複製上方CSV文字貼到Excel，或使用「資料」→「從文字/CSV」功能匯入
         </div>
       </div>
 
-      <div class="auto-fetch-banner show" id="autoFetchBanner">
-        <div class="message">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-          </svg>
-          <span id="autoFetchMsg">檢查排程中...</span>
-        </div>
-        <button class="btn btn-primary" onclick="fetchData()" style="padding: 8px 16px; font-size: 13px;">
-          立即手動刷新
-        </button>
-      </div>
-
-      <div class="control-panel">
-        <button class="btn btn-primary" onclick="fetchData()" id="btnFetch">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
-            <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
-          </svg>
-          抓取 HKPL 電子資源 (API 1)
-        </button>
-        <span class="status" id="status">就緒</span>
-        <span id="nextUpdate" style="margin-left: auto; font-size: 12px; color: var(--text-muted);"></span>
-      </div>
-      
       <div class="result-section">
         <div class="section-header">
           <div class="section-title">
@@ -874,7 +763,6 @@
     <!-- Tab 2: Book Search -->
     <div id="tab-books" class="tab-content">
       <div class="search-layout">
-        <!-- Left: Input -->
         <div class="search-sidebar">
           <div class="input-group">
             <label class="input-label">書籍 ID 輸入</label>
@@ -887,8 +775,7 @@
 • 多個 ID（換行分隔）：
   3780306
   3780307
-  3780308
-• 或逗號分隔：3780306, 3780307, 3780308"
+  3780308"
             ></textarea>
             <div class="input-hint">
               支援單一查詢或批量查詢（換行、逗號、空格分隔）
@@ -913,7 +800,6 @@
           </div>
         </div>
         
-        <!-- Right: Results -->
         <div class="search-results" id="bookResults">
           <div class="empty-state">
             <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
@@ -922,7 +808,6 @@
         </div>
       </div>
       
-      <!-- Export Button -->
       <button class="btn btn-export" onclick="exportToExcel()" id="btnExport" style="display: none;">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
           <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
@@ -945,7 +830,6 @@
     let currentRowHeight = 20;
     let autoScrapeTimer = null;
     
-    // Constants for storage keys
     const STORAGE_KEY_DATA = 'hkpl_scrape_data';
     const STORAGE_KEY_TIME = 'hkpl_scrape_time';
     
@@ -953,7 +837,6 @@
     function switchTab(tabName, btnElement) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
       document.getElementById('tab-' + tabName).classList.add('active');
       if (btnElement) btnElement.classList.add('active');
     }
@@ -962,7 +845,6 @@
     function updateNetworkStatus() {
       const statusEl = document.getElementById('networkStatus');
       const textEl = document.getElementById('networkText');
-      
       if (navigator.onLine) {
         statusEl.classList.remove('offline');
         textEl.textContent = '網絡連線正常';
@@ -975,7 +857,8 @@
     window.addEventListener('online', () => {
       updateNetworkStatus();
       if (document.getElementById('tab-scrape').classList.contains('active')) {
-        setStatus('網絡已恢復', 'success');
+        setStatus('網絡已恢復，自動刷新中...', 'loading');
+        setTimeout(() => fetchData(true, true), 1000);
       }
     });
     
@@ -987,65 +870,46 @@
     // Loading Control
     function setLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('show', show);
-      document.getElementById('btnFetch').disabled = show;
       document.getElementById('btnBookSearch').disabled = show;
     }
     
-    // Status Control
     function setStatus(msg, type, elementId = 'status') {
       const el = document.getElementById(elementId);
       if (!el) return;
       el.textContent = msg;
       el.className = 'status show ' + type;
-      
       if (type === 'success' || type === 'error') {
         setTimeout(() => { if (el) el.className = 'status'; }, 5000);
       }
     }
     
-    // Show/Hide Extract Panel
-    function showExtractPanel() {
-      const panel = document.getElementById('extractPanel');
-      const textarea = document.getElementById('extractDataArea');
-      
-      // Generate CSV data
-      const csv = generateCSV();
-      textarea.value = csv;
-      
-      panel.classList.add('show');
-      textarea.select();
-    }
-    
-    function hideExtractPanel() {
-      document.getElementById('extractPanel').classList.remove('show');
-    }
-    
-    // Generate CSV from current data
+    // Generate CSV/JSON for extract panel
     function generateCSV() {
       if (!currentScrapeData) return '無資料';
-      
       const ebooks = currentScrapeData.ebooks || [];
       const databases = currentScrapeData.edatabases || [];
-      
       let csv = '類型,標題,連結,分類,說明\n';
-      
       ebooks.forEach(item => {
         csv += `電子書,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${(item.category || '').replace(/"/g, '""')}","${(item.description || '').replace(/"/g, '""')}"\n`;
       });
-      
       databases.forEach(item => {
         const locations = (item.locations || []).join('; ');
         const tags = (item.tags || []).join('; ');
         csv += `資料庫,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${locations}","${tags}"\n`;
       });
-      
       return csv;
     }
     
-    // Generate JSON from current data
     function generateJSON() {
       if (!currentScrapeData) return '{}';
       return JSON.stringify(currentScrapeData, null, 2);
+    }
+    
+    function updateExtractPanel() {
+      const textarea = document.getElementById('extractDataArea');
+      if (textarea && currentScrapeData) {
+        textarea.value = generateCSV();
+      }
     }
     
     // Copy to clipboard
@@ -1059,7 +923,6 @@
         document.execCommand('copy');
         setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
       } catch (err) {
-        // Fallback
         navigator.clipboard.writeText(content).then(() => {
           setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
         }).catch(() => {
@@ -1075,15 +938,12 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       link.download = `HKPL_Data_${date}.${format}`;
-      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
       setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success');
     }
     
@@ -1120,6 +980,15 @@
         });
         document.getElementById('lastScrapeTime').textContent = timeDisplay;
         document.getElementById('storageInfo').style.display = 'flex';
+        
+        // Update next update time
+        const next9AM = new Date();
+        next9AM.setHours(9, 0, 0, 0);
+        if (date.getHours() >= 9) {
+          next9AM.setDate(next9AM.getDate() + 1);
+        }
+        document.getElementById('nextUpdateTime').textContent = 
+          `下次更新: ${next9AM.getMonth()+1}/${next9AM.getDate()} 09:00`;
       }
     }
     
@@ -1134,11 +1003,6 @@
       }
       
       const msUntil9AM = next9AM - now;
-      const hoursUntil = Math.floor(msUntil9AM / (1000 * 60 * 60));
-      const minutesUntil = Math.floor((msUntil9AM % (1000 * 60 * 60)) / (1000 * 60));
-      
-      document.getElementById('nextUpdate').textContent = 
-        `下次自動更新: ${next9AM.getMonth()+1}/${next9AM.getDate()} 09:00 (還有 ${hoursUntil}小時${minutesUntil}分)`;
       
       if (autoScrapeTimer) clearTimeout(autoScrapeTimer);
       
@@ -1147,11 +1011,9 @@
         fetchData(true, true);
         scheduleNextScrape();
       }, msUntil9AM);
-      
-      console.log(`[Schedule] 已設定 ${next9AM.toLocaleString()} 自動抓取`);
     }
     
-    // Check if we need to scrape now
+    // Check and scrape on load
     function checkAndScrape() {
       const stored = loadFromStorage();
       const now = new Date();
@@ -1159,18 +1021,21 @@
       if (stored && stored.data) {
         currentScrapeData = stored.data;
         renderScrapeData(stored.data);
+        updateExtractPanel();
         updateStorageInfo();
-        setStatus('已載入本地儲存資料', 'success');
+        setStatus('已載入儲存資料', 'success');
         
+        // Check if data is stale (last update before today 9:00 and now after 9:00)
         const lastUpdate = stored.time;
         const today9AM = new Date();
         today9AM.setHours(9, 0, 0, 0);
         
         if (lastUpdate < today9AM && now >= today9AM) {
-          console.log('[Check] 資料過期，立即更新');
+          console.log('[Check] 資料過期，立即自動更新');
           setTimeout(() => fetchData(true, true), 1000);
         }
       } else {
+        // No stored data, fetch immediately
         setTimeout(() => fetchData(true, true), 1000);
       }
       
@@ -1205,7 +1070,7 @@
       currentBookData = [];
     }
     
-    // Update Row Height - Excel-like truncation
+    // Update Row Height
     function updateRowHeight(height) {
       currentRowHeight = parseInt(height);
       document.documentElement.style.setProperty('--row-height', currentRowHeight + 'px');
@@ -1218,7 +1083,7 @@
       });
     }
     
-    // Column Resize Logic
+    // Column Resize
     function initResizableColumns() {
       document.querySelectorAll('.resizer').forEach(resizer => {
         resizer.addEventListener('mousedown', initResize);
@@ -1230,11 +1095,9 @@
       currentCol = e.target.parentElement;
       startX = e.pageX;
       startWidth = currentCol.offsetWidth;
-      
       e.target.classList.add('resizing');
       document.body.style.userSelect = 'none';
       document.body.style.cursor = 'col-resize';
-      
       document.addEventListener('mousemove', doResize);
       document.addEventListener('mouseup', stopResize);
       e.preventDefault();
@@ -1359,7 +1222,7 @@
           <input type="range" class="height-slider" min="16" max="100" value="${currentRowHeight}" 
                  oninput="updateRowHeight(this.value)" onchange="updateRowHeight(this.value)">
           <span class="height-value" id="heightValue">${currentRowHeight}px</span>
-          <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">內容過長時自動顯示「...」</span>
+          <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">內容過長時自動截斷顯示「...」</span>
         </div>
       `;
       
@@ -1511,15 +1374,10 @@
       setStatus(`已滙出 ${currentBookData.length} 本`, 'success', 'bookStatus');
     }
     
-    // Fetch Scrape Data
+    // Fetch Scrape Data (自動化，無手動按鈕)
     function fetchData(isAuto = false, saveToStorageFlag = false) {
       setLoading(true);
-      setStatus(isAuto ? '自動抓取中...' : '連接中...', 'loading');
-      
-      if (!isAuto) {
-        document.getElementById('ebookResult').innerHTML = '<div class="empty-state">載入中...</div>';
-        document.getElementById('dbResult').innerHTML = '<div class="empty-state">載入中...</div>';
-      }
+      setStatus(isAuto ? '自動更新中...' : '更新中...', 'loading');
       
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/api/proxy?target=8000&endpoint=scrape', true);
@@ -1534,15 +1392,15 @@
               if (result.success && result.data) {
                 currentScrapeData = result.data;
                 renderScrapeData(result.data);
+                updateExtractPanel();
                 
                 if (saveToStorageFlag) {
                   saveToStorage(result.data);
                 }
                 
-                setStatus(isAuto ? '自動抓取成功！' : '抓取成功！', 'success');
+                setStatus(isAuto ? '自動更新完成' : '更新完成', 'success');
                 
                 if (isAuto && isFirstLoad) {
-                  setTimeout(() => document.getElementById('autoFetchBanner').classList.remove('show'), 3000);
                   isFirstLoad = false;
                 }
               } else {
@@ -1605,7 +1463,6 @@
       }
     }
     
-    // Utility
     function escapeHtml(text) {
       if (!text) return '--';
       const div = document.createElement('div');
@@ -1613,7 +1470,6 @@
       return div.innerHTML;
     }
     
-    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.getElementById('tab-books').classList.contains('active')) {
         fetchBookData();
