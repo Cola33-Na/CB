@@ -282,6 +282,48 @@
     .badge-ebook { background: #d1fae5; color: #065f46; }
     .badge-db { background: #dbeafe; color: #1e40af; }
     
+    /* Excel Extract Panel - 自動顯示，無需點擊連結 */
+    .extract-panel {
+      background: #fffaf0;
+      border: 2px dashed var(--warning);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .extract-panel h4 {
+      color: #92400e;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    
+    .extract-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .extract-textarea {
+      width: 100%;
+      min-height: 150px;
+      max-height: 300px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      resize: vertical;
+      background: #fff;
+    }
+    
+    .extract-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    
     table {
       width: 100%;
       border-collapse: collapse;
@@ -659,14 +701,36 @@
         <span style="color: var(--text-muted);">
           系統將於每日 09:00 自動抓取最新資料 | 頁面開啟時自動檢查更新
         </span>
-        <button class="btn btn-sm btn-primary" onclick="fetchData(false, true)" id="btnManualUpdate" style="margin-left: auto; white-space: nowrap;">
-          <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
-            <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
-            <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
-          </svg>
-          手動更新
-        </button>
         <span class="status" id="status" style="margin-left: auto;">就緒</span>
+      </div>
+
+      <!-- Excel提取區域（自動顯示，無需點擊連結） -->
+      <div class="extract-panel" id="extractPanel">
+        <h4>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+            <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l2.233-2.68a.5.5 0 0 0-.768-.64L7 8.781 5.884 6.68z"/>
+            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+          </svg>
+          Excel 可提取資料（CSV格式）
+        </h4>
+        <div class="extract-controls">
+          <button class="btn btn-sm btn-primary" onclick="copyToClipboard('csv')">
+            📋 複製CSV
+          </button>
+          <button class="btn btn-sm btn-info" onclick="copyToClipboard('json')">
+            📋 複製JSON
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="downloadFile('csv')">
+            💾 下載CSV
+          </button>
+          <button class="btn btn-sm" onclick="downloadFile('json')" style="background: #e2e8f0; color: var(--text);">
+            💾 下載JSON
+          </button>
+        </div>
+        <textarea class="extract-textarea" id="extractDataArea" readonly placeholder="資料載入中..."></textarea>
+        <div class="extract-hint">
+          提示：可直接複製上方CSV文字貼到Excel，或使用「資料」→「從文字/CSV」功能匯入
+        </div>
       </div>
 
       <div class="result-section">
@@ -690,31 +754,8 @@
           </div>
           <span class="badge badge-db" id="dbCount">0 個</span>
         </div>
-        </div>
-      </div>
-
-      <!-- 靜態資料頁（供 Excel 抓取） -->
-      <div class="result-section" id="staticDataSection">
-        <div class="section-header">
-          <div class="section-title">
-            <span>📄</span>
-            靜態資料頁
-          </div>
-          <span class="badge" style="background: #e0e7ff; color: #3730a3;">供 Excel 抓取</span>
-        </div>
-        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
-          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-            <button class="btn btn-sm btn-primary" onclick="copyStaticData()">
-              📋 複製資料
-            </button>
-            <button class="btn btn-sm btn-info" onclick="refreshStaticData()">
-              🔄 重新整理資料
-            </button>
-          </div>
-          <pre id="staticDataArea" style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 16px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; max-height: 500px; overflow: auto; white-space: pre-wrap; word-break: break-all;">載入中...</pre>
-          <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
-            提示：此區塊顯示純文字格式的電子資源資料，可直接複製到 Excel，或使用 Excel「資料」→「從網頁」功能抓取此頁面內容
-          </div>
+        <div id="dbResult">
+          <div class="empty-state">載入中...</div>
         </div>
       </div>
     </div>
@@ -751,6 +792,7 @@
           <button class="btn" onclick="clearBookInput()" style="width: 100%; background: var(--border); color: var(--text);">
             清空輸入
           </button>
+          
           <div class="status" id="bookStatus" style="display: none;"></div>
           
           <div class="progress-bar" id="progressBar" style="display: none;">
@@ -841,78 +883,70 @@
       }
     }
     
-    // Static Data Page Functions (供 Excel 抓取)
-    function generateStaticData() {
+    // Generate CSV/JSON for extract panel
+    function generateCSV() {
       if (!currentScrapeData) return '無資料';
       const ebooks = currentScrapeData.ebooks || [];
       const databases = currentScrapeData.edatabases || [];
-      let output = '=== HKPL 電子資源資料 ===\n';
-      output += '更新時間: ' + new Date().toLocaleString('zh-HK') + '\n\n';
-
-      output += '【電子書平台】(' + ebooks.length + ' 個)\n';
-      output += '----------------------------------------\n';
-      ebooks.forEach((item, idx) => {
-        output += (idx + 1) + '. ' + (item.title || '') + '\n';
-        output += '   類型: ' + (item.category || '') + '\n';
-        output += '   連結: ' + (item.link || '') + '\n';
-        if (item.description) output += '   說明: ' + item.description + '\n';
-        output += '\n';
+      let csv = '類型,標題,連結,分類,說明\n';
+      ebooks.forEach(item => {
+        csv += `電子書,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${(item.category || '').replace(/"/g, '""')}","${(item.description || '').replace(/"/g, '""')}"\n`;
       });
-
-      output += '\n【電子資料庫】(' + databases.length + ' 個)\n';
-      output += '----------------------------------------\n';
-      databases.forEach((item, idx) => {
-        output += (idx + 1) + '. ' + (item.title || '') + '\n';
-        output += '   連結: ' + (item.link || '') + '\n';
-        output += '   使用地點: ' + (item.locations || []).join(', ') + '\n';
-        if (item.tags && item.tags.length > 0) output += '   標籤: ' + item.tags.join(', ') + '\n';
-        output += '\n';
+      databases.forEach(item => {
+        const locations = (item.locations || []).join('; ');
+        const tags = (item.tags || []).join('; ');
+        csv += `資料庫,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${locations}","${tags}"\n`;
       });
-
-      return output;
+      return csv;
     }
-
-    function updateStaticData() {
-      const area = document.getElementById('staticDataArea');
-      if (area && currentScrapeData) {
-        area.textContent = generateStaticData();
+    
+    function generateJSON() {
+      if (!currentScrapeData) return '{}';
+      return JSON.stringify(currentScrapeData, null, 2);
+    }
+    
+    function updateExtractPanel() {
+      const textarea = document.getElementById('extractDataArea');
+      if (textarea && currentScrapeData) {
+        textarea.value = generateCSV();
       }
     }
-
-    function copyStaticData() {
-      const content = generateStaticData();
-      try {
-        navigator.clipboard.writeText(content).then(() => {
-          setStatus('已複製靜態資料到剪貼簿', 'success');
-        }).catch(() => {
-          fallbackCopy(content);
-        });
-      } catch (err) {
-        fallbackCopy(content);
-      }
-    }
-
-    function fallbackCopy(content) {
-      const textarea = document.createElement('textarea');
+    
+    // Copy to clipboard
+    function copyToClipboard(format) {
+      const textarea = document.getElementById('extractDataArea');
+      const content = format === 'csv' ? generateCSV() : generateJSON();
       textarea.value = content;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
       textarea.select();
+      
       try {
         document.execCommand('copy');
-        setStatus('已複製靜態資料到剪貼簿', 'success');
+        setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
       } catch (err) {
-        setStatus('複製失敗，請手動複製', 'error');
+        navigator.clipboard.writeText(content).then(() => {
+          setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
+        }).catch(() => {
+          setStatus('複製失敗，請手動複製', 'error');
+        });
       }
-      document.body.removeChild(textarea);
     }
-
-    function refreshStaticData() {
-      setStatus('重新整理資料中...', 'loading');
-      fetchData(false, true);
+    
+    // Download file
+    function downloadFile(format) {
+      const content = format === 'csv' ? generateCSV() : generateJSON();
+      const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.download = `HKPL_Data_${date}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success');
     }
-
+    
     // Storage Functions
     function saveToStorage(data) {
       try {
@@ -987,6 +1021,7 @@
       if (stored && stored.data) {
         currentScrapeData = stored.data;
         renderScrapeData(stored.data);
+        updateExtractPanel();
         updateStorageInfo();
         setStatus('已載入儲存資料', 'success');
         
@@ -1180,19 +1215,6 @@
       }
       
       let html = '';
-
-      html += `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <span style="font-size: 13px; color: var(--text-muted);">共 ${currentBookData.length} 筆結果</span>
-          <button class="btn" onclick="exportToExcel()" style="background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); color: white; font-size: 13px; padding: 8px 18px;">
-            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
-              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-            </svg>
-            滙出 Excel
-          </button>
-        </div>
-      `;
       
       html += `
         <div class="height-control-panel">
@@ -1370,7 +1392,7 @@
               if (result.success && result.data) {
                 currentScrapeData = result.data;
                 renderScrapeData(result.data);
-                updateStaticData();
+                updateExtractPanel();
                 
                 if (saveToStorageFlag) {
                   saveToStorage(result.data);
@@ -1388,34 +1410,12 @@
               setStatus('解析失敗', 'error');
             }
           } else {
-            // API 連接失敗，嘗試載入本地儲存資料
-            const stored = loadFromStorage();
-            if (stored && stored.data) {
-              currentScrapeData = stored.data;
-              renderScrapeData(stored.data);
-              updateStaticData();
-              updateStorageInfo();
-              setStatus('API 連接失敗 (' + xhr.status + ')，已載入本地儲存資料', 'loading');
-            } else {
-              setStatus('連接失敗 (' + xhr.status + ')', 'error');
-            }
+            setStatus('連接失敗 (' + xhr.status + ')', 'error');
           }
           setLoading(false);
         }
       };
-      xhr.onerror = () => {
-        const stored = loadFromStorage();
-        if (stored && stored.data) {
-          currentScrapeData = stored.data;
-          renderScrapeData(stored.data);
-          updateStaticData();
-          updateStorageInfo();
-          setStatus('API 連接失敗，已載入本地儲存資料', 'loading');
-        } else {
-          setStatus('網絡錯誤', 'error');
-        }
-        setLoading(false);
-      };
+      xhr.onerror = () => { setStatus('網絡錯誤', 'error'); setLoading(false); };
       xhr.send('{}');
     }
     
@@ -1429,12 +1429,12 @@
       if (ebooks.length > 0) {
         document.getElementById('ebookResult').innerHTML = `
           <table>
-            <thead><tr><th>標題</th><th>類型</th><th>鏈接</th></tr></thead>
+            <thead><tr><th>類型</th><th>標題</th><th>鏈接</th></tr></thead>
             <tbody>
               ${ebooks.map(item => `
                 <tr>
-                  <td>${escapeHtml(item.title)}</td>
                   <td><span class="badge ${item.category?.includes('英文') ? 'badge-db' : 'badge-ebook'}">${escapeHtml(item.category || '電子書')}</span></td>
+                  <td>${escapeHtml(item.title)}</td>
                   <td><a href="${item.link || '#'}" target="_blank" style="color: var(--primary);">查看 →</a></td>
                 </tr>
               `).join('')}
@@ -1461,10 +1461,10 @@
       } else {
         document.getElementById('dbResult').innerHTML = '<div class="empty-state">無數據庫數據</div>';
       }
-      updateStaticData();
     }
-
+    
     function escapeHtml(text) {
+      if (!text) return '--';
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
