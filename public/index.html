@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v3.2 (全自動)</title>
+  <title>HKPL 資源控制台 v3.3 (優化版)</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
@@ -149,7 +149,7 @@
       display: block;
     }
     
-    /* 自動狀態指示器（取代手動按鈕） */
+    /* 自動狀態指示器 */
     .auto-status-bar {
       background: #e0e7ff;
       border-radius: 8px;
@@ -160,6 +160,7 @@
       gap: 12px;
       font-size: 13px;
       color: #3730a3;
+      flex-wrap: wrap;
     }
     
     .auto-status-bar .indicator {
@@ -170,6 +171,7 @@
       background: white;
       border-radius: 12px;
       font-weight: 600;
+      white-space: nowrap;
     }
     
     .control-panel {
@@ -222,6 +224,11 @@
     
     .btn-info {
       background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-warning {
+      background: linear-gradient(90deg, #ed8936 0%, #f6ad55 100%);
       color: white;
     }
     
@@ -282,48 +289,6 @@
     .badge-ebook { background: #d1fae5; color: #065f46; }
     .badge-db { background: #dbeafe; color: #1e40af; }
     
-    /* Excel Extract Panel - 自動顯示，無需點擊連結 */
-    .extract-panel {
-      background: #fffaf0;
-      border: 2px dashed var(--warning);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-    
-    .extract-panel h4 {
-      color: #92400e;
-      margin-bottom: 12px;
-      font-size: 14px;
-    }
-    
-    .extract-controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    
-    .extract-textarea {
-      width: 100%;
-      min-height: 150px;
-      max-height: 300px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      line-height: 1.4;
-      resize: vertical;
-      background: #fff;
-    }
-    
-    .extract-hint {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 8px;
-    }
-    
     table {
       width: 100%;
       border-collapse: collapse;
@@ -374,6 +339,149 @@
       background: #f8fafc;
       border-radius: 8px;
       border: 2px dashed var(--border);
+    }
+    
+    /* ===== 日誌欄樣式 ===== */
+    .log-panel {
+      background: #1e1e2e;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #2d2d44;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .log-header:hover {
+      background: #353550;
+    }
+    
+    .log-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a6a6c8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .log-toggle {
+      font-size: 11px;
+      color: #7a7a9d;
+    }
+    
+    .log-body {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 12px 16px;
+      font-family: 'Courier New', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    
+    .log-body.collapsed {
+      display: none;
+    }
+    
+    .log-entry {
+      margin-bottom: 6px;
+      padding: 4px 0;
+      border-bottom: 1px solid #2d2d44;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #6c6c8a;
+      font-size: 11px;
+    }
+    
+    .log-tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    
+    .log-tag.request {
+      background: #3b5998;
+      color: #dce6f8;
+    }
+    
+    .log-tag.response {
+      background: #2d6a4f;
+      color: #d8f3dc;
+    }
+    
+    .log-tag.error {
+      background: #9b2226;
+      color: #ffe6e6;
+    }
+    
+    .log-tag.info {
+      background: #5a4fcf;
+      color: #e8e6ff;
+    }
+    
+    .log-tag.success {
+      background: #2d6a4f;
+      color: #d8f3dc;
+    }
+    
+    .log-content {
+      color: #c8c8dc;
+    }
+    
+    .log-url {
+      color: #7ec8e3;
+      word-break: break-all;
+    }
+    
+    .log-status-ok {
+      color: #52b788;
+    }
+    
+    .log-status-error {
+      color: #e07a7a;
+    }
+    
+    .log-clear-btn {
+      background: transparent;
+      border: 1px solid #4a4a6a;
+      color: #7a7a9d;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    
+    .log-clear-btn:hover {
+      background: #4a4a6a;
+      color: #c8c8dc;
+    }
+    
+    /* ===== 查詢書籍頁滙出按鈕群組 ===== */
+    .export-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .export-group .btn {
+      width: 100%;
+      justify-content: center;
     }
     
     .search-layout {
@@ -651,6 +759,7 @@
       }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
   <div class="loading-overlay" id="loadingOverlay">
@@ -661,7 +770,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v3.2</h1>
+          <h1>HKPL 資源控制台 v3.3</h1>
           <p>全自動抓取系統 - 每日 09:00 自動更新</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -680,7 +789,7 @@
       </button>
     </div>
     
-    <!-- Tab 1: Scrape (全自動，無手動按鈕) -->
+    <!-- Tab 1: 電子資源 -->
     <div id="tab-scrape" class="tab-content active">
       <div class="storage-info" id="storageInfo" style="display: none;">
         <span>
@@ -692,7 +801,7 @@
         <span id="nextUpdateTime" style="color: var(--text-muted);"></span>
       </div>
 
-      <!-- 自動狀態指示器（取代手動刷新按鈕） -->
+      <!-- 狀態列 + 手動更新按鍵 -->
       <div class="auto-status-bar" id="autoStatusBar">
         <span class="indicator">
           <span style="color: var(--success);">●</span>
@@ -701,35 +810,29 @@
         <span style="color: var(--text-muted);">
           系統將於每日 09:00 自動抓取最新資料 | 頁面開啟時自動檢查更新
         </span>
-        <span class="status" id="status" style="margin-left: auto;">就緒</span>
+        <button class="btn btn-sm btn-primary" onclick="fetchData(false, true)" id="btnManualUpdate" style="margin-left: auto;">
+          🔄 手動更新
+        </button>
+        <span class="status" id="status">就緒</span>
       </div>
 
-      <!-- Excel提取區域（自動顯示，無需點擊連結） -->
-      <div class="extract-panel" id="extractPanel">
-        <h4>
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
-            <path d="M5.884 6.68a.5.5 0 1 0-.768.64L7.349 10l2.233-2.68a.5.5 0 0 0-.768-.64L7 8.781 5.884 6.68z"/>
-            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
-          </svg>
-          Excel 可提取資料（CSV格式）
-        </h4>
-        <div class="extract-controls">
-          <button class="btn btn-sm btn-primary" onclick="copyToClipboard('csv')">
-            📋 複製CSV
-          </button>
-          <button class="btn btn-sm btn-info" onclick="copyToClipboard('json')">
-            📋 複製JSON
-          </button>
-          <button class="btn btn-sm btn-secondary" onclick="downloadFile('csv')">
-            💾 下載CSV
-          </button>
-          <button class="btn btn-sm" onclick="downloadFile('json')" style="background: #e2e8f0; color: var(--text);">
-            💾 下載JSON
-          </button>
+      <!-- 日誌欄 -->
+      <div class="log-panel" id="logPanel">
+        <div class="log-header" onclick="toggleLog()">
+          <span class="log-title">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block;">
+              <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3V3H2v10a1 1 0 0 0 1 1h8zM1 3v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3H1z"/>
+            </svg>
+            API 連接日誌
+            <span id="logCount" style="background: #4a4a6a; color: #a6a6c8; padding: 1px 6px; border-radius: 8px; font-size: 10px;">0 筆</span>
+          </span>
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <button class="log-clear-btn" onclick="event.stopPropagation(); clearLogs()">清除</button>
+            <span class="log-toggle" id="logToggle">▼ 收起</span>
+          </span>
         </div>
-        <textarea class="extract-textarea" id="extractDataArea" readonly placeholder="資料載入中..."></textarea>
-        <div class="extract-hint">
-          提示：可直接複製上方CSV文字貼到Excel，或使用「資料」→「從文字/CSV」功能匯入
+        <div class="log-body" id="logBody">
+          <div style="color: #6c6c8a; text-align: center; padding: 20px;">尚無日誌記錄</div>
         </div>
       </div>
 
@@ -760,7 +863,7 @@
       </div>
     </div>
     
-    <!-- Tab 2: Book Search -->
+    <!-- Tab 2: 查詢書籍 -->
     <div id="tab-books" class="tab-content">
       <div class="search-layout">
         <div class="search-sidebar">
@@ -793,6 +896,32 @@
             清空輸入
           </button>
           
+          <!-- 滙出功能群組 -->
+          <div class="export-group" id="bookExportGroup" style="display: none;">
+            <label class="input-label" style="margin-top: 8px;">📥 滙出書籍資料</label>
+            <button class="btn btn-sm btn-export" onclick="exportBookToExcel()" style="position: static; box-shadow: none;">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+              </svg>
+              滙出 Excel (.xlsx)
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="exportBookToCSV()">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+              </svg>
+              滙出 CSV
+            </button>
+            <button class="btn btn-sm btn-info" onclick="exportBookToJSON()">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+              </svg>
+              滙出 JSON
+            </button>
+          </div>
+          
           <div class="status" id="bookStatus" style="display: none;"></div>
           
           <div class="progress-bar" id="progressBar" style="display: none;">
@@ -807,14 +936,6 @@
           </div>
         </div>
       </div>
-      
-      <button class="btn btn-export" onclick="exportToExcel()" id="btnExport" style="display: none;">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-          <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-        </svg>
-        滙出 Excel
-      </button>
     </div>
   </div>
 
@@ -829,6 +950,8 @@
     let startWidth = 0;
     let currentRowHeight = 20;
     let autoScrapeTimer = null;
+    let logEntries = [];
+    let logCollapsed = false;
     
     const STORAGE_KEY_DATA = 'hkpl_scrape_data';
     const STORAGE_KEY_TIME = 'hkpl_scrape_time';
@@ -839,6 +962,64 @@
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabName).classList.add('active');
       if (btnElement) btnElement.classList.add('active');
+    }
+    
+    // ===== 日誌功能 =====
+    function addLog(type, message, detail) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-HK', { hour12: false }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
+      
+      const entry = {
+        time: timeStr,
+        type: type,
+        message: message,
+        detail: detail || ''
+      };
+      
+      logEntries.unshift(entry);
+      if (logEntries.length > 100) logEntries.pop();
+      
+      renderLogs();
+    }
+    
+    function renderLogs() {
+      const body = document.getElementById('logBody');
+      const count = document.getElementById('logCount');
+      
+      count.textContent = logEntries.length + ' 筆';
+      
+      if (logEntries.length === 0) {
+        body.innerHTML = '<div style="color: #6c6c8a; text-align: center; padding: 20px;">尚無日誌記錄</div>';
+        return;
+      }
+      
+      body.innerHTML = logEntries.map(entry => {
+        let detailHtml = '';
+        if (entry.detail) {
+          detailHtml = `<div class="log-content" style="margin-top: 2px; padding-left: 76px;">${entry.detail}</div>`;
+        }
+        return `
+          <div class="log-entry">
+            <span class="log-time">${entry.time}</span>
+            <span class="log-tag ${entry.type}">${entry.type.toUpperCase()}</span>
+            <span class="log-content">${entry.message}</span>
+            ${detailHtml}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function toggleLog() {
+      const body = document.getElementById('logBody');
+      const toggle = document.getElementById('logToggle');
+      logCollapsed = !logCollapsed;
+      body.classList.toggle('collapsed', logCollapsed);
+      toggle.textContent = logCollapsed ? '▶ 展開' : '▼ 收起';
+    }
+    
+    function clearLogs() {
+      logEntries = [];
+      renderLogs();
     }
     
     // Network Status
@@ -856,6 +1037,7 @@
     
     window.addEventListener('online', () => {
       updateNetworkStatus();
+      addLog('info', '網絡已恢復連線');
       if (document.getElementById('tab-scrape').classList.contains('active')) {
         setStatus('網絡已恢復，自動刷新中...', 'loading');
         setTimeout(() => fetchData(true, true), 1000);
@@ -864,6 +1046,7 @@
     
     window.addEventListener('offline', () => {
       updateNetworkStatus();
+      addLog('error', '網絡已斷開');
       setStatus('網絡已斷開', 'error');
     });
     
@@ -871,6 +1054,7 @@
     function setLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('show', show);
       document.getElementById('btnBookSearch').disabled = show;
+      document.getElementById('btnManualUpdate').disabled = show;
     }
     
     function setStatus(msg, type, elementId = 'status') {
@@ -883,78 +1067,16 @@
       }
     }
     
-    // Generate CSV/JSON for extract panel
-    function generateCSV() {
-      if (!currentScrapeData) return '無資料';
-      const ebooks = currentScrapeData.ebooks || [];
-      const databases = currentScrapeData.edatabases || [];
-      let csv = '類型,標題,連結,分類,說明\n';
-      ebooks.forEach(item => {
-        csv += `電子書,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${(item.category || '').replace(/"/g, '""')}","${(item.description || '').replace(/"/g, '""')}"\n`;
-      });
-      databases.forEach(item => {
-        const locations = (item.locations || []).join('; ');
-        const tags = (item.tags || []).join('; ');
-        csv += `資料庫,"${(item.title || '').replace(/"/g, '""')}","${item.link || ''}","${locations}","${tags}"\n`;
-      });
-      return csv;
-    }
-    
-    function generateJSON() {
-      if (!currentScrapeData) return '{}';
-      return JSON.stringify(currentScrapeData, null, 2);
-    }
-    
-    function updateExtractPanel() {
-      const textarea = document.getElementById('extractDataArea');
-      if (textarea && currentScrapeData) {
-        textarea.value = generateCSV();
-      }
-    }
-    
-    // Copy to clipboard
-    function copyToClipboard(format) {
-      const textarea = document.getElementById('extractDataArea');
-      const content = format === 'csv' ? generateCSV() : generateJSON();
-      textarea.value = content;
-      textarea.select();
-      
-      try {
-        document.execCommand('copy');
-        setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
-      } catch (err) {
-        navigator.clipboard.writeText(content).then(() => {
-          setStatus(`已複製${format.toUpperCase()}到剪貼簿`, 'success');
-        }).catch(() => {
-          setStatus('複製失敗，請手動複製', 'error');
-        });
-      }
-    }
-    
-    // Download file
-    function downloadFile(format) {
-      const content = format === 'csv' ? generateCSV() : generateJSON();
-      const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.download = `HKPL_Data_${date}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success');
-    }
-    
     // Storage Functions
     function saveToStorage(data) {
       try {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data));
         localStorage.setItem(STORAGE_KEY_TIME, new Date().toISOString());
         updateStorageInfo();
+        addLog('success', '資料已儲存到本地', '筆數: ' + ((data.ebooks?.length || 0) + (data.edatabases?.length || 0)));
       } catch (e) {
         console.error('Storage failed:', e);
+        addLog('error', '本地儲存失敗', e.message);
       }
     }
     
@@ -967,6 +1089,7 @@
         }
       } catch (e) {
         console.error('Load failed:', e);
+        addLog('error', '讀取本地儲存失敗', e.message);
       }
       return null;
     }
@@ -981,7 +1104,6 @@
         document.getElementById('lastScrapeTime').textContent = timeDisplay;
         document.getElementById('storageInfo').style.display = 'flex';
         
-        // Update next update time
         const next9AM = new Date();
         next9AM.setHours(9, 0, 0, 0);
         if (date.getHours() >= 9) {
@@ -1008,34 +1130,37 @@
       
       autoScrapeTimer = setTimeout(() => {
         console.log('[Auto] 09:00 觸發自動抓取');
+        addLog('info', '定時觸發自動抓取 (09:00)');
         fetchData(true, true);
         scheduleNextScrape();
       }, msUntil9AM);
+      
+      addLog('info', '已排程下次自動更新', '時間: ' + next9AM.toLocaleString('zh-HK'));
     }
     
     // Check and scrape on load
     function checkAndScrape() {
+      addLog('info', '系統初始化', '檢查本地儲存資料...');
       const stored = loadFromStorage();
       const now = new Date();
       
       if (stored && stored.data) {
         currentScrapeData = stored.data;
         renderScrapeData(stored.data);
-        updateExtractPanel();
         updateStorageInfo();
         setStatus('已載入儲存資料', 'success');
+        addLog('success', '已載入儲存資料', `電子書: ${stored.data.ebooks?.length || 0} 個, 資料庫: ${stored.data.edatabases?.length || 0} 個`);
         
-        // Check if data is stale (last update before today 9:00 and now after 9:00)
         const lastUpdate = stored.time;
         const today9AM = new Date();
         today9AM.setHours(9, 0, 0, 0);
         
         if (lastUpdate < today9AM && now >= today9AM) {
-          console.log('[Check] 資料過期，立即自動更新');
+          addLog('info', '資料已過期，觸發自動更新');
           setTimeout(() => fetchData(true, true), 1000);
         }
       } else {
-        // No stored data, fetch immediately
+        addLog('info', '無本地資料，觸發首次抓取');
         setTimeout(() => fetchData(true, true), 1000);
       }
       
@@ -1066,7 +1191,7 @@
           請在左側輸入書籍 ID 並點擊「查詢書籍」
         </div>
       `;
-      document.getElementById('btnExport').style.display = 'none';
+      document.getElementById('bookExportGroup').style.display = 'none';
       currentBookData = [];
     }
     
@@ -1136,54 +1261,74 @@
       currentBookData = [];
       setLoading(true);
       setStatus(`查詢中...`, 'loading', 'bookStatus');
+      addLog('info', '開始查詢書籍', `ID 數量: ${ids.length} 個`);
       
       if (ids.length > 1) {
         document.getElementById('progressBar').style.display = 'block';
       }
       
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (ids.length > 1) {
-          document.getElementById('progressFill').style.width = ((i / ids.length) * 100).toFixed(0) + '%';
+      try {
+        for (let i = 0; i < ids.length; i++) {
+          const id = ids[i];
+          if (ids.length > 1) {
+            document.getElementById('progressFill').style.width = ((i / ids.length) * 100).toFixed(0) + '%';
+          }
+          
+          try {
+            addLog('request', `查詢書籍 ID: ${id}`, 'GET /api/proxy?target=8081&endpoint=book/' + id);
+            const data = await fetchSingleBook(id);
+            if (data) {
+              currentBookData.push({ id, ...data });
+              addLog('response', `書籍 ID ${id} 查詢成功`, `書名: ${data['書本名稱'] || 'N/A'}`);
+            }
+          } catch (err) {
+            addLog('error', `書籍 ID ${id} 查詢失敗`, err.message);
+            currentBookData.push({ 
+              id, 
+              error: err.message,
+              '書本名稱': '查詢失敗',
+              '書目詳情': {},
+              '館藏列表': []
+            });
+          }
+          
+          if (ids.length > 1 && currentBookData.length > 0) {
+            renderExcelTable();
+            initResizableColumns();
+          }
+          
+          if (i < ids.length - 1) await new Promise(r => setTimeout(r, 300));
         }
         
-        try {
-          const data = await fetchSingleBook(id);
-          if (data) currentBookData.push({ id, ...data });
-        } catch (err) {
-          currentBookData.push({ 
-            id, 
-            error: err.message,
-            '書本名稱': '查詢失敗',
-            '書目詳情': {},
-            '館藏列表': []
-          });
+        document.getElementById('progressBar').style.display = 'none';
+        renderExcelTable();
+        initResizableColumns();
+        
+        const successCount = currentBookData.filter(b => !b.error).length;
+        setStatus(`完成！${successCount}/${ids.length}`, successCount > 0 ? 'success' : 'error', 'bookStatus');
+        
+        // 顯示滙出按鈕群組
+        if (currentBookData.length > 0) {
+          document.getElementById('bookExportGroup').style.display = 'flex';
         }
         
-        if (ids.length > 1 && currentBookData.length > 0) {
-          renderExcelTable();
-          initResizableColumns();
-        }
-        
-        if (i < ids.length - 1) await new Promise(r => setTimeout(r, 300));
+        addLog('success', '書籍查詢完成', `成功: ${successCount}/${ids.length}`);
+      } catch (err) {
+        addLog('error', '查詢過程發生錯誤', err.message);
+        setStatus('查詢失敗: ' + err.message, 'error', 'bookStatus');
+      } finally {
+        setLoading(false);
+        document.getElementById('progressBar').style.display = 'none';
       }
-      
-      document.getElementById('progressBar').style.display = 'none';
-      renderExcelTable();
-      initResizableColumns();
-      
-      const successCount = currentBookData.filter(b => !b.error).length;
-      setStatus(`完成！${successCount}/${ids.length}`, successCount > 0 ? 'success' : 'error', 'bookStatus');
-      document.getElementById('btnExport').style.display = 'inline-flex';
-      setLoading(false);
     }
     
-    // API Call
+    // API Call with timeout protection
     function fetchSingleBook(id) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', '/api/proxy?target=8081&endpoint=book/' + encodeURIComponent(id), true);
         xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
+        xhr.timeout = 15000; // 15 seconds timeout
         
         xhr.onreadystatechange = function() {
           if (xhr.readyState === 4) {
@@ -1202,6 +1347,7 @@
           }
         };
         xhr.onerror = () => reject(new Error('網絡錯誤'));
+        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)'));
         xhr.send();
       });
     }
@@ -1320,8 +1466,10 @@
       container.innerHTML = html;
     }
     
-    // Export to Excel
-    function exportToExcel() {
+    // ===== 書籍滙出功能 =====
+    
+    // Excel 滙出
+    function exportBookToExcel() {
       if (!currentBookData || currentBookData.length === 0) {
         alert('沒有可滙出的資料');
         return;
@@ -1371,18 +1519,145 @@
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       XLSX.writeFile(wb, `HKPL_Books_${date}_${currentBookData.length}本.xlsx`);
       
-      setStatus(`已滙出 ${currentBookData.length} 本`, 'success', 'bookStatus');
+      setStatus(`已滙出 Excel: ${currentBookData.length} 本`, 'success', 'bookStatus');
+      addLog('success', '已滙出 Excel 檔案', `書籍數量: ${currentBookData.length}`);
     }
     
-    // Fetch Scrape Data (自動化，無手動按鈕)
+    // CSV 滙出
+    function exportBookToCSV() {
+      if (!currentBookData || currentBookData.length === 0) {
+        alert('沒有可滙出的資料');
+        return;
+      }
+      
+      let csv = '\uFEFF'; // BOM for UTF-8
+      csv += '序號,書名,作者,ISBN,館藏編號,索書號,出版地,出版者,出版年份,圖書編號,叢書名,其他著者,書刊別名,標準號碼,附加叢書名稱,附註,語言,館藏數量,館藏分佈\n';
+      
+      currentBookData.forEach((book, idx) => {
+        const details = book['書目詳情'] || {};
+        const libraries = book['館藏列表'] || [];
+        const locationStr = book.error ? `錯誤: ${book.error}` : 
+          libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']})`).join('; ');
+        
+        const escapeCSV = (str) => {
+          if (!str) return '';
+          str = String(str).replace(/"/g, '""');
+          if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+            str = '"' + str + '"';
+          }
+          return str;
+        };
+        
+        csv += [
+          idx + 1,
+          escapeCSV(book['書本名稱'] || (book.error ? '查詢失敗' : '')),
+          escapeCSV(details['著者']),
+          escapeCSV(details['標準號碼']),
+          escapeCSV(details['館藏編目號碼']),
+          escapeCSV(details['索書號']),
+          escapeCSV(details['出版地']),
+          escapeCSV(details['出版者']),
+          escapeCSV(details['出版年份']),
+          book.id,
+          escapeCSV(details['叢書名']),
+          escapeCSV(details['其他著者']),
+          escapeCSV(details['書刊別名']),
+          escapeCSV(details['標準號碼']),
+          escapeCSV(details['附加叢書名稱']),
+          escapeCSV(details['附註']),
+          escapeCSV(details['語言']),
+          libraries.length,
+          escapeCSV(locationStr)
+        ].join(',') + '\n';
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.download = `HKPL_Books_${date}_${currentBookData.length}本.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setStatus(`已滙出 CSV: ${currentBookData.length} 本`, 'success', 'bookStatus');
+      addLog('success', '已滙出 CSV 檔案', `書籍數量: ${currentBookData.length}`);
+    }
+    
+    // JSON 滙出
+    function exportBookToJSON() {
+      if (!currentBookData || currentBookData.length === 0) {
+        alert('沒有可滙出的資料');
+        return;
+      }
+      
+      const exportData = currentBookData.map((book, idx) => ({
+        序號: idx + 1,
+        書名: book['書本名稱'] || (book.error ? '查詢失敗' : ''),
+        作者: book['書目詳情']?.['著者'] || '',
+        ISBN: book['書目詳情']?.['標準號碼'] || '',
+        館藏編號: book['書目詳情']?.['館藏編目號碼'] || '',
+        索書號: book['書目詳情']?.['索書號'] || '',
+        出版地: book['書目詳情']?.['出版地'] || '',
+        出版者: book['書目詳情']?.['出版者'] || '',
+        出版年份: book['書目詳情']?.['出版年份'] || '',
+        圖書編號: book.id,
+        叢書名: book['書目詳情']?.['叢書名'] || '',
+        其他著者: book['書目詳情']?.['其他著者'] || '',
+        書刊別名: book['書目詳情']?.['書刊別名'] || '',
+        標準號碼: book['書目詳情']?.['標準號碼'] || '',
+        附加叢書名稱: book['書目詳情']?.['附加叢書名稱'] || '',
+        附註: book['書目詳情']?.['附註'] || '',
+        語言: book['書目詳情']?.['語言'] || '',
+        館藏數量: (book['館藏列表'] || []).length,
+        館藏分佈: book.error ? `錯誤: ${book.error}` : (book['館藏列表'] || []).map(l => ({
+          圖書館: l['圖書館'],
+          索書號: l['索書號'],
+          館藏現況: l['館藏現況'],
+          館藏: l['館藏']
+        }))
+      }));
+      
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.download = `HKPL_Books_${date}_${currentBookData.length}本.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setStatus(`已滙出 JSON: ${currentBookData.length} 本`, 'success', 'bookStatus');
+      addLog('success', '已滙出 JSON 檔案', `書籍數量: ${currentBookData.length}`);
+    }
+    
+    // Fetch Scrape Data
     function fetchData(isAuto = false, saveToStorageFlag = false) {
+      const apiUrl = '/api/proxy?target=9000&endpoint=scrape';
+      
       setLoading(true);
-      setStatus(isAuto ? '自動更新中...' : '更新中...', 'loading');
+      setStatus(isAuto ? '自動更新中...' : '手動更新中...', 'loading');
+      addLog('request', (isAuto ? '自動' : '手動') + '抓取電子資源', `POST ${apiUrl}`);
       
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/proxy?target=9000&endpoint=scrape', true);
+      xhr.open('POST', apiUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
+      xhr.timeout = 30000; // 30 seconds timeout
+      
+      let completed = false;
+      
+      function finish() {
+        if (!completed) {
+          completed = true;
+          setLoading(false);
+        }
+      }
       
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
@@ -1392,31 +1667,50 @@
               if (result.success && result.data) {
                 currentScrapeData = result.data;
                 renderScrapeData(result.data);
-                updateExtractPanel();
                 
                 if (saveToStorageFlag) {
                   saveToStorage(result.data);
                 }
                 
-                setStatus(isAuto ? '自動更新完成' : '更新完成', 'success');
+                setStatus(isAuto ? '自動更新完成' : '手動更新完成', 'success');
+                addLog('response', '電子資源抓取成功', 
+                  `電子書: ${result.data.ebooks?.length || 0} 個 | 資料庫: ${result.data.edatabases?.length || 0} 個`);
                 
                 if (isAuto && isFirstLoad) {
                   isFirstLoad = false;
                 }
               } else {
                 setStatus('數據格式錯誤', 'error');
+                addLog('error', 'API 回應格式錯誤', JSON.stringify(result).substring(0, 200));
               }
             } catch (e) {
               setStatus('解析失敗', 'error');
+              addLog('error', 'JSON 解析失敗', e.message);
             }
           } else {
             setStatus('連接失敗 (' + xhr.status + ')', 'error');
+            addLog('error', 'API 連接失敗', `HTTP ${xhr.status} - ${xhr.statusText}`);
           }
-          setLoading(false);
+          finish();
         }
       };
-      xhr.onerror = () => { setStatus('網絡錯誤', 'error'); setLoading(false); };
-      xhr.send('{}');
+      xhr.onerror = () => { 
+        setStatus('網絡錯誤', 'error'); 
+        addLog('error', 'API 網絡錯誤', '無法連接到伺服器');
+        finish();
+      };
+      xhr.ontimeout = () => {
+        setStatus('請求逾時', 'error');
+        addLog('error', 'API 請求逾時', '30秒內未收到回應');
+        finish();
+      };
+      
+      try {
+        xhr.send('{}');
+      } catch (e) {
+        addLog('error', '發送請求失敗', e.message);
+        finish();
+      }
     }
     
     function renderScrapeData(data) {
@@ -1426,15 +1720,16 @@
       document.getElementById('ebookCount').textContent = ebooks.length + ' 個';
       document.getElementById('dbCount').textContent = databases.length + ' 個';
       
+      // ===== 修改: 電子書平台表格 - 先顯示標題, 再顯示類型 =====
       if (ebooks.length > 0) {
         document.getElementById('ebookResult').innerHTML = `
           <table>
-            <thead><tr><th>類型</th><th>標題</th><th>鏈接</th></tr></thead>
+            <thead><tr><th>標題</th><th>類型</th><th>鏈接</th></tr></thead>
             <tbody>
               ${ebooks.map(item => `
                 <tr>
+                  <td><strong>${escapeHtml(item.title)}</strong></td>
                   <td><span class="badge ${item.category?.includes('英文') ? 'badge-db' : 'badge-ebook'}">${escapeHtml(item.category || '電子書')}</span></td>
-                  <td>${escapeHtml(item.title)}</td>
                   <td><a href="${item.link || '#'}" target="_blank" style="color: var(--primary);">查看 →</a></td>
                 </tr>
               `).join('')}
