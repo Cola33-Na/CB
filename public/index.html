@@ -861,6 +861,37 @@
           <div class="empty-state">載入中...</div>
         </div>
       </div>
+
+      <!-- 靜態資料欄：抓取後自動填入，方便 Excel 提取 -->
+      <div class="result-section" id="staticDataSection" style="display: none;">
+        <div class="section-header">
+          <div class="section-title">
+            <span>📋</span>
+            靜態資料（Excel 可提取）
+          </div>
+          <span class="badge" style="background: #fef3c7; color: #92400e;" id="staticDataCount">0 筆</span>
+        </div>
+        <div class="extract-panel" style="background: #fffaf0; border: 2px dashed var(--warning); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <div class="extract-controls" style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+            <button class="btn btn-sm btn-primary" onclick="copyStaticData('csv')">
+              📋 複製CSV
+            </button>
+            <button class="btn btn-sm btn-info" onclick="copyStaticData('json')">
+              📋 複製JSON
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="downloadStaticData('csv')">
+              💾 下載CSV
+            </button>
+            <button class="btn btn-sm" onclick="downloadStaticData('json')" style="background: #e2e8f0; color: var(--text);">
+              💾 下載JSON
+            </button>
+          </div>
+          <textarea class="extract-textarea" id="staticDataArea" readonly placeholder="抓取資料後自動填入..." style="width: 100%; min-height: 150px; max-height: 300px; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4; resize: vertical; background: #fff;"></textarea>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+            提示：可直接複製上方 CSV 文字貼到 Excel，或使用「資料」→「從文字/CSV」功能匯入
+          </div>
+        </div>
+      </div>
     </div>
     
     <!-- Tab 2: 查詢書籍 -->
@@ -1147,6 +1178,7 @@
       if (stored && stored.data) {
         currentScrapeData = stored.data;
         renderScrapeData(stored.data);
+        updateStaticData();
         updateStorageInfo();
         setStatus('已載入儲存資料', 'success');
         addLog('success', '已載入儲存資料', `電子書: ${stored.data.ebooks?.length || 0} 個, 資料庫: ${stored.data.edatabases?.length || 0} 個`);
@@ -1275,14 +1307,15 @@
           }
           
           try {
-            addLog('request', `查詢書籍 ID: ${id}`, 'GET /api/proxy?target=8081&endpoint=book/' + id);
+            const bookApiDesc = `圖書查詢 API (target=8081, endpoint=book/${id})`;
+            addLog('request', `查詢書籍 ID: ${id}`, `GET /api/proxy?target=8081&endpoint=book/${id} | ${bookApiDesc}`);
             const data = await fetchSingleBook(id);
             if (data) {
               currentBookData.push({ id, ...data });
-              addLog('response', `書籍 ID ${id} 查詢成功`, `書名: ${data['書本名稱'] || 'N/A'}`);
+              addLog('response', `書籍 ID ${id} 查詢成功`, `${bookApiDesc} | 書名: ${data['書本名稱'] || 'N/A'}`);
             }
           } catch (err) {
-            addLog('error', `書籍 ID ${id} 查詢失敗`, err.message);
+            addLog('error', `書籍 ID ${id} 查詢失敗`, `圖書查詢 API (target=8081) | ${err.message}`);
             currentBookData.push({ 
               id, 
               error: err.message,
@@ -1638,11 +1671,14 @@
     
     // Fetch Scrape Data
     function fetchData(isAuto = false, saveToStorageFlag = false) {
-      const apiUrl = '/api/proxy?target=9000&endpoint=scrape';
+      const target = '9000';
+      const endpoint = 'scrape';
+      const apiDesc = '電子資源抓取 API (target=' + target + ', endpoint=' + endpoint + ')';
+      const apiUrl = '/api/proxy?target=' + target + '&endpoint=' + endpoint;
       
       setLoading(true);
       setStatus(isAuto ? '自動更新中...' : '手動更新中...', 'loading');
-      addLog('request', (isAuto ? '自動' : '手動') + '抓取電子資源', `POST ${apiUrl}`);
+      addLog('request', (isAuto ? '自動' : '手動') + '抓取電子資源', `POST ${apiUrl} | ${apiDesc}`);
       
       const xhr = new XMLHttpRequest();
       xhr.open('POST', apiUrl, true);
@@ -1667,6 +1703,7 @@
               if (result.success && result.data) {
                 currentScrapeData = result.data;
                 renderScrapeData(result.data);
+                updateStaticData();
                 
                 if (saveToStorageFlag) {
                   saveToStorage(result.data);
@@ -1674,41 +1711,41 @@
                 
                 setStatus(isAuto ? '自動更新完成' : '手動更新完成', 'success');
                 addLog('response', '電子資源抓取成功', 
-                  `電子書: ${result.data.ebooks?.length || 0} 個 | 資料庫: ${result.data.edatabases?.length || 0} 個`);
+                  `${apiDesc} | 電子書: ${result.data.ebooks?.length || 0} 個 | 資料庫: ${result.data.edatabases?.length || 0} 個`);
                 
                 if (isAuto && isFirstLoad) {
                   isFirstLoad = false;
                 }
               } else {
                 setStatus('數據格式錯誤', 'error');
-                addLog('error', 'API 回應格式錯誤', JSON.stringify(result).substring(0, 200));
+                addLog('error', 'API 回應格式錯誤', `${apiDesc} | 回應: ${JSON.stringify(result).substring(0, 200)}`);
               }
             } catch (e) {
               setStatus('解析失敗', 'error');
-              addLog('error', 'JSON 解析失敗', e.message);
+              addLog('error', 'JSON 解析失敗', `${apiDesc} | ${e.message}`);
             }
           } else {
             setStatus('連接失敗 (' + xhr.status + ')', 'error');
-            addLog('error', 'API 連接失敗', `HTTP ${xhr.status} - ${xhr.statusText}`);
+            addLog('error', 'API 連接失敗', `${apiDesc} | HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`);
           }
           finish();
         }
       };
       xhr.onerror = () => { 
         setStatus('網絡錯誤', 'error'); 
-        addLog('error', 'API 網絡錯誤', '無法連接到伺服器');
+        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 target=${target}`);
         finish();
       };
       xhr.ontimeout = () => {
         setStatus('請求逾時', 'error');
-        addLog('error', 'API 請求逾時', '30秒內未收到回應');
+        addLog('error', 'API 請求逾時', `${apiDesc} | 30秒內未收到回應`);
         finish();
       };
       
       try {
         xhr.send('{}');
       } catch (e) {
-        addLog('error', '發送請求失敗', e.message);
+        addLog('error', '發送請求失敗', `${apiDesc} | ${e.message}`);
         finish();
       }
     }
@@ -1756,6 +1793,96 @@
       } else {
         document.getElementById('dbResult').innerHTML = '<div class="empty-state">無數據庫數據</div>';
       }
+    }
+    
+    // ===== 靜態資料欄：CSV/JSON 生成與操作 =====
+    
+    function generateCSV() {
+      if (!currentScrapeData) return '';
+      const ebooks = currentScrapeData.ebooks || [];
+      const databases = currentScrapeData.edatabases || [];
+      let csv = '\uFEFF類型,標題,連結,分類/地點,說明/標籤\n';
+      ebooks.forEach(item => {
+        const cat = (item.category || '電子書').replace(/"/g, '""');
+        const title = (item.title || '').replace(/"/g, '""');
+        const link = (item.link || '').replace(/"/g, '""');
+        const desc = (item.description || '').replace(/"/g, '""');
+        csv += `"電子書","${title}","${link}","${cat}","${desc}"\n`;
+      });
+      databases.forEach(item => {
+        const locations = (item.locations || []).join('; ').replace(/"/g, '""');
+        const tags = (item.tags || []).join('; ').replace(/"/g, '""');
+        const title = (item.title || '').replace(/"/g, '""');
+        const link = (item.link || '').replace(/"/g, '""');
+        csv += `"資料庫","${title}","${link}","${locations}","${tags}"\n`;
+      });
+      return csv;
+    }
+    
+    function generateJSON() {
+      if (!currentScrapeData) return '{}';
+      return JSON.stringify(currentScrapeData, null, 2);
+    }
+    
+    function updateStaticData() {
+      const textarea = document.getElementById('staticDataArea');
+      const section = document.getElementById('staticDataSection');
+      const countEl = document.getElementById('staticDataCount');
+      if (!textarea || !section || !currentScrapeData) return;
+      
+      const ebooks = currentScrapeData.ebooks || [];
+      const databases = currentScrapeData.edatabases || [];
+      const total = ebooks.length + databases.length;
+      
+      textarea.value = generateCSV();
+      countEl.textContent = total + ' 筆';
+      section.style.display = 'block';
+    }
+    
+    function copyStaticData(format) {
+      const content = format === 'csv' ? generateCSV() : generateJSON();
+      if (!content || content === '{}' || content === '') {
+        setStatus('無資料可複製', 'error');
+        return;
+      }
+      
+      const textarea = document.getElementById('staticDataArea');
+      textarea.value = content;
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`, 'success');
+        addLog('success', `已複製 ${format.toUpperCase()}`, '靜態資料已複製到剪貼簿');
+      } catch (err) {
+        navigator.clipboard.writeText(content).then(() => {
+          setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`, 'success');
+        }).catch(() => {
+          setStatus('複製失敗，請手動複製', 'error');
+        });
+      }
+    }
+    
+    function downloadStaticData(format) {
+      const content = format === 'csv' ? generateCSV() : generateJSON();
+      if (!content || content === '{}' || content === '') {
+        setStatus('無資料可下載', 'error');
+        return;
+      }
+      
+      const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.download = `HKPL_Data_${date}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success');
+      addLog('success', `已下載 ${format.toUpperCase()}`, `檔名: HKPL_Data_${date}.${format}`);
     }
     
     function escapeHtml(text) {
