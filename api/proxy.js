@@ -12,17 +12,17 @@ export default async function handler(req, res) {
 
   const { endpoint, target } = req.query;
   
-  if (!target || !['8000', '8081'].includes(target)) {
+  if (!target || !['9000', '8081'].includes(target)) {
     return res.status(400).json({ 
       success: false, 
       error: 'Invalid target port',
-      detail: 'Allowed ports: 8000 (scraper), 8081 (book query)'
+      detail: 'Allowed ports: 9000 (scraper), 8081 (book query)'
     });
   }
 
   // 從環境變量獲取配置
-  const baseURL = target === '8000' 
-    ? (process.env.WKY_API_8000 || process.env.HKPL_SCRAPER_URL) 
+  const baseURL = target === '9000' 
+    ? (process.env.WKY_API_9000 || process.env.HKPL_SCRAPER_URL) 
     : (process.env.WKY_API_8081 || process.env.HKPL_BOOK_API_URL);
   
   const apiKey = process.env.API_KEY || 'HKPL2024SecureKey';
@@ -47,8 +47,8 @@ export default async function handler(req, res) {
     };
 
     // 根據目標和端點構造請求
-    if (target === '8000') {
-      // API 1: 爬蟲服務 (Port 8000)
+    if (target === '9000') {
+      // API 1: 爬蟲服務 (Port 9000)
       if (endpoint === 'scrape') {
         targetURL = `${baseURL}/scrape`;
         fetchOptions.method = 'POST';
