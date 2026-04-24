@@ -787,6 +787,9 @@
       <button class="tab-btn" onclick="switchTab('books', this)">
         📚 查詢書籍
       </button>
+      <button class="tab-btn" onclick="switchTab('extract', this)">
+        📊 資料提取
+      </button>
     </div>
     
     <!-- Tab 1: 電子資源 -->
@@ -836,33 +839,19 @@
         </div>
       </div>
 
-      <div class="result-section">
+      <!-- 抓取結果（不長駐，抓取時短暫顯示） -->
+      <div class="result-section" id="resultSection" style="display: none;">
         <div class="section-header">
           <div class="section-title">
-            <span>📖</span>
-            電子書平台
+            <span>📊</span>
+            抓取結果
           </div>
-          <span class="badge badge-ebook" id="ebookCount">0 個</span>
+          <span class="badge badge-ebook" id="resultCount">0 筆</span>
         </div>
-        <div id="ebookResult">
-          <div class="empty-state">載入中...<br><small>檢查本地儲存資料</small></div>
+        <div id="resultContent">
+          <div class="empty-state">點擊「手動更新」開始抓取資料</div>
         </div>
       </div>
-      
-      <div class="result-section">
-        <div class="section-header">
-          <div class="section-title">
-            <span>🗄️</span>
-            電子資料庫
-          </div>
-          <span class="badge badge-db" id="dbCount">0 個</span>
-        </div>
-        <div id="dbResult">
-          <div class="empty-state">載入中...</div>
-        </div>
-      </div>
-
-      <!-- 靜態資料欄：Excel 可讀取的 table 結構 + CSV 文字區 -->
       <div class="result-section" id="staticDataSection">
         <div class="section-header">
           <div class="section-title">
@@ -980,6 +969,72 @@
         </div>
       </div>
     </div>
+    
+    <!-- Tab 3: 資料提取（Excel 從 Web 可讀取的靜態頁面） -->
+    <div id="tab-extract" class="tab-content">
+      <!-- 頁面頂部資訊列 -->
+      <div class="storage-info" style="background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%); border-left-color: var(--warning); color: #92400e;">
+        <span>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/>
+          </svg>
+          📅 最後抓取時間：<strong id="extractLastTime">--</strong>
+        </span>
+        <span style="color: var(--text-muted); font-size: 12px;">
+          本頁資料可直接用 Excel「資料 → 從 Web」提取
+        </span>
+      </div>
+      
+      <!-- 操作按鈕 -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+        <button class="btn btn-sm btn-primary" onclick="copyStaticData('csv')">
+          📋 複製 CSV
+        </button>
+        <button class="btn btn-sm btn-info" onclick="copyStaticData('json')">
+          📋 複製 JSON
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="downloadStaticData('csv')">
+          💾 下載 CSV
+        </button>
+        <button class="btn btn-sm" onclick="downloadStaticData('json')" style="background: #e2e8f0; color: var(--text);">
+          💾 下載 JSON
+        </button>
+        <button class="btn btn-sm btn-warning" onclick="downloadStaticHTML()">
+          📄 下載靜態 HTML（Excel 專用）
+        </button>
+        <span class="status" id="extractStatus" style="display: none; margin-left: auto;"></span>
+      </div>
+      
+      <!-- 靜態表格：Excel「從 Web」可直接讀取 -->
+      <div style="overflow-x: auto; border: 2px solid var(--success); border-radius: 8px; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; background: white; font-size: 14px; margin-bottom: 0;" id="extractTable">
+          <thead>
+            <tr style="background: #f0fff4;">
+              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success); width: 80px;">類型</th>
+              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success);">標題</th>
+              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success); width: 200px;">連結</th>
+              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success);">分類/地點</th>
+              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success);">說明/標籤</th>
+            </tr>
+          </thead>
+          <tbody id="extractTableBody">
+            <tr>
+              <td colspan="5" style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
+                <div style="font-size: 32px; margin-bottom: 12px;">📊</div>
+                暫無資料<br>
+                <small>請到「電子資源」頁點擊「手動更新」抓取資料</small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- CSV 文字區 -->
+      <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
+        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">CSV 格式文字（可直接複製貼到 Excel）</label>
+        <textarea id="extractTextarea" readonly placeholder="抓取資料後自動填入..." style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4; resize: vertical;"></textarea>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -998,6 +1053,13 @@
     
     const STORAGE_KEY_DATA = 'hkpl_scrape_data';
     const STORAGE_KEY_TIME = 'hkpl_scrape_time';
+    
+    // ===== API 配置（繞過代理，直接連接後端服務） =====
+    // 如果 API 在不同主機，請修改以下網址
+    const API_CONFIG = {
+      scraper: 'http://localhost:9000',   // 電子資源抓取服務
+      book:    'http://localhost:8081'    // 圖書查詢服務
+    };
     
     // Tab Switching
     function switchTab(tabName, btnElement) {
@@ -1319,15 +1381,15 @@
           }
           
           try {
-            const bookApiDesc = `圖書查詢 API (target=8081, endpoint=book/${id})`;
-            addLog('request', `查詢書籍 ID: ${id}`, `GET /api/proxy?target=8081&endpoint=book/${id} | ${bookApiDesc}`);
+            const bookApiDesc = `圖書查詢 API (localhost:8081, endpoint=book/${id})`;
+            addLog('request', `查詢書籍 ID: ${id}`, `GET ${API_CONFIG.book}/book/${id} | ${bookApiDesc}`);
             const data = await fetchSingleBook(id);
             if (data) {
               currentBookData.push({ id, ...data });
               addLog('response', `書籍 ID ${id} 查詢成功`, `${bookApiDesc} | 書名: ${data['書本名稱'] || 'N/A'}`);
             }
           } catch (err) {
-            addLog('error', `書籍 ID ${id} 查詢失敗`, `圖書查詢 API (target=8081) | ${err.message}`);
+            addLog('error', `書籍 ID ${id} 查詢失敗`, `圖書查詢 API (localhost:8081) | ${err.message}`);
             currentBookData.push({ 
               id, 
               error: err.message,
@@ -1371,7 +1433,7 @@
     function fetchSingleBook(id) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/proxy?target=8081&endpoint=book/' + encodeURIComponent(id), true);
+        xhr.open('GET', API_CONFIG.book + '/book/' + encodeURIComponent(id), true);
         xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
         xhr.timeout = 15000; // 15 seconds timeout
         
@@ -1405,8 +1467,8 @@
             }
           }
         };
-        xhr.onerror = () => reject(new Error('網絡錯誤：無法連接到 target=8081'));
-        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)：target=8081 未回應'));
+        xhr.onerror = () => reject(new Error('網絡錯誤：無法連接到 localhost:8081'));
+        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)：localhost:8081 未回應'));
         xhr.send();
       });
     }
@@ -1697,10 +1759,8 @@
     
     // Fetch Scrape Data
     function fetchData(isAuto = false, saveToStorageFlag = false) {
-      const target = '9000';
-      const endpoint = 'scrape';
-      const apiDesc = '電子資源抓取 API (target=' + target + ', endpoint=' + endpoint + ')';
-      const apiUrl = '/api/proxy?target=' + target + '&endpoint=' + endpoint;
+      const apiUrl = API_CONFIG.scraper + '/scrape';
+      const apiDesc = '電子資源抓取 API (localhost:9000, endpoint=/scrape)';
       
       setLoading(true);
       setStatus(isAuto ? '自動更新中...' : '手動更新中...', 'loading');
@@ -1781,7 +1841,7 @@
             else if (xhr.status === 403) diagnosis = ' | [診斷] 拒絕存取：沒有權限呼叫此 API';
             else if (xhr.status === 404) diagnosis = ' | [診斷] 端點不存在：請檢查 endpoint 路徑是否正確';
             else if (xhr.status === 500) diagnosis = ' | [診斷] 伺服器內部錯誤：後端服務可能異常';
-            else if (xhr.status === 502) diagnosis = ' | [診斷] 閘道錯誤：後端服務 (target=' + target + ') 可能未啟動';
+            else if (xhr.status === 502) diagnosis = ' | [診斷] 閘道錯誤：後端服務 (localhost:9000) 可能未啟動';
             else if (xhr.status === 503) diagnosis = ' | [診斷] 服務不可用：後端服務可能過載或維護中';
             
             setStatus('連接失敗 (' + xhr.status + ')', 'error');
@@ -1792,19 +1852,19 @@
       };
       xhr.onerror = () => { 
         setStatus('網絡錯誤', 'error'); 
-        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 target=${target}，請檢查：1) 網絡連線 2) API 伺服器是否啟動 3) 代理服務是否正常`);
+        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 localhost:9000，請檢查：1) 網絡連線 2) API 伺服器(Scraper)是否已啟動在 port 9000 3) Flask CORS 是否正確配置`);
         finish();
       };
       xhr.ontimeout = () => {
         setStatus('請求逾時', 'error');
-        addLog('error', 'API 請求逾時', `${apiDesc} | 30秒內未收到回應`);
+        addLog('error', 'API 請求逾時', `${apiDesc} | 30秒內未收到回應，請確認 Flask Scraper 服務正在運行`);
         finish();
       };
       
       try {
         xhr.send('{}');
       } catch (e) {
-        addLog('error', '發送請求失敗', `${apiDesc} | ${e.message}`);
+        addLog('error', '發送請求失敗', `${apiDesc} | ${e.message} | 請確認 API_CONFIG.scraper 網址正確`);
         finish();
       }
     }
@@ -1812,46 +1872,43 @@
     function renderScrapeData(data) {
       const ebooks = data.ebooks || [];
       const databases = data.edatabases || [];
+      const total = ebooks.length + databases.length;
       
-      document.getElementById('ebookCount').textContent = ebooks.length + ' 個';
-      document.getElementById('dbCount').textContent = databases.length + ' 個';
+      // 顯示結果區塊
+      const resultSection = document.getElementById('resultSection');
+      const resultContent = document.getElementById('resultContent');
+      const resultCount = document.getElementById('resultCount');
+      if (resultSection) resultSection.style.display = 'block';
+      if (resultCount) resultCount.textContent = `電子書 ${ebooks.length} 個 + 資料庫 ${databases.length} 個 = ${total} 筆`;
       
-      // ===== 修改: 電子書平台表格 - 先顯示標題, 再顯示類型 =====
-      if (ebooks.length > 0) {
-        document.getElementById('ebookResult').innerHTML = `
-          <table>
-            <thead><tr><th>標題</th><th>類型</th><th>鏈接</th></tr></thead>
-            <tbody>
-              ${ebooks.map(item => `
-                <tr>
-                  <td><strong>${escapeHtml(item.title)}</strong></td>
-                  <td><span class="badge ${item.category?.includes('英文') ? 'badge-db' : 'badge-ebook'}">${escapeHtml(item.category || '電子書')}</span></td>
-                  <td><a href="${item.link || '#'}" target="_blank" style="color: var(--primary);">查看 →</a></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>`;
-      } else {
-        document.getElementById('ebookResult').innerHTML = '<div class="empty-state">無電子書數據</div>';
-      }
+      // 渲染合併表格
+      let html = '<div style="overflow-x: auto;"><table style="margin-bottom: 0;">';
+      html += '<thead><tr><th>類型</th><th>標題</th><th>連結</th><th>分類/地點</th><th>說明/標籤</th></tr></thead><tbody>';
       
-      if (databases.length > 0) {
-        document.getElementById('dbResult').innerHTML = `
-          <table>
-            <thead><tr><th>標題</th><th>使用地點</th><th>標籤</th></tr></thead>
-            <tbody>
-              ${databases.map(db => `
-                <tr>
-                  <td><strong>${escapeHtml(db.title)}</strong></td>
-                  <td>${(db.locations || []).map(l => `<span class="badge" style="background: #e2e8f0; color: var(--text); margin: 2px;">${escapeHtml(l)}</span>`).join('')}</td>
-                  <td>${(db.tags || []).slice(0, 5).join(', ')}${(db.tags || []).length > 5 ? '...' : ''}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>`;
-      } else {
-        document.getElementById('dbResult').innerHTML = '<div class="empty-state">無數據庫數據</div>';
-      }
+      ebooks.forEach(item => {
+        html += '<tr>' +
+          '<td><span class="badge badge-ebook">' + escapeHtml(item.category || '電子書') + '</span></td>' +
+          '<td><strong>' + escapeHtml(item.title) + '</strong></td>' +
+          '<td><a href="' + (item.link || '#') + '" target="_blank" style="color: var(--primary);">查看 →</a></td>' +
+          '<td>' + escapeHtml(item.category || '電子書') + '</td>' +
+          '<td>' + escapeHtml(item.description || '--') + '</td>' +
+        '</tr>';
+      });
+      
+      databases.forEach(db => {
+        const locs = (db.locations || []).map(l => escapeHtml(l)).join('; ');
+        const tags = (db.tags || []).slice(0, 5).map(t => escapeHtml(t)).join(', ') + ((db.tags || []).length > 5 ? '...' : '');
+        html += '<tr>' +
+          '<td><span class="badge badge-db">資料庫</span></td>' +
+          '<td><strong>' + escapeHtml(db.title) + '</strong></td>' +
+          '<td><a href="' + (db.link || '#') + '" target="_blank" style="color: var(--primary);">查看 →</a></td>' +
+          '<td>' + locs + '</td>' +
+          '<td>' + tags + '</td>' +
+        '</tr>';
+      });
+      
+      html += '</tbody></table></div>';
+      if (resultContent) resultContent.innerHTML = html;
     }
     
     // ===== 靜態資料欄：CSV/JSON 生成與操作 =====
@@ -1884,44 +1941,56 @@
     }
     
     function updateStaticData() {
-      const textarea = document.getElementById('staticDataArea');
-      const tableBody = document.getElementById('staticDataTableBody');
-      const countEl = document.getElementById('staticDataCount');
-      if (!textarea || !tableBody || !currentScrapeData) return;
+      if (!currentScrapeData) return;
       
       const ebooks = currentScrapeData.ebooks || [];
       const databases = currentScrapeData.edatabases || [];
       const total = ebooks.length + databases.length;
+      const now = new Date();
+      const timeStr = now.toLocaleString('zh-HK');
       
-      // 更新 CSV textarea
-      textarea.value = generateCSV();
-      countEl.textContent = total + ' 筆';
-      
-      // 更新 table（Excel 從 Web 可讀取）
-      let html = '';
+      // 共用表格 HTML 生成
+      let tableHtml = '';
       if (total === 0) {
-        html = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">暫無資料</td></tr>';
+        tableHtml = '<tr><td colspan="5" style="padding: 40px 20px; text-align: center; color: var(--text-muted);"><div style="font-size: 32px; margin-bottom: 12px;">📊</div>暫無資料<br><small>請到「電子資源」頁點擊「手動更新」抓取資料</small></td></tr>';
       } else {
         ebooks.forEach(item => {
-          html += '<tr>' +
-            '<td>電子書</td>' +
-            '<td>' + escapeHtml(item.title) + '</td>' +
-            '<td><a href="' + (item.link || '#') + '" target="_blank">' + (item.link || '--') + '</a></td>' +
-            '<td>' + escapeHtml(item.category || '電子書') + '</td>' +
-            '<td>' + escapeHtml(item.description || '--') + '</td>' +
+          tableHtml += '<tr>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);"><span style="padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; background: #d1fae5; color: #065f46;">' + escapeHtml(item.category || '電子書') + '</span></td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-weight: 600;">' + escapeHtml(item.title) + '</td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px;"><a href="' + (item.link || '#') + '" target="_blank" style="color: var(--primary);">' + (item.link || '--') + '</a></td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + escapeHtml(item.category || '電子書') + '</td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + escapeHtml(item.description || '--') + '</td>' +
           '</tr>';
         });
         databases.forEach(item => {
-          html += '<tr>' +
-            '<td>資料庫</td>' +
-            '<td>' + escapeHtml(item.title) + '</td>' +
-            '<td><a href="' + (item.link || '#') + '" target="_blank">' + (item.link || '--') + '</a></td>' +
-            '<td>' + (item.locations || []).map(l => escapeHtml(l)).join('; ') + '</td>' +
-            '<td>' + (item.tags || []).slice(0, 5).map(t => escapeHtml(t)).join(', ') + ((item.tags || []).length > 5 ? '...' : '') + '</td>' +
+          tableHtml += '<tr>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);"><span style="padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; background: #dbeafe; color: #1e40af;">資料庫</span></td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-weight: 600;">' + escapeHtml(item.title) + '</td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px;"><a href="' + (item.link || '#') + '" target="_blank" style="color: var(--primary);">' + (item.link || '--') + '</a></td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + (item.locations || []).map(l => escapeHtml(l)).join('; ') + '</td>' +
+            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + (item.tags || []).slice(0, 5).map(t => escapeHtml(t)).join(', ') + ((item.tags || []).length > 5 ? '...' : '') + '</td>' +
           '</tr>';
         });
       }
-      tableBody.innerHTML = html;
+      
+      // 更新電子資源頁的靜態資料表格
+      const staticTableBody = document.getElementById('staticDataTableBody');
+      const staticCount = document.getElementById('staticDataCount');
+      const staticTextarea = document.getElementById('staticDataArea');
+      if (staticTableBody) {
+        staticTableBody.innerHTML = tableHtml;
+        staticCount.textContent = total + ' 筆';
+      }
+      if (staticTextarea) staticTextarea.value = generateCSV();
+      
+      // 更新「資料提取」頁的表格
+      const extractBody = document.getElementById('extractTableBody');
+      const extractTextarea = document.getElementById('extractTextarea');
+      const extractTime = document.getElementById('extractLastTime');
+      if (extractBody) extractBody.innerHTML = tableHtml;
+      if (extractTextarea) extractTextarea.value = generateCSV();
+      if (extractTime) extractTime.textContent = timeStr + `（共 ${total} 筆：電子書 ${ebooks.length} + 資料庫 ${databases.length}）`;
     }
     
     function copyStaticData(format) {
@@ -1968,6 +2037,92 @@
       
       setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success');
       addLog('success', `已下載 ${format.toUpperCase()}`, `檔名: HKPL_Data_${date}.${format}`);
+    }
+    
+    // ===== 下載靜態 HTML（Excel「從 Web」可讀取）=====
+    function downloadStaticHTML() {
+      if (!currentScrapeData) {
+        setStatus('無資料，請先抓取', 'error', 'extractStatus');
+        return;
+      }
+      
+      const ebooks = currentScrapeData.ebooks || [];
+      const databases = currentScrapeData.edatabases || [];
+      const total = ebooks.length + databases.length;
+      const now = new Date();
+      const timeStr = now.toLocaleString('zh-HK');
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      
+      // 生成表格 HTML
+      let tableRows = '';
+      ebooks.forEach(item => {
+        const title = String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const link = String(item.link || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const cat = String(item.category || '電子書').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const desc = String(item.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        tableRows += '<tr>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + cat + '</td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">' + title + '</td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="' + link + '" target="_blank">' + link + '</a></td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + cat + '</td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + desc + '</td>' +
+        '</tr>';
+      });
+      databases.forEach(item => {
+        const title = String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const link = String(item.link || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const locs = (item.locations || []).map(l => String(l).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join('; ');
+        const tags = (item.tags || []).slice(0, 5).map(t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join(', ') + ((item.tags || []).length > 5 ? '...' : '');
+        tableRows += '<tr>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">資料庫</td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">' + title + '</td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="' + link + '" target="_blank">' + link + '</a></td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + locs + '</td>' +
+          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + tags + '</td>' +
+        '</tr>';
+      });
+      
+      // 生成完整靜態 HTML
+      const html = `<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<title>HKPL 資料提取 - ${timeStr}</title>
+<style>
+  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; padding: 20px; color: #2d3748; }
+  h1 { font-size: 20px; margin-bottom: 8px; }
+  .meta { color: #718096; font-size: 13px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #f0fff4; padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid #48bb78; }
+  td { padding: 10px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:hover { background: #f8fafc; }
+  a { color: #667eea; }
+</style>
+</head>
+<body>
+<h1>HKPL 電子資源資料</h1>
+<div class="meta">抓取時間：${timeStr} | 共 ${total} 筆（電子書 ${ebooks.length} + 資料庫 ${databases.length}）</div>
+<table>
+<thead><tr><th>類型</th><th>標題</th><th>連結</th><th>分類/地點</th><th>說明/標籤</th></tr></thead>
+<tbody>
+${tableRows}
+</tbody>
+</table>
+</body>
+</html>`;
+      
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `HKPL_Extract_${dateStr}_${total}筆.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setStatus('已下載靜態 HTML', 'success', 'extractStatus');
+      addLog('success', '已下載靜態 HTML', `檔名: HKPL_Extract_${dateStr}_${total}筆.html | Excel 可直接開啟此檔案`);
     }
     
     function escapeHtml(text) {
