@@ -3,802 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v3.5 </title>
-  
+  <title>HKPL 資源控制台 v3.5</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    :root {
-      --primary: #667eea;
-      --primary-dark: #5a67d8;
-      --secondary: #764ba2;
-      --accent-orange: #f093fb;
-      --accent-blue: #4facfe;
-      --success: #48bb78;
-      --warning: #ed8936;
-      --danger: #f56565;
-      --bg: #f7fafc;
-      --card-bg: #ffffff;
-      --text: #2d3748;
-      --text-muted: #718096;
-      --border: #e2e8f0;
-      --row-height: 20px;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang HK", sans-serif;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      min-height: 100vh;
-      padding: 20px;
-      color: var(--text);
-    }
-    
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-      background: var(--card-bg);
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-    
-    .header {
-      background: linear-gradient(90deg, var(--accent-blue) 0%, #00f2fe 100%);
-      color: white;
-      padding: 30px;
-      text-align: center;
-      position: relative;
-    }
-    
-    .header h1 {
-      font-size: 28px;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-    
-    .network-status {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .network-status.offline {
-      background: rgba(245, 101, 101, 0.3);
-    }
-    
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    .storage-info {
-      background: linear-gradient(90deg, #f0fff4 0%, #c6f6d5 100%);
-      border-left: 4px solid var(--success);
-      padding: 12px 20px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      font-size: 13px;
-      color: #22543d;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .storage-info .time {
-      font-weight: 600;
-      color: var(--success);
-    }
-    
-    .tab-nav {
-      display: flex;
-      background: #f8fafc;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .tab-btn {
-      flex: 1;
-      padding: 18px 24px;
-      background: none;
-      border: none;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .tab-btn:hover {
-      color: var(--primary);
-      background: rgba(102, 126, 234, 0.05);
-    }
-    
-    .tab-btn.active {
-      color: var(--primary);
-      background: white;
-      box-shadow: inset 0 -3px 0 var(--primary);
-    }
-    
-    .tab-content {
-      display: none;
-      padding: 30px;
-    }
-    
-    .tab-content.active {
-      display: block;
-    }
-    
-    /* 狀態指示器 */
-    .auto-status-bar {
-      background: #e0e7ff;
-      border-radius: 8px;
-      padding: 12px 20px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-      color: #3730a3;
-      flex-wrap: wrap;
-    }
-    
-    .auto-status-bar .indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      background: white;
-      border-radius: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    
-    .control-panel {
-      background: #f8fafc;
-      padding: 20px 24px;
-      border-radius: 12px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
-      color: white;
-    }
-    
-    .btn-secondary {
-      background: linear-gradient(90deg, var(--accent-orange) 0%, #f5576c 100%);
-      color: white;
-    }
-    
-    .btn-export {
-      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
-      z-index: 100;
-    }
-    
-    .btn-sm {
-      padding: 8px 16px;
-      font-size: 13px;
-    }
-    
-    .btn-info {
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .btn-warning {
-      background: linear-gradient(90deg, #ed8936 0%, #f6ad55 100%);
-      color: white;
-    }
-    
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    
-    .status {
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .status.loading {
-      background: #fef3c7;
-      color: #92400e;
-    }
-    
-    .status.success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-    
-    .status.error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-    
-    .result-section {
-      margin-bottom: 32px;
-    }
-    
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid var(--border);
-    }
-    
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .badge {
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .badge-ebook { background: #d1fae5; color: #065f46; }
-    .badge-db { background: #dbeafe; color: #1e40af; }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      font-size: 14px;
-    }
-    
-    th {
-      background: #f8fafc;
-      padding: 14px 16px;
-      text-align: left;
-      font-weight: 600;
-      color: var(--text-muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      border-bottom: 2px solid var(--border);
-    }
-    
-    td {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-    
-    tr:hover {
-      background: #f8fafc;
-    }
-    
-    .status-badge {
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .status-available { background: #d1fae5; color: #065f46; }
-    .status-loaned { background: #fef3c7; color: #92400e; }
-    .status-reserve { background: #fee2e2; color: #991b1b; }
-    .status-processing { background: #dbeafe; color: #1e40af; }
-    
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-muted);
-      background: #f8fafc;
-      border-radius: 8px;
-      border: 2px dashed var(--border);
-    }
-    
-    /* ===== 日誌欄樣式 ===== */
-    .log-panel {
-      background: #1e1e2e;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-    
-    .log-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 16px;
-      background: #2d2d44;
-      cursor: pointer;
-      user-select: none;
-    }
-    
-    .log-header:hover {
-      background: #353550;
-    }
-    
-    .log-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #a6a6c8;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .log-toggle {
-      font-size: 11px;
-      color: #7a7a9d;
-    }
-    
-    .log-body {
-      max-height: 300px;
-      overflow-y: auto;
-      padding: 12px 16px;
-      font-family: 'Courier New', 'Consolas', monospace;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-    
-    .log-body.collapsed {
-      display: none;
-    }
-    
-    .log-entry {
-      margin-bottom: 6px;
-      padding: 4px 0;
-      border-bottom: 1px solid #2d2d44;
-    }
-    
-    .log-entry:last-child {
-      border-bottom: none;
-    }
-    
-    .log-time {
-      color: #6c6c8a;
-      font-size: 11px;
-    }
-    
-    .log-tag {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      margin-right: 6px;
-    }
-    
-    .log-tag.request {
-      background: #3b5998;
-      color: #dce6f8;
-    }
-    
-    .log-tag.response {
-      background: #2d6a4f;
-      color: #d8f3dc;
-    }
-    
-    .log-tag.error {
-      background: #9b2226;
-      color: #ffe6e6;
-    }
-    
-    .log-tag.info {
-      background: #5a4fcf;
-      color: #e8e6ff;
-    }
-    
-    .log-tag.success {
-      background: #2d6a4f;
-      color: #d8f3dc;
-    }
-    
-    .log-content {
-      color: #c8c8dc;
-    }
-    
-    .log-url {
-      color: #7ec8e3;
-      word-break: break-all;
-    }
-    
-    .log-status-ok {
-      color: #52b788;
-    }
-    
-    .log-status-error {
-      color: #e07a7a;
-    }
-    
-    .log-clear-btn {
-      background: transparent;
-      border: 1px solid #4a4a6a;
-      color: #7a7a9d;
-      padding: 2px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-    
-    .log-clear-btn:hover {
-      background: #4a4a6a;
-      color: #c8c8dc;
-    }
-    
-    /* ===== 查詢書籍頁滙出按鈕群組 ===== */
-    .export-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    
-    .export-group .btn {
-      width: 100%;
-      justify-content: center;
-    }
-    
-    .search-layout {
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 24px;
-      height: calc(100vh - 200px);
-      min-height: 600px;
-    }
-    
-    .search-sidebar {
-      background: #f8fafc;
-      padding: 24px;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-    }
-    
-    .input-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-    
-    .book-input {
-      width: 100%;
-      flex: 1;
-      padding: 16px;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: 'Courier New', monospace;
-      resize: none;
-    }
-    
-    .book-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    
-    .input-hint {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-    
-    .search-results {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      overflow: auto;
-    }
-    
-    .height-control-panel {
-      background: #f0f4f8;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 16px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-    }
-    
-    .height-slider {
-      flex: 1;
-      height: 6px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: #cbd5e0;
-      border-radius: 3px;
-    }
-    
-    .height-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      background: var(--primary);
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    
-    .height-value {
-      font-weight: 700;
-      color: var(--primary);
-      min-width: 40px;
-      text-align: center;
-    }
-    
-    .excel-book-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      border: 1px solid var(--border);
-      table-layout: fixed;
-    }
-    
-    .excel-book-table th {
-      background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-      color: var(--text);
-      font-weight: 700;
-      padding: 6px 4px;
-      border: 1px solid var(--border);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      user-select: none;
-      height: 24px;
-    }
-    
-    .excel-book-table td {
-      padding: 2px 4px;
-      border: 1px solid var(--border);
-      vertical-align: middle;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      height: var(--row-height);
-      max-height: var(--row-height);
-      font-size: 12px;
-      line-height: calc(var(--row-height) - 4px);
-      white-space: nowrap;
-    }
-    
-    .excel-book-table tr:hover {
-      background: #e0e7ff;
-    }
-    
-    .excel-book-table tr:hover td {
-      overflow: visible;
-      white-space: normal;
-      background: #e0e7ff;
-      z-index: 10;
-      position: relative;
-    }
-    
-    .resizer {
-      position: absolute;
-      right: 0;
-      top: 0;
-      height: 100%;
-      width: 5px;
-      cursor: col-resize;
-      background: transparent;
-      z-index: 10;
-    }
-    
-    .resizer:hover {
-      background: var(--primary);
-      width: 3px;
-    }
-    
-    .col-seq { width: 40px; text-align: center; background: #f0f4f8; font-weight: 600; }
-    .col-title { width: 180px; font-weight: 600; color: var(--primary-dark); }
-    .col-author { width: 90px; }
-    .col-isbn { width: 110px; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-catalog { width: 90px; font-size: 11px; }
-    .col-callno { width: 110px; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-place { width: 70px; }
-    .col-publisher { width: 110px; }
-    .col-year { width: 60px; text-align: center; }
-    .col-bookid { width: 80px; text-align: center; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-series { width: 110px; }
-    .col-other-authors { width: 90px; }
-    .col-alias { width: 90px; }
-    .col-standard { width: 110px; font-family: 'Courier New', monospace; font-size: 11px; }
-    .col-add-series { width: 110px; }
-    .col-notes { width: 130px; font-size: 11px; }
-    .col-lang { width: 60px; text-align: center; font-size: 11px; }
-    .col-count { width: 60px; text-align: center; font-weight: 600; }
-    .col-locations { width: 320px; min-width: 280px; }
-    
-    .location-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-    
-    .location-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 1px 3px;
-      background: white;
-      border-radius: 2px;
-      border-left: 2px solid var(--border);
-      font-size: 10px;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .location-item.available { border-left-color: var(--success); background: #f0fff4; }
-    .location-item.loaned { border-left-color: var(--warning); background: #fffaf0; }
-    .location-item.reserved { border-left-color: var(--danger); background: #fff5f5; }
-    
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 16px 0;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-      transition: width 0.3s;
-    }
-    
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255,255,255,0.9);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    
-    .loading-overlay.show {
-      display: flex;
-    }
-    
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    /* 診斷提示框 */
-    .diagnostic-box {
-      background: #fff5f5;
-      border: 1px solid #feb2b2;
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      color: #742a2a;
-      line-height: 1.5;
-    }
-    
-    .diagnostic-box strong {
-      color: #c53030;
-    }
-    
-    .diagnostic-box code {
-      background: #fed7d7;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-    }
-    
-    @media (max-width: 1200px) {
-      .search-layout {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-    }
-    
-    @media (max-width: 968px) {
-      .btn-export {
-        bottom: 20px;
-        right: 20px;
-      }
-      
-      .network-status {
-        position: static;
-        margin-top: 10px;
-      }
-      
-      .auto-status-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--primary:#667eea;--primary-dark:#5a67d8;--secondary:#764ba2;--accent-orange:#f093fb;--accent-blue:#4facfe;--success:#48bb78;--warning:#ed8936;--danger:#f56565;--bg:#f7fafc;--card-bg:#ffffff;--text:#2d3748;--text-muted:#718096;--border:#e2e8f0;--row-height:20px}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang HK",sans-serif;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);min-height:100vh;padding:20px;color:var(--text)}
+    .container{max-width:1600px;margin:0 auto;background:var(--card-bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden}
+    .header{background:linear-gradient(90deg,var(--accent-blue) 0%,#00f2fe 100%);color:white;padding:30px;text-align:center;position:relative}
+    .header h1{font-size:28px;margin-bottom:8px;font-weight:700}
+    .network-status{position:absolute;top:20px;right:20px;display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(255,255,255,0.2);border-radius:20px;font-size:12px;font-weight:600}
+    .network-status.offline{background:rgba(245,101,101,0.3)}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    .storage-info{background:linear-gradient(90deg,#f0fff4 0%,#c6f6d5 100%);border-left:4px solid var(--success);padding:12px 20px;margin-bottom:20px;border-radius:8px;font-size:13px;color:#22543d;display:flex;justify-content:space-between;align-items:center}
+    .storage-info .time{font-weight:600;color:var(--success)}
+    .tab-nav{display:flex;background:#f8fafc;border-bottom:1px solid var(--border)}
+    .tab-btn{flex:1;padding:18px 24px;background:none;border:none;font-size:16px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.3s}
+    .tab-btn:hover{color:var(--primary);background:rgba(102,126,234,0.05)}
+    .tab-btn.active{color:var(--primary);background:white;box-shadow:inset 0 -3px 0 var(--primary)}
+    .tab-content{display:none;padding:30px}
+    .tab-content.active{display:block}
+    .auto-status-bar{background:#e0e7ff;border-radius:8px;padding:12px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#3730a3;flex-wrap:wrap}
+    .auto-status-bar .indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:white;border-radius:12px;font-weight:600;white-space:nowrap}
+    .control-panel{background:#f8fafc;padding:20px 24px;border-radius:12px;margin-bottom:24px;display:flex;align-items:center;gap:16px}
+    .btn{padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px}
+    .btn-primary{background:linear-gradient(90deg,#11998e 0%,#38ef7d 100%);color:white}
+    .btn-secondary{background:linear-gradient(90deg,var(--accent-orange) 0%,#f5576c 100%);color:white}
+    .btn-export{background:linear-gradient(90deg,#4facfe 0%,#00f2fe 100%);color:white;position:fixed;bottom:30px;right:30px;box-shadow:0 4px 15px rgba(79,172,254,0.4);z-index:100}
+    .btn-sm{padding:8px 16px;font-size:13px}
+    .btn-info{background:linear-gradient(90deg,#667eea 0%,#764ba2 100%);color:white}
+    .btn-warning{background:linear-gradient(90deg,#ed8936 0%,#f6ad55 100%);color:white}
+    .btn:disabled{opacity:0.6;cursor:not-allowed}
+    .status{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+    .status.loading{background:#fef3c7;color:#92400e}
+    .status.success{background:#d1fae5;color:#065f46}
+    .status.error{background:#fee2e2;color:#991b1b}
+    .result-section{margin-bottom:32px}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border)}
+    .section-title{font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+    .badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600}
+    .badge-ebook{background:#d1fae5;color:#065f46}
+    .badge-db{background:#dbeafe;color:#1e40af}
+    table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);font-size:14px}
+    th{background:#f8fafc;padding:14px 16px;text-align:left;font-weight:600;color:var(--text-muted);font-size:12px;text-transform:uppercase;border-bottom:2px solid var(--border)}
+    td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:top}
+    tr:hover{background:#f8fafc}
+    .status-badge{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
+    .status-available{background:#d1fae5;color:#065f46}
+    .status-loaned{background:#fef3c7;color:#92400e}
+    .status-reserve{background:#fee2e2;color:#991b1b}
+    .status-processing{background:#dbeafe;color:#1e40af}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);background:#f8fafc;border-radius:8px;border:2px dashed var(--border)}
+    .log-panel{background:#1e1e2e;border-radius:8px;margin-bottom:20px;overflow:hidden}
+    .log-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#2d2d44;cursor:pointer;user-select:none}
+    .log-header:hover{background:#353550}
+    .log-title{font-size:13px;font-weight:600;color:#a6a6c8;display:flex;align-items:center;gap:8px}
+    .log-toggle{font-size:11px;color:#7a7a9d}
+    .log-body{max-height:300px;overflow-y:auto;padding:12px 16px;font-family:'Courier New','Consolas',monospace;font-size:12px;line-height:1.6}
+    .log-body.collapsed{display:none}
+    .log-entry{margin-bottom:6px;padding:4px 0;border-bottom:1px solid #2d2d44}
+    .log-entry:last-child{border-bottom:none}
+    .log-time{color:#6c6c8a;font-size:11px}
+    .log-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-right:6px}
+    .log-tag.request{background:#3b5998;color:#dce6f8}
+    .log-tag.response{background:#2d6a4f;color:#d8f3dc}
+    .log-tag.error{background:#9b2226;color:#ffe6e6}
+    .log-tag.info{background:#5a4fcf;color:#e8e6ff}
+    .log-tag.success{background:#2d6a4f;color:#d8f3dc}
+    .log-content{color:#c8c8dc}
+    .log-url{color:#7ec8e3;word-break:break-all}
+    .log-clear-btn{background:transparent;border:1px solid #4a4a6a;color:#7a7a9d;padding:2px 10px;border-radius:4px;font-size:11px;cursor:pointer}
+    .log-clear-btn:hover{background:#4a4a6a;color:#c8c8dc}
+    .export-group{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .export-group .btn{width:100%;justify-content:center}
+    .search-layout{display:grid;grid-template-columns:350px 1fr;gap:24px;height:calc(100vh - 200px);min-height:600px}
+    .search-sidebar{background:#f8fafc;padding:24px;border-radius:12px;display:flex;flex-direction:column;gap:16px}
+    .input-group{display:flex;flex-direction:column;gap:8px;flex:1}
+    .input-label{font-size:14px;font-weight:600;color:var(--text-muted)}
+    .book-input{width:100%;flex:1;padding:16px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:'Courier New',monospace;resize:none}
+    .book-input:focus{outline:none;border-color:var(--primary)}
+    .input-hint{font-size:12px;color:var(--text-muted)}
+    .search-results{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;overflow:auto}
+    .height-control-panel{background:#f0f4f8;border:1px solid var(--border);border-radius:6px;padding:8px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;font-size:13px}
+    .height-slider{flex:1;height:6px;-webkit-appearance:none;appearance:none;background:#cbd5e0;border-radius:3px}
+    .height-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;background:var(--primary);border-radius:50%;cursor:pointer}
+    .height-value{font-weight:700;color:var(--primary);min-width:40px;text-align:center}
+    .excel-book-table{width:100%;border-collapse:collapse;font-size:13px;border:1px solid var(--border);table-layout:fixed}
+    .excel-book-table th{background:linear-gradient(180deg,#f8fafc 0%,#e2e8f0 100%);color:var(--text);font-weight:700;padding:6px 4px;border:1px solid var(--border);text-align:center;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:none;height:24px}
+    .excel-book-table td{padding:2px 4px;border:1px solid var(--border);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;height:var(--row-height);max-height:var(--row-height);font-size:12px;line-height:calc(var(--row-height) - 4px);white-space:nowrap}
+    .excel-book-table tr:hover{background:#e0e7ff}
+    .excel-book-table tr:hover td{overflow:visible;white-space:normal;background:#e0e7ff;z-index:10;position:relative}
+    .resizer{position:absolute;right:0;top:0;height:100%;width:5px;cursor:col-resize;background:transparent;z-index:10}
+    .resizer:hover{background:var(--primary);width:3px}
+    .col-seq{width:40px;text-align:center;background:#f0f4f8;font-weight:600}
+    .col-title{width:180px;font-weight:600;color:var(--primary-dark)}
+    .col-author{width:90px}
+    .col-isbn{width:110px;font-family:'Courier New',monospace;font-size:11px}
+    .col-catalog{width:90px;font-size:11px}
+    .col-callno{width:110px;font-family:'Courier New',monospace;font-size:11px}
+    .col-place{width:70px}
+    .col-publisher{width:110px}
+    .col-year{width:60px;text-align:center}
+    .col-bookid{width:80px;text-align:center;font-family:'Courier New',monospace;font-size:11px}
+    .col-series{width:110px}
+    .col-other-authors{width:90px}
+    .col-alias{width:90px}
+    .col-standard{width:110px;font-family:'Courier New',monospace;font-size:11px}
+    .col-add-series{width:110px}
+    .col-notes{width:130px;font-size:11px}
+    .col-lang{width:60px;text-align:center;font-size:11px}
+    .col-count{width:60px;text-align:center;font-weight:600}
+    .col-locations{width:320px;min-width:280px}
+    .location-list{display:flex;flex-direction:column;gap:1px}
+    .location-item{display:inline-flex;align-items:center;gap:4px;padding:1px 3px;background:white;border-radius:2px;border-left:2px solid var(--border);font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .location-item.available{border-left-color:var(--success);background:#f0fff4}
+    .location-item.loaned{border-left-color:var(--warning);background:#fffaf0}
+    .location-item.reserved{border-left-color:var(--danger);background:#fff5f5}
+    .progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;margin:16px 0;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary) 0%,var(--secondary) 100%);transition:width 0.3s}
+    .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);display:none;justify-content:center;align-items:center;z-index:1000}
+    .loading-overlay.show{display:flex}
+    .spinner{width:50px;height:50px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .diagnostic-box{background:#fff5f5;border:1px solid #feb2b2;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#742a2a;line-height:1.5}
+    .diagnostic-box strong{color:#c53030}
+    .diagnostic-box code{background:#fed7d7;padding:2px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:12px}
+    @media(max-width:1200px){.search-layout{grid-template-columns:1fr;height:auto}}
+    @media(max-width:968px){.btn-export{bottom:20px;right:20px}.network-status{position:static;margin-top:10px}.auto-status-bar{flex-direction:column;align-items:flex-start}}
   </style>
-<base target="_blank">
+  <base target="_blank">
 </head>
 <body>
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-  </div>
-
+  <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
   <div class="container">
     <div class="header">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div style="flex: 1;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;">
           <h1>HKPL 資源控制台 v3.5</h1>
           <p>手動抓取系統 - 點擊「手動更新」抓取最新資料</p>
         </div>
@@ -808,1303 +149,535 @@
         </div>
       </div>
     </div>
-    
     <div class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('scrape', this)">
-        📡 電子資源
-      </button>
-      <button class="tab-btn" onclick="switchTab('books', this)">
-        📚 查詢書籍
-      </button>
-      <button class="tab-btn" onclick="switchTab('extract', this)">
-        📊 資料提取
-      </button>
+      <button class="tab-btn active" onclick="switchTab('scrape',this)">📡 電子資源</button>
+      <button class="tab-btn" onclick="switchTab('books',this)">📚 查詢書籍</button>
+      <button class="tab-btn" onclick="switchTab('extract',this)">📊 資料提取</button>
     </div>
-    
+
     <!-- Tab 1: 電子資源 -->
     <div id="tab-scrape" class="tab-content active">
-      <div class="storage-info" id="storageInfo" style="display: none;">
+      <div class="storage-info" id="storageInfo" style="display:none;">
         <span>
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
-            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/>
-          </svg>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display:inline-block;vertical-align:middle;margin-right:6px;"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/></svg>
           上次儲存時間：<span class="time" id="lastScrapeTime">--</span>
         </span>
       </div>
-
-      <!-- API 連線診斷提示（動態顯示） -->
-      <div class="diagnostic-box" id="apiDiagnostic" style="display: none;">
-        <strong>⚠️ API 連線診斷</strong><br>
-        <span id="diagnosticText"></span>
+      <div class="diagnostic-box" id="apiDiagnostic" style="display:none;">
+        <strong>⚠️ API 連線診斷</strong><br><span id="diagnosticText"></span>
       </div>
-
-      <!-- 狀態列 + 手動更新按鍵 -->
       <div class="auto-status-bar" id="autoStatusBar">
-        <span class="indicator">
-          <span style="color: var(--text-muted);">●</span>
-          自動更新已停用
-        </span>
-        <span style="color: var(--text-muted);">
-          請點擊「手動更新」抓取最新資料
-        </span>
-        <button class="btn btn-sm btn-primary" onclick="fetchData(false, true)" id="btnManualUpdate" style="margin-left: auto;">
-          🔄 手動更新
-        </button>
+        <span class="indicator"><span style="color:var(--text-muted);">●</span> 自動更新已停用</span>
+        <span style="color:var(--text-muted);">請點擊「手動更新」抓取最新資料</span>
+        <button class="btn btn-sm btn-primary" onclick="fetchData(false,true)" id="btnManualUpdate" style="margin-left:auto;">🔄 手動更新</button>
         <span class="status" id="status">就緒</span>
       </div>
-
-      <!-- 日誌欄 -->
       <div class="log-panel" id="logPanel">
         <div class="log-header" onclick="toggleLog()">
           <span class="log-title">
-            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block;">
-              <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3V3H2v10a1 1 0 0 0 1 1h8zM1 3v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3H1z"/>
-            </svg>
-            API 連接日誌
-            <span id="logCount" style="background: #4a4a6a; color: #a6a6c8; padding: 1px 6px; border-radius: 8px; font-size: 10px;">0 筆</span>
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="display:inline-block;"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3V3H2v10a1 1 0 0 0 1 1h8zM1 3v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3H1z"/></svg>
+            API 連接日誌 <span id="logCount" style="background:#4a4a6a;color:#a6a6c8;padding:1px 6px;border-radius:8px;font-size:10px;">0 筆</span>
           </span>
-          <span style="display: flex; align-items: center; gap: 8px;">
-            <button class="log-clear-btn" onclick="event.stopPropagation(); clearLogs()">清除</button>
+          <span style="display:flex;align-items:center;gap:8px;">
+            <button class="log-clear-btn" onclick="event.stopPropagation();clearLogs()">清除</button>
             <span class="log-toggle" id="logToggle">▼ 收起</span>
           </span>
         </div>
-        <div class="log-body" id="logBody">
-          <div style="color: #6c6c8a; text-align: center; padding: 20px;">尚無日誌記錄</div>
-        </div>
+        <div class="log-body" id="logBody"><div style="color:#6c6c8a;text-align:center;padding:20px;">尚無日誌記錄</div></div>
       </div>
-
-      <!-- 抓取結果（僅當前會話顯示，關閉/刷新後不保留） -->
-      <div class="result-section" id="resultSection" style="display: none;">
+      <div class="result-section" id="resultSection" style="display:none;">
         <div class="section-header">
-          <div class="section-title">
-            <span>📊</span>
-            抓取結果 <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">（僅本次會話顯示，刷新後消失）</span>
-          </div>
+          <div class="section-title"><span>📊</span> 抓取結果 <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">（僅本次會話顯示，刷新後消失）</span></div>
           <span class="badge badge-ebook" id="resultCount">0 筆</span>
         </div>
-        <div id="resultContent">
-          <div class="empty-state">點擊「手動更新」開始抓取資料</div>
-        </div>
+        <div id="resultContent"><div class="empty-state">點擊「手動更新」開始抓取資料</div></div>
       </div>
     </div>
-    
+
     <!-- Tab 2: 查詢書籍 -->
     <div id="tab-books" class="tab-content">
       <div class="search-layout">
         <div class="search-sidebar">
           <div class="input-group">
             <label class="input-label">書籍 ID 輸入</label>
-            <textarea 
-              class="book-input" 
-              id="bookInput" 
-              placeholder="請輸入書籍 ID...
-支援格式：
-• 單一 ID：3780306
-• 多個 ID（換行分隔）：
-  3780306
-  3780307
-  3780308"
-            ></textarea>
-            <div class="input-hint">
-              支援單一查詢或批量查詢（換行、逗號、空格分隔）
-            </div>
+            <textarea class="book-input" id="bookInput" placeholder="請輸入書籍 ID...&#10;支援格式：&#10;• 單一 ID：3780306&#10;• 多個 ID（換行分隔）：&#10;  3780306&#10;  3780307&#10;  3780308"></textarea>
+            <div class="input-hint">支援單一查詢或批量查詢（換行、逗號、空格分隔）</div>
           </div>
-          
-          <button class="btn btn-secondary" onclick="fetchBookData()" id="btnBookSearch" style="width: 100%; justify-content: center;">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-            </svg>
-            查詢書籍
+          <button class="btn btn-secondary" onclick="fetchBookData()" id="btnBookSearch" style="width:100%;justify-content:center;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg> 查詢書籍
           </button>
-          
-          <button class="btn" onclick="clearBookInput()" style="width: 100%; background: var(--border); color: var(--text);">
-            清空輸入
-          </button>
-          
-          <!-- 滙出功能群組 -->
-          <div class="export-group" id="bookExportGroup" style="display: none;">
-            <label class="input-label" style="margin-top: 8px;">📥 滙出書籍資料</label>
-            <button class="btn btn-sm btn-export" onclick="exportBookToExcel()" style="position: static; box-shadow: none;">
-              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-              </svg>
-              滙出 Excel (.xlsx)
-            </button>
-            <button class="btn btn-sm btn-primary" onclick="exportBookToCSV()">
-              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-              </svg>
-              滙出 CSV
-            </button>
-            <button class="btn btn-sm btn-info" onclick="exportBookToJSON()">
-              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-              </svg>
-              滙出 JSON
-            </button>
+          <button class="btn" onclick="clearBookInput()" style="width:100%;background:var(--border);color:var(--text);">清空輸入</button>
+          <div class="export-group" id="bookExportGroup" style="display:none;">
+            <label class="input-label" style="margin-top:8px;">📥 滙出書籍資料</label>
+            <button class="btn btn-sm btn-export" onclick="exportBookToExcel()" style="position:static;box-shadow:none;">滙出 Excel (.xlsx)</button>
+            <button class="btn btn-sm btn-primary" onclick="exportBookToCSV()">滙出 CSV</button>
+            <button class="btn btn-sm btn-info" onclick="exportBookToJSON()">滙出 JSON</button>
           </div>
-          
-          <div class="status" id="bookStatus" style="display: none;"></div>
-          
-          <div class="progress-bar" id="progressBar" style="display: none;">
-            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-          </div>
+          <div class="status" id="bookStatus" style="display:none;"></div>
+          <div class="progress-bar" id="progressBar" style="display:none;"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
         </div>
-        
         <div class="search-results" id="bookResults">
-          <div class="empty-state">
-            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-            請在左側輸入書籍 ID 並點擊「查詢書籍」
-          </div>
+          <div class="empty-state"><div style="font-size:48px;margin-bottom:16px;">📚</div>請在左側輸入書籍 ID 並點擊「查詢書籍」</div>
         </div>
       </div>
     </div>
-    
-    <!-- Tab 3: 資料提取（Excel 從 Web 可讀取的靜態頁面） -->
+
+    <!-- Tab 3: 資料提取（靜態 HTML，供 Excel 從 Web 提取） -->
     <div id="tab-extract" class="tab-content">
-      <!-- 頁面頂部資訊列 -->
-      <div class="storage-info" style="background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%); border-left-color: var(--warning); color: #92400e;">
-        <span>
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
-            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/>
-          </svg>
-          📅 最後抓取時間：<strong id="extractLastTime">--</strong>
-        </span>
-        <span style="color: var(--text-muted); font-size: 12px;">
-          本頁資料可直接用 Excel「資料 → 從 Web」提取
-        </span>
+      <!-- Excel 專用連結區 -->
+      <div style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:600;color:#0369a1;margin-bottom:8px;">📊 Excel「從 Web」專用連結</div>
+        <div style="font-family:'Courier New',monospace;background:white;padding:8px 12px;border-radius:4px;border:1px solid #bae6fd;margin-bottom:8px;word-break:break-all;font-size:13px;color:#0c4a6e;">
+          https://cb-one-phi.vercel.app/
+        </div>
+        <div style="font-size:12px;color:#0284c7;line-height:1.6;">
+          ✅ <strong>Excel 操作：</strong>資料 → 從 Web → 貼上上方網址 → 載入<br>
+          ✅ 資料每日 <strong>09:00</strong> 自動更新（CasaOS cron 定時抓取）<br>
+          ✅ 載入速度極快（讀取預生成靜態檔案）<br>
+          ✅ <strong>Excel 只需輸入根網址，無需加任何 API 參數</strong>
+        </div>
       </div>
-      
       <!-- 操作按鈕 -->
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-        <button class="btn btn-sm btn-primary" onclick="copyStaticData('csv')">
-          📋 複製 CSV
-        </button>
-        <button class="btn btn-sm btn-info" onclick="copyStaticData('json')">
-          📋 複製 JSON
-        </button>
-        <button class="btn btn-sm btn-secondary" onclick="downloadStaticData('csv')">
-          💾 下載 CSV
-        </button>
-        <button class="btn btn-sm" onclick="downloadStaticData('json')" style="background: #e2e8f0; color: var(--text);">
-          💾 下載 JSON
-        </button>
-        <button class="btn btn-sm btn-warning" onclick="downloadStaticHTML()">
-          📄 下載靜態 HTML（Excel 專用）
-        </button>
-        <span class="status" id="extractStatus" style="display: none; margin-left: auto;"></span>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-primary" onclick="refreshStaticPreview()">🔄 刷新預覽</button>
+        <button class="btn btn-sm btn-secondary" onclick="downloadStaticData('csv')">💾 下載 CSV</button>
+        <button class="btn btn-sm" onclick="downloadStaticData('json')" style="background:#e2e8f0;color:var(--text);">💾 下載 JSON</button>
+        <span class="status" id="extractStatus" style="display:none;margin-left:auto;"></span>
       </div>
-      
-      <!-- 靜態表格：Excel「從 Web」可直接讀取 -->
-      <div style="overflow-x: auto; border: 2px solid var(--success); border-radius: 8px; margin-bottom: 20px;">
-        <table style="width: 100%; border-collapse: collapse; background: white; font-size: 14px; margin-bottom: 0;" id="extractTable">
-          <thead>
-            <tr style="background: #f0fff4;">
-              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success); width: 80px;">類型</th>
-              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success);">標題</th>
-              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success); width: 200px;">連結</th>
-              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success);">分類/地點</th>
-              <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid var(--success);">說明/標籤</th>
-            </tr>
-          </thead>
-          <tbody id="extractTableBody">
-            <tr>
-              <td colspan="5" style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
-                <div style="font-size: 32px; margin-bottom: 12px;">📊</div>
-                暫無資料<br>
-                <small>請到「電子資源」頁點擊「手動更新」抓取資料</small>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- 靜態資料預覽（iframe 載入 Vercel 根網址） -->
+      <div style="border:2px solid var(--success);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+        <div style="background:#f0fff4;padding:8px 16px;font-size:13px;font-weight:600;color:#22543d;border-bottom:1px solid #c6f6d5;">
+          📋 靜態資料預覽（每日 09:00 自動更新）
+        </div>
+        <iframe id="staticPreview" src="https://cb-one-phi.vercel.app/" style="width:100%;height:500px;border:none;background:white;" title="HKPL 靜態資料"></iframe>
       </div>
-      
       <!-- CSV 文字區 -->
-      <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
-        <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">CSV 格式文字（可直接複製貼到 Excel）</label>
-        <textarea id="extractTextarea" readonly placeholder="抓取資料後自動填入..." style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4; resize: vertical;"></textarea>
+      <div style="background:#f8fafc;border-radius:8px;padding:16px;">
+        <label style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;display:block;">CSV 格式文字（備用）</label>
+        <textarea id="extractTextarea" readonly placeholder="點擊「立即刷新靜態資料」後載入..." style="width:100%;min-height:120px;padding:12px;border:1px solid var(--border);border-radius:6px;font-family:'Courier New',monospace;font-size:12px;line-height:1.4;resize:vertical;"></textarea>
       </div>
     </div>
   </div>
 
   <script>
-    // Global storage
-    let currentBookData = [];
-    let currentScrapeData = null;
-    let isFirstLoad = true;
-    let isResizing = false;
-    let currentCol = null;
-    let startX = 0;
-    let startWidth = 0;
-    let currentRowHeight = 20;
-    let logEntries = [];
-    let logCollapsed = false;
+    let currentBookData=[],currentScrapeData=null,isFirstLoad=true,isResizing=false,currentCol=null,startX=0,startWidth=0,currentRowHeight=20,logEntries=[],logCollapsed=false;
+    const STORAGE_KEY_DATA='hkpl_scrape_data',STORAGE_KEY_TIME='hkpl_scrape_time';
     
-    const STORAGE_KEY_DATA = 'hkpl_scrape_data';
-    const STORAGE_KEY_TIME = 'hkpl_scrape_time';
-    
-    // ===== API 配置（已改為 Vercel Proxy） =====
-    const API_CONFIG = {
-      scraper: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=scrape',
-      book:    'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint='
+    // ===== API 配置（Vercel Proxy） =====
+    const API_CONFIG={
+      scraper:'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=scrape',
+      book:'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint='
     };
     
-    // Tab Switching
-    function switchTab(tabName, btnElement) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tabName).classList.add('active');
-      if (btnElement) btnElement.classList.add('active');
+    function switchTab(tabName,btnElement){
+      document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+      document.getElementById('tab-'+tabName).classList.add('active');
+      if(btnElement)btnElement.classList.add('active');
     }
     
-    // ===== 日誌功能 =====
-    function addLog(type, message, detail) {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('zh-HK', { hour12: false }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
-      
-      const entry = {
-        time: timeStr,
-        type: type,
-        message: message,
-        detail: detail || ''
-      };
-      
-      logEntries.unshift(entry);
-      if (logEntries.length > 100) logEntries.pop();
-      
+    function addLog(type,message,detail){
+      const now=new Date();
+      const timeStr=now.toLocaleTimeString('zh-HK',{hour12:false})+'.'+String(now.getMilliseconds()).padStart(3,'0');
+      logEntries.unshift({time:timeStr,type:type,message:message,detail:detail||''});
+      if(logEntries.length>100)logEntries.pop();
       renderLogs();
     }
     
-    function renderLogs() {
-      const body = document.getElementById('logBody');
-      const count = document.getElementById('logCount');
-      
-      count.textContent = logEntries.length + ' 筆';
-      
-      if (logEntries.length === 0) {
-        body.innerHTML = '<div style="color: #6c6c8a; text-align: center; padding: 20px;">尚無日誌記錄</div>';
-        return;
-      }
-      
-      body.innerHTML = logEntries.map(entry => {
-        let detailHtml = '';
-        if (entry.detail) {
-          detailHtml = `<div class="log-content" style="margin-top: 2px; padding-left: 76px;">${entry.detail}</div>`;
-        }
-        return `
-          <div class="log-entry">
-            <span class="log-time">${entry.time}</span>
-            <span class="log-tag ${entry.type}">${entry.type.toUpperCase()}</span>
-            <span class="log-content">${entry.message}</span>
-            ${detailHtml}
-          </div>
-        `;
+    function renderLogs(){
+      const body=document.getElementById('logBody'),count=document.getElementById('logCount');
+      count.textContent=logEntries.length+' 筆';
+      if(logEntries.length===0){body.innerHTML='<div style="color:#6c6c8a;text-align:center;padding:20px;">尚無日誌記錄</div>';return;}
+      body.innerHTML=logEntries.map(entry=>{
+        let detailHtml='';
+        if(entry.detail)detailHtml=`<div class="log-content" style="margin-top:2px;padding-left:76px;">${entry.detail}</div>`;
+        return `<div class="log-entry"><span class="log-time">${entry.time}</span><span class="log-tag ${entry.type}">${entry.type.toUpperCase()}</span><span class="log-content">${entry.message}</span>${detailHtml}</div>`;
       }).join('');
     }
     
-    function toggleLog() {
-      const body = document.getElementById('logBody');
-      const toggle = document.getElementById('logToggle');
-      logCollapsed = !logCollapsed;
-      body.classList.toggle('collapsed', logCollapsed);
-      toggle.textContent = logCollapsed ? '▶ 展開' : '▼ 收起';
+    function toggleLog(){
+      const body=document.getElementById('logBody'),toggle=document.getElementById('logToggle');
+      logCollapsed=!logCollapsed;body.classList.toggle('collapsed',logCollapsed);
+      toggle.textContent=logCollapsed?'▶ 展開':'▼ 收起';
     }
     
-    function clearLogs() {
-      logEntries = [];
-      renderLogs();
-    }
+    function clearLogs(){logEntries=[];renderLogs();}
     
-    // ===== API 連線診斷 =====
-    function getApiDiagnostic() {
-      const currentHost = window.location.hostname;
-      const scraperUrl = API_CONFIG.scraper;
-      const isLocalhostApi = scraperUrl.includes('localhost') || scraperUrl.includes('127.0.0.1');
-      const isHttpsPage = window.location.protocol === 'https:';
-      const isLocalPage = currentHost === 'localhost' || currentHost === '127.0.0.1';
-      
-      let diagnosis = [];
-      
-      if (isLocalhostApi && !isLocalPage) {
+    function getApiDiagnostic(){
+      const currentHost=window.location.hostname,scraperUrl=API_CONFIG.scraper;
+      const isLocalhostApi=scraperUrl.includes('localhost')||scraperUrl.includes('127.0.0.1');
+      const isHttpsPage=window.location.protocol==='https:',isLocalPage=currentHost==='localhost'||currentHost==='127.0.0.1';
+      let diagnosis=[];
+      if(isLocalhostApi&&!isLocalPage){
         diagnosis.push(`網頁位於 <code>${currentHost}</code>，但 API 設定為 <code>${scraperUrl}</code>。`);
         diagnosis.push('瀏覽器從公網/外部網域無法直接存取您本機的 localhost。');
         diagnosis.push('解決方案：將 API 部署到與網頁相同網域，或透過反向代理轉發。');
       }
-      
-      if (isHttpsPage && scraperUrl.startsWith('http:')) {
+      if(isHttpsPage&&scraperUrl.startsWith('http:')){
         diagnosis.push('網頁使用 HTTPS，但 API 使用 HTTP（混合內容/Mixed Content）。');
         diagnosis.push('現代瀏覽器會攔截 HTTPS 頁面對 HTTP 資源的請求。');
         diagnosis.push('解決方案：將 API 改為 HTTPS，或將網頁改為 HTTP/localhost 存取。');
       }
-      
-      if (diagnosis.length === 0) {
+      if(diagnosis.length===0){
         diagnosis.push('無法連線到 API 伺服器，可能原因：');
         diagnosis.push('1) API 伺服器未啟動（請確認 port 9000/8081 有服務運行）');
         diagnosis.push('2) Flask CORS 未正確配置（需允許此網頁來源）');
         diagnosis.push('3) 防火牆或網絡設定阻擋了連線');
         diagnosis.push('4) Vercel Proxy 環境變數未設定（WKY_API_9000 / WKY_API_8081）');
       }
-      
       return diagnosis.join('<br>');
     }
     
-    function showDiagnostic(show) {
-      const box = document.getElementById('apiDiagnostic');
-      const text = document.getElementById('diagnosticText');
-      if (show) {
-        text.innerHTML = getApiDiagnostic();
-        box.style.display = 'block';
-      } else {
-        box.style.display = 'none';
-      }
+    function showDiagnostic(show){
+      const box=document.getElementById('apiDiagnostic'),text=document.getElementById('diagnosticText');
+      if(show){text.innerHTML=getApiDiagnostic();box.style.display='block';}else{box.style.display='none';}
     }
     
-    // Network Status
-    function updateNetworkStatus() {
-      const statusEl = document.getElementById('networkStatus');
-      const textEl = document.getElementById('networkText');
-      if (navigator.onLine) {
-        statusEl.classList.remove('offline');
-        textEl.textContent = '網絡連線正常';
-      } else {
-        statusEl.classList.add('offline');
-        textEl.textContent = '離線狀態';
-      }
+    function updateNetworkStatus(){
+      const statusEl=document.getElementById('networkStatus'),textEl=document.getElementById('networkText');
+      if(navigator.onLine){statusEl.classList.remove('offline');textEl.textContent='網絡連線正常';}
+      else{statusEl.classList.add('offline');textEl.textContent='離線狀態';}
     }
     
-    window.addEventListener('online', () => {
-      updateNetworkStatus();
-      addLog('info', '網絡已恢復連線');
-    });
+    window.addEventListener('online',()=>{updateNetworkStatus();addLog('info','網絡已恢復連線');});
+    window.addEventListener('offline',()=>{updateNetworkStatus();addLog('error','網絡已斷開');});
     
-    window.addEventListener('offline', () => {
-      updateNetworkStatus();
-      addLog('error', '網絡已斷開');
-    });
-    
-    // Loading Control
-    function setLoading(show) {
-      document.getElementById('loadingOverlay').classList.toggle('show', show);
-      document.getElementById('btnBookSearch').disabled = show;
-      document.getElementById('btnManualUpdate').disabled = show;
+    function setLoading(show){
+      document.getElementById('loadingOverlay').classList.toggle('show',show);
+      document.getElementById('btnBookSearch').disabled=show;
+      document.getElementById('btnManualUpdate').disabled=show;
     }
     
-    function setStatus(msg, type, elementId = 'status') {
-      const el = document.getElementById(elementId);
-      if (!el) return;
-      el.textContent = msg;
-      el.className = 'status show ' + type;
-      if (type === 'success' || type === 'error') {
-        setTimeout(() => { if (el) el.className = 'status'; }, 5000);
-      }
+    function setStatus(msg,type,elementId='status'){
+      const el=document.getElementById(elementId);
+      if(!el)return;
+      el.textContent=msg;el.className='status show '+type;
+      if(type==='success'||type==='error')setTimeout(()=>{if(el)el.className='status';},5000);
     }
     
-    // Storage Functions
-    function saveToStorage(data) {
-      try {
-        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data));
-        localStorage.setItem(STORAGE_KEY_TIME, new Date().toISOString());
+    function saveToStorage(data){
+      try{
+        localStorage.setItem(STORAGE_KEY_DATA,JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEY_TIME,new Date().toISOString());
         updateStorageInfo();
-        addLog('success', '資料已儲存到本地', '筆數: ' + ((data.ebooks?.length || 0) + (data.edatabases?.length || 0)));
-      } catch (e) {
-        console.error('Storage failed:', e);
-        addLog('error', '本地儲存失敗', e.message);
-      }
+        addLog('success','資料已儲存到本地','筆數: '+((data.ebooks?.length||0)+(data.edatabases?.length||0)));
+      }catch(e){console.error('Storage failed:',e);addLog('error','本地儲存失敗',e.message);}
     }
     
-    function loadFromStorage() {
-      try {
-        const data = localStorage.getItem(STORAGE_KEY_DATA);
-        const time = localStorage.getItem(STORAGE_KEY_TIME);
-        if (data && time) {
-          return { data: JSON.parse(data), time: new Date(time) };
-        }
-      } catch (e) {
-        console.error('Load failed:', e);
-        addLog('error', '讀取本地儲存失敗', e.message);
-      }
+    function loadFromStorage(){
+      try{
+        const data=localStorage.getItem(STORAGE_KEY_DATA),time=localStorage.getItem(STORAGE_KEY_TIME);
+        if(data&&time)return{data:JSON.parse(data),time:new Date(time)};
+      }catch(e){console.error('Load failed:',e);addLog('error','讀取本地儲存失敗',e.message);}
       return null;
     }
     
-    function updateStorageInfo() {
-      const timeStr = localStorage.getItem(STORAGE_KEY_TIME);
-      if (timeStr) {
-        const date = new Date(timeStr);
-        const timeDisplay = date.toLocaleString('zh-HK', {
-          month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-        });
-        document.getElementById('lastScrapeTime').textContent = timeDisplay;
-        document.getElementById('storageInfo').style.display = 'flex';
+    function updateStorageInfo(){
+      const timeStr=localStorage.getItem(STORAGE_KEY_TIME);
+      if(timeStr){
+        const date=new Date(timeStr);
+        const timeDisplay=date.toLocaleString('zh-HK',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+        document.getElementById('lastScrapeTime').textContent=timeDisplay;
+        document.getElementById('storageInfo').style.display='flex';
       }
     }
     
-    // ===== 初始化：只載入儲存資料，不自動抓取 =====
-    function initLoad() {
-      addLog('info', '系統初始化', '載入本地儲存資料...');
-      const stored = loadFromStorage();
-      
-      if (stored && stored.data) {
-        currentScrapeData = stored.data;
+    function initLoad(){
+      addLog('info','系統初始化','載入本地儲存資料...');
+      const stored=loadFromStorage();
+      if(stored&&stored.data){
+        currentScrapeData=stored.data;
         updateExtractTab();
         updateStorageInfo();
-        setStatus('已載入儲存資料', 'success');
-        addLog('success', '已載入儲存資料', `電子書: ${stored.data.ebooks?.length || 0} 個, 資料庫: ${stored.data.edatabases?.length || 0} 個`);
-      } else {
-        addLog('info', '無本地資料', '請點擊「手動更新」抓取資料');
-        setStatus('無本地資料，請手動更新', 'loading');
+        setStatus('已載入儲存資料','success');
+        addLog('success','已載入儲存資料',`電子書: ${stored.data.ebooks?.length||0} 個, 資料庫: ${stored.data.edatabases?.length||0} 個`);
+      }else{
+        addLog('info','無本地資料','請點擊「手動更新」抓取資料');
+        setStatus('無本地資料，請手動更新','loading');
       }
     }
     
-    // Page Load
-    window.addEventListener('DOMContentLoaded', function() {
-      updateNetworkStatus();
-      initLoad();
-    });
+    window.addEventListener('DOMContentLoaded',function(){updateNetworkStatus();initLoad();});
     
-    // Parse Book IDs
-    function parseBookIds() {
-      const input = document.getElementById('bookInput').value;
-      const ids = input.split(/[\n\r,،\s\t]+/)
-        .map(id => id.trim())
-        .filter(id => id.length > 0 && /^\d+$/.test(id));
-      return [...new Set(ids)];
+    function parseBookIds(){
+      const input=document.getElementById('bookInput').value;
+      const ids=input.split(/[\n\r,،\s\t]+/).map(id=>id.trim()).filter(id=>id.length>0&&/^\d+$/.test(id));
+      return[...new Set(ids)];
     }
     
-    // Clear Input
-    function clearBookInput() {
-      document.getElementById('bookInput').value = '';
-      document.getElementById('bookResults').innerHTML = `
-        <div class="empty-state">
-          <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-          請在左側輸入書籍 ID 並點擊「查詢書籍」
-        </div>
-      `;
-      document.getElementById('bookExportGroup').style.display = 'none';
-      currentBookData = [];
+    function clearBookInput(){
+      document.getElementById('bookInput').value='';
+      document.getElementById('bookResults').innerHTML=`<div class="empty-state"><div style="font-size:48px;margin-bottom:16px;">📚</div>請在左側輸入書籍 ID 並點擊「查詢書籍」</div>`;
+      document.getElementById('bookExportGroup').style.display='none';
+      currentBookData=[];
     }
     
-    // Update Row Height
-    function updateRowHeight(height) {
-      currentRowHeight = parseInt(height);
-      document.documentElement.style.setProperty('--row-height', currentRowHeight + 'px');
-      document.getElementById('heightValue').textContent = currentRowHeight + 'px';
-      
-      const cells = document.querySelectorAll('.excel-book-table td');
-      cells.forEach(cell => {
-        cell.style.height = currentRowHeight + 'px';
-        cell.style.maxHeight = currentRowHeight + 'px';
-      });
+    function updateRowHeight(height){
+      currentRowHeight=parseInt(height);
+      document.documentElement.style.setProperty('--row-height',currentRowHeight+'px');
+      document.getElementById('heightValue').textContent=currentRowHeight+'px';
+      document.querySelectorAll('.excel-book-table td').forEach(cell=>{cell.style.height=currentRowHeight+'px';cell.style.maxHeight=currentRowHeight+'px';});
     }
     
-    // Column Resize
-    function initResizableColumns() {
-      document.querySelectorAll('.resizer').forEach(resizer => {
-        resizer.addEventListener('mousedown', initResize);
-      });
+    function initResizableColumns(){
+      document.querySelectorAll('.resizer').forEach(resizer=>{resizer.addEventListener('mousedown',initResize);});
     }
     
-    function initResize(e) {
-      isResizing = true;
-      currentCol = e.target.parentElement;
-      startX = e.pageX;
-      startWidth = currentCol.offsetWidth;
-      e.target.classList.add('resizing');
-      document.body.style.userSelect = 'none';
-      document.body.style.cursor = 'col-resize';
-      document.addEventListener('mousemove', doResize);
-      document.addEventListener('mouseup', stopResize);
-      e.preventDefault();
+    function initResize(e){
+      isResizing=true;currentCol=e.target.parentElement;startX=e.pageX;startWidth=currentCol.offsetWidth;
+      e.target.classList.add('resizing');document.body.style.userSelect='none';document.body.style.cursor='col-resize';
+      document.addEventListener('mousemove',doResize);document.addEventListener('mouseup',stopResize);e.preventDefault();
     }
     
-    function doResize(e) {
-      if (!isResizing || !currentCol) return;
-      const diff = e.pageX - startX;
-      const newWidth = Math.max(50, startWidth + diff);
-      currentCol.style.width = newWidth + 'px';
-      currentCol.style.minWidth = newWidth + 'px';
+    function doResize(e){
+      if(!isResizing||!currentCol)return;
+      const diff=e.pageX-startX;const newWidth=Math.max(50,startWidth+diff);
+      currentCol.style.width=newWidth+'px';currentCol.style.minWidth=newWidth+'px';
     }
     
-    function stopResize() {
-      if (!isResizing) return;
-      isResizing = false;
-      if (currentCol) {
-        const resizer = currentCol.querySelector('.resizer');
-        if (resizer) resizer.classList.remove('resizing');
-      }
-      currentCol = null;
-      document.body.style.userSelect = '';
-      document.body.style.cursor = '';
-      document.removeEventListener('mousemove', doResize);
-      document.removeEventListener('mouseup', stopResize);
+    function stopResize(){
+      if(!isResizing)return;isResizing=false;
+      if(currentCol){const resizer=currentCol.querySelector('.resizer');if(resizer)resizer.classList.remove('resizing');}
+      currentCol=null;document.body.style.userSelect='';document.body.style.cursor='';
+      document.removeEventListener('mousemove',doResize);document.removeEventListener('mouseup',stopResize);
     }
     
-    // Fetch Book Data
-    async function fetchBookData() {
-      const ids = parseBookIds();
-      if (ids.length === 0) {
-        setStatus('請輸入有效的書籍 ID', 'error', 'bookStatus');
-        return;
-      }
-      
-      currentBookData = [];
-      setLoading(true);
-      setStatus(`查詢中...`, 'loading', 'bookStatus');
-      addLog('info', '開始查詢書籍', `ID 數量: ${ids.length} 個`);
-      
-      if (ids.length > 1) {
-        document.getElementById('progressBar').style.display = 'block';
-      }
-      
-      try {
-        for (let i = 0; i < ids.length; i++) {
-          const id = ids[i];
-          if (ids.length > 1) {
-            document.getElementById('progressFill').style.width = ((i / ids.length) * 100).toFixed(0) + '%';
+    async function fetchBookData(){
+      const ids=parseBookIds();
+      if(ids.length===0){setStatus('請輸入有效的書籍 ID','error','bookStatus');return;}
+      currentBookData=[];setLoading(true);setStatus(`查詢中...`,'loading','bookStatus');addLog('info','開始查詢書籍',`ID 數量: ${ids.length} 個`);
+      if(ids.length>1)document.getElementById('progressBar').style.display='block';
+      try{
+        for(let i=0;i<ids.length;i++){
+          const id=ids[i];
+          if(ids.length>1)document.getElementById('progressFill').style.width=((i/ids.length)*100).toFixed(0)+'%';
+          try{
+            const bookApiDesc=`圖書查詢 API (Proxy → 8081/book/${id})`;
+            addLog('request',`查詢書籍 ID: ${id}`,`GET ${API_CONFIG.book}book/${id} | ${bookApiDesc}`);
+            const data=await fetchSingleBook(id);
+            if(data){currentBookData.push({id,...data});addLog('response',`書籍 ID ${id} 查詢成功`,`${bookApiDesc} | 書名: ${data['書本名稱']||'N/A'}`);}
+          }catch(err){
+            addLog('error',`書籍 ID ${id} 查詢失敗`,`圖書查詢 API (Proxy → 8081) | ${err.message}`);
+            currentBookData.push({id,error:err.message,'書本名稱':'查詢失敗','書目詳情':{},'館藏列表':[]});
           }
-          
-          try {
-            const bookApiDesc = `圖書查詢 API (Proxy → 8081/book/${id})`;
-            addLog('request', `查詢書籍 ID: ${id}`, `GET ${API_CONFIG.book}book/${id} | ${bookApiDesc}`);
-            const data = await fetchSingleBook(id);
-            if (data) {
-              currentBookData.push({ id, ...data });
-              addLog('response', `書籍 ID ${id} 查詢成功`, `${bookApiDesc} | 書名: ${data['書本名稱'] || 'N/A'}`);
-            }
-          } catch (err) {
-            addLog('error', `書籍 ID ${id} 查詢失敗`, `圖書查詢 API (Proxy → 8081) | ${err.message}`);
-            currentBookData.push({ 
-              id, 
-              error: err.message,
-              '書本名稱': '查詢失敗',
-              '書目詳情': {},
-              '館藏列表': []
-            });
-          }
-          
-          if (ids.length > 1 && currentBookData.length > 0) {
-            renderExcelTable();
-            initResizableColumns();
-          }
-          
-          if (i < ids.length - 1) await new Promise(r => setTimeout(r, 300));
+          if(ids.length>1&&currentBookData.length>0){renderExcelTable();initResizableColumns();}
+          if(i<ids.length-1)await new Promise(r=>setTimeout(r,300));
         }
-        
-        document.getElementById('progressBar').style.display = 'none';
-        renderExcelTable();
-        initResizableColumns();
-        
-        const successCount = currentBookData.filter(b => !b.error).length;
-        setStatus(`完成！${successCount}/${ids.length}`, successCount > 0 ? 'success' : 'error', 'bookStatus');
-        
-        if (currentBookData.length > 0) {
-          document.getElementById('bookExportGroup').style.display = 'flex';
-        }
-        
-        addLog('success', '書籍查詢完成', `成功: ${successCount}/${ids.length}`);
-      } catch (err) {
-        addLog('error', '查詢過程發生錯誤', err.message);
-        setStatus('查詢失敗: ' + err.message, 'error', 'bookStatus');
-      } finally {
-        setLoading(false);
-        document.getElementById('progressBar').style.display = 'none';
-      }
+        document.getElementById('progressBar').style.display='none';
+        renderExcelTable();initResizableColumns();
+        const successCount=currentBookData.filter(b=>!b.error).length;
+        setStatus(`完成！${successCount}/${ids.length}`,successCount>0?'success':'error','bookStatus');
+        if(currentBookData.length>0)document.getElementById('bookExportGroup').style.display='flex';
+        addLog('success','書籍查詢完成',`成功: ${successCount}/${ids.length}`);
+      }catch(err){
+        addLog('error','查詢過程發生錯誤',err.message);
+        setStatus('查詢失敗: '+err.message,'error','bookStatus');
+      }finally{setLoading(false);document.getElementById('progressBar').style.display='none';}
     }
     
-    // API Call with timeout protection
-    function fetchSingleBook(id) {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', API_CONFIG.book + 'book/' + encodeURIComponent(id), true);
-        xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
-        xhr.timeout = 15000;
-        
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              try {
-                const result = JSON.parse(xhr.responseText);
-                resolve(result.data || result);
-              } catch (e) {
-                reject(new Error('JSON 解析失敗: ' + e.message));
-              }
-            } else if (xhr.status === 404) {
-              reject(new Error('HTTP 404: 書籍不存在'));
-            } else {
-              let errMsg = `HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`;
-              try {
-                if (xhr.responseText) {
-                  const errBody = JSON.parse(xhr.responseText);
-                  errMsg += ` - ${errBody.error || errBody.message || xhr.responseText.substring(0, 200)}`;
-                }
-              } catch (e) {
-                if (xhr.responseText) errMsg += ` - ${xhr.responseText.substring(0, 200)}`;
-              }
-              if (xhr.status === 400) errMsg += ' [請求格式錯誤]';
-              else if (xhr.status === 401) errMsg += ' [API Key 無效]';
-              else if (xhr.status === 403) errMsg += ' [權限不足]';
-              else if (xhr.status === 500) errMsg += ' [伺服器內部錯誤]';
-              else if (xhr.status === 502) errMsg += ' [後端服務未啟動]';
+    function fetchSingleBook(id){
+      return new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.open('GET',API_CONFIG.book+'book/'+encodeURIComponent(id),true);
+        xhr.setRequestHeader('X-API-Key','HKPL2024SecureKey');xhr.timeout=15000;
+        xhr.onreadystatechange=function(){
+          if(xhr.readyState===4){
+            if(xhr.status===200){try{const result=JSON.parse(xhr.responseText);resolve(result.data||result);}catch(e){reject(new Error('JSON 解析失敗: '+e.message));}}
+            else if(xhr.status===404){reject(new Error('HTTP 404: 書籍不存在'));}
+            else{
+              let errMsg=`HTTP ${xhr.status} - ${xhr.statusText||'未知錯誤'}`;
+              try{if(xhr.responseText){const errBody=JSON.parse(xhr.responseText);errMsg+=` - ${errBody.error||errBody.message||xhr.responseText.substring(0,200)}`;}}catch(e){if(xhr.responseText)errMsg+=` - ${xhr.responseText.substring(0,200)}`;}
+              if(xhr.status===400)errMsg+=' [請求格式錯誤]';else if(xhr.status===401)errMsg+=' [API Key 無效]';else if(xhr.status===403)errMsg+=' [權限不足]';else if(xhr.status===500)errMsg+=' [伺服器內部錯誤]';else if(xhr.status===502)errMsg+=' [後端服務未啟動]';
               reject(new Error(errMsg));
             }
           }
         };
-        xhr.onerror = () => reject(new Error('網絡錯誤：無法連接到 Proxy (8081)'));
-        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)：Proxy (8081) 未回應'));
+        xhr.onerror=()=>reject(new Error('網絡錯誤：無法連接到 Proxy (8081)'));
+        xhr.ontimeout=()=>reject(new Error('請求逾時 (15秒)：Proxy (8081) 未回應'));
         xhr.send();
       });
     }
     
-    // Render Excel Table
-    function renderExcelTable() {
-      const container = document.getElementById('bookResults');
-      if (currentBookData.length === 0) {
-        container.innerHTML = '<div class="empty-state">無資料</div>';
-        return;
-      }
-      
-      let html = '';
-      
-      html += `
-        <div class="height-control-panel">
-          <label>行高調整:</label>
-          <input type="range" class="height-slider" min="16" max="100" value="${currentRowHeight}" 
-                 oninput="updateRowHeight(this.value)" onchange="updateRowHeight(this.value)">
-          <span class="height-value" id="heightValue">${currentRowHeight}px</span>
-          <span style="color: var(--text-muted); font-size: 11px; margin-left: auto;">內容過長時自動截斷顯示「...」</span>
-        </div>
-      `;
-      
-      html += '<div style="overflow-x: auto; border: 1px solid var(--border); border-radius: 8px;">';
-      html += '<table class="excel-book-table" id="excelTable">';
-      
-      html += `
-        <thead>
-          <tr>
-            <th class="col-seq"><div class="resizer"></div>序號</th>
-            <th class="col-title"><div class="resizer"></div>書名</th>
-            <th class="col-author"><div class="resizer"></div>作者</th>
-            <th class="col-isbn"><div class="resizer"></div>ISBN</th>
-            <th class="col-catalog"><div class="resizer"></div>館藏編號</th>
-            <th class="col-callno"><div class="resizer"></div>索書號</th>
-            <th class="col-place"><div class="resizer"></div>出版地</th>
-            <th class="col-publisher"><div class="resizer"></div>出版者</th>
-            <th class="col-year"><div class="resizer"></div>出版年份</th>
-            <th class="col-bookid"><div class="resizer"></div>圖書編號</th>
-            <th class="col-series"><div class="resizer"></div>叢書名</th>
-            <th class="col-other-authors"><div class="resizer"></div>其他著者</th>
-            <th class="col-alias"><div class="resizer"></div>書刊別名</th>
-            <th class="col-standard"><div class="resizer"></div>標準號碼</th>
-            <th class="col-add-series"><div class="resizer"></div>附加叢書名稱</th>
-            <th class="col-notes"><div class="resizer"></div>附註</th>
-            <th class="col-lang"><div class="resizer"></div>語言</th>
-            <th class="col-count"><div class="resizer"></div>館藏數量</th>
-            <th class="col-locations"><div class="resizer"></div>館藏分佈</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
-      
-      currentBookData.forEach((book, index) => {
-        const details = book['書目詳情'] || {};
-        const libraries = book['館藏列表'] || [];
-        
-        let locationHtml = '';
-        if (book.error) {
-          locationHtml = `<span style="color: var(--danger); font-size: 10px;">錯誤: ${escapeHtml(book.error)}</span>`;
-        } else if (libraries.length === 0) {
-          locationHtml = '<span style="color: var(--text-muted); font-size: 10px;">無</span>';
-        } else {
-          locationHtml = '<div class="location-list">';
-          libraries.forEach(lib => {
-            const status = lib['館藏現況'] || '--';
-            let statusClass = 'status-processing';
-            let itemClass = '';
-            if (status.includes('可供借閱')) { statusClass = 'status-available'; itemClass = 'available'; }
-            else if (status.includes('已借出')) { statusClass = 'status-loaned'; itemClass = 'loaned'; }
-            else if (status.includes('預約')) { statusClass = 'status-reserve'; itemClass = 'reserved'; }
-            
-            locationHtml += `
-              <div class="location-item ${itemClass}" title="${escapeHtml(lib['圖書館'])} - ${escapeHtml(lib['索書號'])} - ${escapeHtml(status)}">
-                <span class="location-library">${escapeHtml(lib['圖書館'])}</span>
-                <span class="location-callno">${escapeHtml(lib['索書號'])}</span>
-                <span class="location-status ${statusClass}">${escapeHtml(status)}</span>
-                ${lib['館藏'] ? `<span class="location-shelf">[${escapeHtml(lib['館藏'])}]</span>` : ''}
-              </div>
-            `;
+    function renderExcelTable(){
+      const container=document.getElementById('bookResults');
+      if(currentBookData.length===0){container.innerHTML='<div class="empty-state">無資料</div>';return;}
+      let html='';
+      html+=`<div class="height-control-panel"><label>行高調整:</label><input type="range" class="height-slider" min="16" max="100" value="${currentRowHeight}" oninput="updateRowHeight(this.value)" onchange="updateRowHeight(this.value)"><span class="height-value" id="heightValue">${currentRowHeight}px</span><span style="color:var(--text-muted);font-size:11px;margin-left:auto;">內容過長時自動截斷顯示「...」</span></div>`;
+      html+='<div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px;"><table class="excel-book-table" id="excelTable">';
+      html+=`<thead><tr><th class="col-seq"><div class="resizer"></div>序號</th><th class="col-title"><div class="resizer"></div>書名</th><th class="col-author"><div class="resizer"></div>作者</th><th class="col-isbn"><div class="resizer"></div>ISBN</th><th class="col-catalog"><div class="resizer"></div>館藏編號</th><th class="col-callno"><div class="resizer"></div>索書號</th><th class="col-place"><div class="resizer"></div>出版地</th><th class="col-publisher"><div class="resizer"></div>出版者</th><th class="col-year"><div class="resizer"></div>出版年份</th><th class="col-bookid"><div class="resizer"></div>圖書編號</th><th class="col-series"><div class="resizer"></div>叢書名</th><th class="col-other-authors"><div class="resizer"></div>其他著者</th><th class="col-alias"><div class="resizer"></div>書刊別名</th><th class="col-standard"><div class="resizer"></div>標準號碼</th><th class="col-add-series"><div class="resizer"></div>附加叢書名稱</th><th class="col-notes"><div class="resizer"></div>附註</th><th class="col-lang"><div class="resizer"></div>語言</th><th class="col-count"><div class="resizer"></div>館藏數量</th><th class="col-locations"><div class="resizer"></div>館藏分佈</th></tr></thead><tbody>`;
+      currentBookData.forEach((book,index)=>{
+        const details=book['書目詳情']||{},libraries=book['館藏列表']||[];
+        let locationHtml='';
+        if(book.error){locationHtml=`<span style="color:var(--danger);font-size:10px;">錯誤: ${escapeHtml(book.error)}</span>`;}
+        else if(libraries.length===0){locationHtml='<span style="color:var(--text-muted);font-size:10px;">無</span>';}
+        else{
+          locationHtml='<div class="location-list">';
+          libraries.forEach(lib=>{
+            const status=lib['館藏現況']||'--';
+            let statusClass='status-processing',itemClass='';
+            if(status.includes('可供借閱')){statusClass='status-available';itemClass='available';}
+            else if(status.includes('已借出')){statusClass='status-loaned';itemClass='loaned';}
+            else if(status.includes('預約')){statusClass='status-reserve';itemClass='reserved';}
+            locationHtml+=`<div class="location-item ${itemClass}" title="${escapeHtml(lib['圖書館'])} - ${escapeHtml(lib['索書號'])} - ${escapeHtml(status)}"><span class="location-library">${escapeHtml(lib['圖書館'])}</span><span class="location-callno">${escapeHtml(lib['索書號'])}</span><span class="location-status ${statusClass}">${escapeHtml(status)}</span>${lib['館藏']?`<span class="location-shelf">[${escapeHtml(lib['館藏'])}]</span>`:''}</div>`;
           });
-          locationHtml += '</div>';
+          locationHtml+='</div>';
         }
-        
-        html += `
-          <tr ${book.error ? 'style="background: #fff5f5;"' : ''}>
-            <td class="col-seq">${index + 1}</td>
-            <td class="col-title" title="${escapeHtml(book['書本名稱'] || '')}">
-              ${book.error ? '<span style="color: var(--danger);">查詢失敗</span>' : escapeHtml(book['書本名稱'] || '--')}
-            </td>
-            <td class="col-author" title="${escapeHtml(details['著者'] || '')}">${escapeHtml(details['著者'] || '--')}</td>
-            <td class="col-isbn" title="${escapeHtml(details['標準號碼'] || '')}">${escapeHtml(details['標準號碼'] || '--')}</td>
-            <td class="col-catalog" title="${escapeHtml(details['館藏編目號碼'] || '')}">${escapeHtml(details['館藏編目號碼'] || '--')}</td>
-            <td class="col-callno" title="${escapeHtml(details['索書號'] || '')}">${escapeHtml(details['索書號'] || '--')}</td>
-            <td class="col-place" title="${escapeHtml(details['出版地'] || '')}">${escapeHtml(details['出版地'] || '--')}</td>
-            <td class="col-publisher" title="${escapeHtml(details['出版者'] || '')}">${escapeHtml(details['出版者'] || '--')}</td>
-            <td class="col-year">${escapeHtml(details['出版年份'] || '--')}</td>
-            <td class="col-bookid">${book.id}</td>
-            <td class="col-series" title="${escapeHtml(details['叢書名'] || '')}">${escapeHtml(details['叢書名'] || '--')}</td>
-            <td class="col-other-authors" title="${escapeHtml(details['其他著者'] || '')}">${escapeHtml(details['其他著者'] || '--')}</td>
-            <td class="col-alias" title="${escapeHtml(details['書刊別名'] || '')}">${escapeHtml(details['書刊別名'] || '--')}</td>
-            <td class="col-standard" title="${escapeHtml(details['標準號碼'] || '')}">${escapeHtml(details['標準號碼'] || '--')}</td>
-            <td class="col-add-series" title="${escapeHtml(details['附加叢書名稱'] || '')}">${escapeHtml(details['附加叢書名稱'] || '--')}</td>
-            <td class="col-notes" title="${escapeHtml(details['附註'] || '')}">${escapeHtml(details['附註'] || '--')}</td>
-            <td class="col-lang">${escapeHtml(details['語言'] || '--')}</td>
-            <td class="col-count">${libraries.length}</td>
-            <td class="col-locations">${locationHtml}</td>
-          </tr>
-        `;
+        html+=`<tr ${book.error?'style="background:#fff5f5;"':''}><td class="col-seq">${index+1}</td><td class="col-title" title="${escapeHtml(book['書本名稱']||'')}">${book.error?'<span style="color:var(--danger);">查詢失敗</span>':escapeHtml(book['書本名稱']||'--')}</td><td class="col-author" title="${escapeHtml(details['著者']||'')}">${escapeHtml(details['著者']||'--')}</td><td class="col-isbn" title="${escapeHtml(details['標準號碼']||'')}">${escapeHtml(details['標準號碼']||'--')}</td><td class="col-catalog" title="${escapeHtml(details['館藏編目號碼']||'')}">${escapeHtml(details['館藏編目號碼']||'--')}</td><td class="col-callno" title="${escapeHtml(details['索書號']||'')}">${escapeHtml(details['索書號']||'--')}</td><td class="col-place" title="${escapeHtml(details['出版地']||'')}">${escapeHtml(details['出版地']||'--')}</td><td class="col-publisher" title="${escapeHtml(details['出版者']||'')}">${escapeHtml(details['出版者']||'--')}</td><td class="col-year">${escapeHtml(details['出版年份']||'--')}</td><td class="col-bookid">${book.id}</td><td class="col-series" title="${escapeHtml(details['叢書名']||'')}">${escapeHtml(details['叢書名']||'--')}</td><td class="col-other-authors" title="${escapeHtml(details['其他著者']||'')}">${escapeHtml(details['其他著者']||'--')}</td><td class="col-alias" title="${escapeHtml(details['書刊別名']||'')}">${escapeHtml(details['書刊別名']||'--')}</td><td class="col-standard" title="${escapeHtml(details['標準號碼']||'')}">${escapeHtml(details['標準號碼']||'--')}</td><td class="col-add-series" title="${escapeHtml(details['附加叢書名稱']||'')}">${escapeHtml(details['附加叢書名稱']||'--')}</td><td class="col-notes" title="${escapeHtml(details['附註']||'')}">${escapeHtml(details['附註']||'--')}</td><td class="col-lang">${escapeHtml(details['語言']||'--')}</td><td class="col-count">${libraries.length}</td><td class="col-locations">${locationHtml}</td></tr>`;
       });
-      
-      html += '</tbody></table></div>';
-      html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 滑鼠懸停可查看完整內容</div>';
-      
-      container.innerHTML = html;
+      html+='</tbody></table></div>';
+      html+='<div style="margin-top:8px;font-size:12px;color:var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 滑鼠懸停可查看完整內容</div>';
+      container.innerHTML=html;
     }
     
-    // ===== 書籍滙出功能 =====
-    
-    function exportBookToExcel() {
-      if (!currentBookData || currentBookData.length === 0) {
-        alert('沒有可滙出的資料');
-        return;
-      }
-      
-      const rows = [];
-      currentBookData.forEach((book, idx) => {
-        const details = book['書目詳情'] || {};
-        const libraries = book['館藏列表'] || [];
-        
-        rows.push({
-          '序號': idx + 1,
-          '書名': book['書本名稱'] || (book.error ? '查詢失敗' : ''),
-          '作者': details['著者'] || '',
-          'ISBN': details['標準號碼'] || '',
-          '館藏編號': details['館藏編目號碼'] || '',
-          '索書號': details['索書號'] || '',
-          '出版地': details['出版地'] || '',
-          '出版者': details['出版者'] || '',
-          '出版年份': details['出版年份'] || '',
-          '圖書編號': book.id,
-          '叢書名': details['叢書名'] || '',
-          '其他著者': details['其他著者'] || '',
-          '書刊別名': details['書刊別名'] || '',
-          '標準號碼': details['標準號碼'] || '',
-          '附加叢書名稱': details['附加叢書名稱'] || '',
-          '附註': details['附註'] || '',
-          '語言': details['語言'] || '',
-          '館藏數量': libraries.length,
-          '館藏分佈': book.error ? `錯誤: ${book.error}` : 
-            libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']})`).join('; ')
-        });
+    function exportBookToExcel(){
+      if(!currentBookData||currentBookData.length===0){alert('沒有可滙出的資料');return;}
+      const rows=[];
+      currentBookData.forEach((book,idx)=>{
+        const details=book['書目詳情']||{},libraries=book['館藏列表']||[];
+        rows.push({'序號':idx+1,'書名':book['書本名稱']||(book.error?'查詢失敗':''),'作者':details['著者']||'','ISBN':details['標準號碼']||'','館藏編號':details['館藏編目號碼']||'','索書號':details['索書號']||'','出版地':details['出版地']||'','出版者':details['出版者']||'','出版年份':details['出版年份']||'','圖書編號':book.id,'叢書名':details['叢書名']||'','其他著者':details['其他著者']||'','書刊別名':details['書刊別名']||'','標準號碼':details['標準號碼']||'','附加叢書名稱':details['附加叢書名稱']||'','附註':details['附註']||'','語言':details['語言']||'','館藏數量':libraries.length,'館藏分佈':book.error?`錯誤: ${book.error}`:libraries.map(l=>`${l['圖書館']}: ${l['索書號']} (${l['館藏現況']})`).join('; ')});
       });
-      
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const colWidths = [];
-      const keys = Object.keys(rows[0] || {});
-      keys.forEach((key, i) => {
-        const maxLength = Math.max(key.length, ...rows.map(r => String(r[key] || '').length));
-        colWidths[i] = { wch: Math.min(maxLength + 2, 100) };
-      });
-      ws['!cols'] = colWidths;
-      
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'HKPL館藏查詢');
-      
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      XLSX.writeFile(wb, `HKPL_Books_${date}_${currentBookData.length}本.xlsx`);
-      
-      setStatus(`已滙出 Excel: ${currentBookData.length} 本`, 'success', 'bookStatus');
-      addLog('success', '已滙出 Excel 檔案', `書籍數量: ${currentBookData.length}`);
+      const ws=XLSX.utils.json_to_sheet(rows);
+      const colWidths=[];const keys=Object.keys(rows[0]||{});
+      keys.forEach((key,i)=>{const maxLength=Math.max(key.length,...rows.map(r=>String(r[key]||'').length));colWidths[i]={wch:Math.min(maxLength+2,100)};});
+      ws['!cols']=colWidths;
+      const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'HKPL館藏查詢');
+      const date=new Date().toISOString().slice(0,10).replace(/-/g,'');
+      XLSX.writeFile(wb,`HKPL_Books_${date}_${currentBookData.length}本.xlsx`);
+      setStatus(`已滙出 Excel: ${currentBookData.length} 本`,'success','bookStatus');addLog('success','已滙出 Excel 檔案',`書籍數量: ${currentBookData.length}`);
     }
     
-    function exportBookToCSV() {
-      if (!currentBookData || currentBookData.length === 0) {
-        alert('沒有可滙出的資料');
-        return;
-      }
-      
-      let csv = '\uFEFF';
-      csv += '序號,書名,作者,ISBN,館藏編號,索書號,出版地,出版者,出版年份,圖書編號,叢書名,其他著者,書刊別名,標準號碼,附加叢書名稱,附註,語言,館藏數量,館藏分佈\n';
-      
-      currentBookData.forEach((book, idx) => {
-        const details = book['書目詳情'] || {};
-        const libraries = book['館藏列表'] || [];
-        const locationStr = book.error ? `錯誤: ${book.error}` : 
-          libraries.map(l => `${l['圖書館']}: ${l['索書號']} (${l['館藏現況']})`).join('; ');
-        
-        const escapeCSV = (str) => {
-          if (!str) return '';
-          str = String(str).replace(/"/g, '""');
-          if (str.includes(',') || str.includes('\n') || str.includes('"')) {
-            str = '"' + str + '"';
-          }
-          return str;
-        };
-        
-        csv += [
-          idx + 1,
-          escapeCSV(book['書本名稱'] || (book.error ? '查詢失敗' : '')),
-          escapeCSV(details['著者']),
-          escapeCSV(details['標準號碼']),
-          escapeCSV(details['館藏編目號碼']),
-          escapeCSV(details['索書號']),
-          escapeCSV(details['出版地']),
-          escapeCSV(details['出版者']),
-          escapeCSV(details['出版年份']),
-          book.id,
-          escapeCSV(details['叢書名']),
-          escapeCSV(details['其他著者']),
-          escapeCSV(details['書刊別名']),
-          escapeCSV(details['標準號碼']),
-          escapeCSV(details['附加叢書名稱']),
-          escapeCSV(details['附註']),
-          escapeCSV(details['語言']),
-          libraries.length,
-          escapeCSV(locationStr)
-        ].join(',') + '\n';
+    function exportBookToCSV(){
+      if(!currentBookData||currentBookData.length===0){alert('沒有可滙出的資料');return;}
+      let csv='\uFEFF';csv+='序號,書名,作者,ISBN,館藏編號,索書號,出版地,出版者,出版年份,圖書編號,叢書名,其他著者,書刊別名,標準號碼,附加叢書名稱,附註,語言,館藏數量,館藏分佈\n';
+      currentBookData.forEach((book,idx)=>{
+        const details=book['書目詳情']||{},libraries=book['館藏列表']||[];
+        const locationStr=book.error?`錯誤: ${book.error}`:libraries.map(l=>`${l['圖書館']}: ${l['索書號']} (${l['館藏現況']})`).join('; ');
+        const escapeCSV=(str)=>{if(!str)return'';str=String(str).replace(/"/g,'""');if(str.includes(',')||str.includes('\n')||str.includes('"'))str='"'+str+'"';return str;};
+        csv+=[idx+1,escapeCSV(book['書本名稱']||(book.error?'查詢失敗':'')),escapeCSV(details['著者']),escapeCSV(details['標準號碼']),escapeCSV(details['館藏編目號碼']),escapeCSV(details['索書號']),escapeCSV(details['出版地']),escapeCSV(details['出版者']),escapeCSV(details['出版年份']),book.id,escapeCSV(details['叢書名']),escapeCSV(details['其他著者']),escapeCSV(details['書刊別名']),escapeCSV(details['標準號碼']),escapeCSV(details['附加叢書名稱']),escapeCSV(details['附註']),escapeCSV(details['語言']),libraries.length,escapeCSV(locationStr)].join(',')+'\n';
       });
-      
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.download = `HKPL_Books_${date}_${currentBookData.length}本.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      setStatus(`已滙出 CSV: ${currentBookData.length} 本`, 'success', 'bookStatus');
-      addLog('success', '已滙出 CSV 檔案', `書籍數量: ${currentBookData.length}`);
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;
+      const date=new Date().toISOString().slice(0,10).replace(/-/g,'');link.download=`HKPL_Books_${date}_${currentBookData.length}本.csv`;document.body.appendChild(link);link.click();document.body.removeChild(link);URL.revokeObjectURL(url);
+      setStatus(`已滙出 CSV: ${currentBookData.length} 本`,'success','bookStatus');addLog('success','已滙出 CSV 檔案',`書籍數量: ${currentBookData.length}`);
     }
     
-    function exportBookToJSON() {
-      if (!currentBookData || currentBookData.length === 0) {
-        alert('沒有可滙出的資料');
-        return;
-      }
-      
-      const exportData = currentBookData.map((book, idx) => ({
-        序號: idx + 1,
-        書名: book['書本名稱'] || (book.error ? '查詢失敗' : ''),
-        作者: book['書目詳情']?.['著者'] || '',
-        ISBN: book['書目詳情']?.['標準號碼'] || '',
-        館藏編號: book['書目詳情']?.['館藏編目號碼'] || '',
-        索書號: book['書目詳情']?.['索書號'] || '',
-        出版地: book['書目詳情']?.['出版地'] || '',
-        出版者: book['書目詳情']?.['出版者'] || '',
-        出版年份: book['書目詳情']?.['出版年份'] || '',
-        圖書編號: book.id,
-        叢書名: book['書目詳情']?.['叢書名'] || '',
-        其他著者: book['書目詳情']?.['其他著者'] || '',
-        書刊別名: book['書目詳情']?.['書刊別名'] || '',
-        標準號碼: book['書目詳情']?.['標準號碼'] || '',
-        附加叢書名稱: book['書目詳情']?.['附加叢書名稱'] || '',
-        附註: book['書目詳情']?.['附註'] || '',
-        語言: book['書目詳情']?.['語言'] || '',
-        館藏數量: (book['館藏列表'] || []).length,
-        館藏分佈: book.error ? `錯誤: ${book.error}` : (book['館藏列表'] || []).map(l => ({
-          圖書館: l['圖書館'],
-          索書號: l['索書號'],
-          館藏現況: l['館藏現況'],
-          館藏: l['館藏']
-        }))
-      }));
-      
-      const json = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.download = `HKPL_Books_${date}_${currentBookData.length}本.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      setStatus(`已滙出 JSON: ${currentBookData.length} 本`, 'success', 'bookStatus');
-      addLog('success', '已滙出 JSON 檔案', `書籍數量: ${currentBookData.length}`);
+    function exportBookToJSON(){
+      if(!currentBookData||currentBookData.length===0){alert('沒有可滙出的資料');return;}
+      const exportData=currentBookData.map((book,idx)=>({序號:idx+1,書名:book['書本名稱']||(book.error?'查詢失敗':''),作者:book['書目詳情']?.['著者']||'',ISBN:book['書目詳情']?.['標準號碼']||'',館藏編號:book['書目詳情']?.['館藏編目號碼']||'',索書號:book['書目詳情']?.['索書號']||'',出版地:book['書目詳情']?.['出版地']||'',出版者:book['書目詳情']?.['出版者']||'',出版年份:book['書目詳情']?.['出版年份']||'',圖書編號:book.id,叢書名:book['書目詳情']?.['叢書名']||'',其他著者:book['書目詳情']?.['其他著者']||'',書刊別名:book['書目詳情']?.['書刊別名']||'',標準號碼:book['書目詳情']?.['標準號碼']||'',附加叢書名稱:book['書目詳情']?.['附加叢書名稱']||'',附註:book['書目詳情']?.['附註']||'',語言:book['書目詳情']?.['語言']||'',館藏數量:(book['館藏列表']||[]).length,館藏分佈:book.error?`錯誤: ${book.error}`:(book['館藏列表']||[]).map(l=>({圖書館:l['圖書館'],索書號:l['索書號'],館藏現況:l['館藏現況'],館藏:l['館藏']}))}));
+      const json=JSON.stringify(exportData,null,2);const blob=new Blob([json],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;
+      const date=new Date().toISOString().slice(0,10).replace(/-/g,'');link.download=`HKPL_Books_${date}_${currentBookData.length}本.json`;document.body.appendChild(link);link.click();document.body.removeChild(link);URL.revokeObjectURL(url);
+      setStatus(`已滙出 JSON: ${currentBookData.length} 本`,'success','bookStatus');addLog('success','已滙出 JSON 檔案',`書籍數量: ${currentBookData.length}`);
     }
     
-    // ===== 手動抓取電子資源（無自動重試） =====
-    function fetchData(isAuto = false, saveToStorageFlag = false) {
-      const apiUrl = API_CONFIG.scraper;
-      const apiDesc = '電子資源抓取 API (Proxy → 9000/scrape)';
-      
-      setLoading(true);
-      setStatus('手動更新中...', 'loading');
-      addLog('request', '手動抓取電子資源', `POST ${apiUrl} | ${apiDesc}`);
-      
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', apiUrl, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
-      xhr.timeout = 30000;
-      
-      let completed = false;
-      
-      function finish() {
-        if (!completed) {
-          completed = true;
-          setLoading(false);
-        }
-      }
-      
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            try {
-              const result = JSON.parse(xhr.responseText);
-              if (result.success && result.data) {
-                currentScrapeData = result.data;
-                renderScrapeData(result.data);
-                updateExtractTab();
-                
-                if (saveToStorageFlag) {
-                  saveToStorage(result.data);
-                }
-                
-                setStatus('手動更新完成', 'success');
-                addLog('response', '電子資源抓取成功', 
-                  `${apiDesc} | 電子書: ${result.data.ebooks?.length || 0} 個 | 資料庫: ${result.data.edatabases?.length || 0} 個`);
-                
-                if (isAuto && isFirstLoad) {
-                  isFirstLoad = false;
-                }
-              } else {
-                setStatus('數據格式錯誤', 'error');
-                addLog('error', 'API 回應格式錯誤', `${apiDesc} | 回應: ${JSON.stringify(result).substring(0, 200)}`);
-              }
-            } catch (e) {
-              setStatus('解析失敗', 'error');
-              addLog('error', 'JSON 解析失敗', `${apiDesc} | ${e.message}`);
-            }
-          } else {
-            let errorDetail = `HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`;
-            let diagnosis = '';
-            
-            if (xhr.responseText) {
-              try {
-                const errorJson = JSON.parse(xhr.responseText);
-                if (errorJson.error || errorJson.message) {
-                  errorDetail += ` | 伺服器訊息: ${errorJson.error || errorJson.message}`;
-                }
-              } catch (e) {
-                errorDetail += ` | 回應: ${xhr.responseText.substring(0, 500)}`;
-              }
-            } else {
-              errorDetail += ' | 回應內容為空';
-            }
-            
-            if (xhr.status === 0) {
-              diagnosis = getApiDiagnostic();
-              errorDetail += ' | [診斷] 瀏覽器攔截了請求（可能是 CORS、混合內容、或網絡不可達）';
-            } else if (xhr.status === 400) {
-              errorDetail += ' | [診斷] 請求格式錯誤';
-            } else if (xhr.status === 401) {
-              errorDetail += ' | [診斷] API Key 無效';
-            } else if (xhr.status === 403) {
-              errorDetail += ' | [診斷] 權限不足';
-            } else if (xhr.status === 500) {
-              errorDetail += ' | [診斷] 伺服器內部錯誤';
-            } else if (xhr.status === 502) {
-              errorDetail += ' | [診斷] 後端服務未啟動';
-            }
-            
-            setStatus('連接失敗 (' + xhr.status + ')', 'error');
-            addLog('error', xhr.status === 0 ? 'API 網絡錯誤' : 'API 連接失敗', `${apiDesc} | ${errorDetail}`);
-            
-            if (diagnosis) {
-              showDiagnostic(true);
-            }
+    function fetchData(isAuto=false,saveToStorageFlag=false){
+      const apiUrl=API_CONFIG.scraper;
+      const apiDesc='電子資源抓取 API (Proxy → 9000/scrape)';
+      setLoading(true);setStatus('手動更新中...','loading');addLog('request','手動抓取電子資源',`POST ${apiUrl} | ${apiDesc}`);
+      const xhr=new XMLHttpRequest();xhr.open('POST',apiUrl,true);xhr.setRequestHeader('Content-Type','application/json');xhr.setRequestHeader('X-API-Key','HKPL2024SecureKey');xhr.timeout=30000;
+      let completed=false;
+      function finish(){if(!completed){completed=true;setLoading(false);}}
+      xhr.onreadystatechange=function(){
+        if(xhr.readyState===4){
+          if(xhr.status===200){
+            try{
+              const result=JSON.parse(xhr.responseText);
+              if(result.success&&result.data){
+                currentScrapeData=result.data;renderScrapeData(result.data);updateExtractTab();
+                if(saveToStorageFlag)saveToStorage(result.data);
+                setStatus('手動更新完成','success');
+                addLog('response','電子資源抓取成功',`${apiDesc} | 電子書: ${result.data.ebooks?.length||0} 個 | 資料庫: ${result.data.edatabases?.length||0} 個`);
+                if(isAuto&&isFirstLoad)isFirstLoad=false;
+              }else{setStatus('數據格式錯誤','error');addLog('error','API 回應格式錯誤',`${apiDesc} | 回應: ${JSON.stringify(result).substring(0,200)}`);}
+            }catch(e){setStatus('解析失敗','error');addLog('error','JSON 解析失敗',`${apiDesc} | ${e.message}`);}
+          }else{
+            let errorDetail=`HTTP ${xhr.status} - ${xhr.statusText||'未知錯誤'}`,diagnosis='';
+            if(xhr.responseText){try{const errorJson=JSON.parse(xhr.responseText);if(errorJson.error||errorJson.message)errorDetail+=` | 伺服器訊息: ${errorJson.error||errorJson.message}`;}catch(e){if(xhr.responseText)errorDetail+=` | 回應: ${xhr.responseText.substring(0,500)}`;}}else{errorDetail+=' | 回應內容為空';}
+            if(xhr.status===0){diagnosis=getApiDiagnostic();errorDetail+=' | [診斷] 瀏覽器攔截了請求（可能是 CORS、混合內容、或網絡不可達）';}else if(xhr.status===400)errorDetail+=' | [診斷] 請求格式錯誤';else if(xhr.status===401)errorDetail+=' | [診斷] API Key 無效';else if(xhr.status===403)errorDetail+=' | [診斷] 權限不足';else if(xhr.status===500)errorDetail+=' | [診斷] 伺服器內部錯誤';else if(xhr.status===502)errorDetail+=' | [診斷] 後端服務未啟動';
+            setStatus('連接失敗 ('+xhr.status+')','error');addLog('error',xhr.status===0?'API 網絡錯誤':'API 連接失敗',`${apiDesc} | ${errorDetail}`);
+            if(diagnosis)showDiagnostic(true);
           }
           finish();
         }
       };
-      
-      xhr.onerror = () => { 
-        setStatus('網絡錯誤', 'error'); 
-        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 Proxy (9000)，請檢查：1) 網絡連線 2) CasaOS API 伺服器是否已啟動 3) Vercel Proxy 環境變數是否設定`);
-        showDiagnostic(true);
-        finish();
-      };
-      
-      xhr.ontimeout = () => {
-        setStatus('請求逾時', 'error');
-        addLog('error', 'API 請求逾時', `${apiDesc} | 30秒內未收到回應，請確認 Flask Scraper 服務正在運行`);
-        finish();
-      };
-      
-      try {
-        xhr.send('{}');
-      } catch (e) {
-        addLog('error', '發送請求失敗', `${apiDesc} | ${e.message}`);
-        finish();
+      xhr.onerror=()=>{setStatus('網絡錯誤','error');addLog('error','API 網絡錯誤',`${apiDesc} | 無法連接到 Proxy (9000)，請檢查：1) 網絡連線 2) CasaOS API 伺服器是否已啟動 3) Vercel Proxy 環境變數是否設定`);showDiagnostic(true);finish();};
+      xhr.ontimeout=()=>{setStatus('請求逾時','error');addLog('error','API 請求逾時',`${apiDesc} | 30秒內未收到回應，請確認 Flask Scraper 服務正在運行`);finish();};
+      try{xhr.send('{}');}catch(e){addLog('error','發送請求失敗',`${apiDesc} | ${e.message}`);finish();}
+    }
+    
+    function renderScrapeData(data){
+      const ebooks=data.ebooks||[],databases=data.edatabases||[],total=ebooks.length+databases.length;
+      const resultSection=document.getElementById('resultSection'),resultContent=document.getElementById('resultContent'),resultCount=document.getElementById('resultCount');
+      if(resultSection)resultSection.style.display='block';if(resultCount)resultCount.textContent=`電子書 ${ebooks.length} 個 + 資料庫 ${databases.length} 個 = ${total} 筆`;
+      let html='<div style="overflow-x:auto;"><table style="margin-bottom:0;"><thead><tr><th>類型</th><th>標題</th><th>連結</th><th>分類/地點</th><th>說明/標籤</th></tr></thead><tbody>';
+      ebooks.forEach(item=>{html+='<tr>'+'<td><span class="badge badge-ebook">'+escapeHtml(item.category||'電子書')+'</span></td>'+'<td><strong>'+escapeHtml(item.title)+'</strong></td>'+'<td><a href="'+(item.link||'#')+'" target="_blank" style="color:var(--primary);">查看 →</a></td>'+'<td>'+escapeHtml(item.category||'電子書')+'</td>'+'<td>'+escapeHtml(item.description||'--')+'</td>'+'</tr>';});
+      databases.forEach(db=>{const locs=(db.locations||[]).map(l=>escapeHtml(l)).join('; ');const tags=(db.tags||[]).slice(0,5).map(t=>escapeHtml(t)).join(', ')+((db.tags||[]).length>5?'...':'');html+='<tr>'+'<td><span class="badge badge-db">資料庫</span></td>'+'<td><strong>'+escapeHtml(db.title)+'</strong></td>'+'<td><a href="'+(db.link||'#')+'" target="_blank" style="color:var(--primary);">查看 →</a></td>'+'<td>'+locs+'</td>'+'<td>'+tags+'</td>'+'</tr>';});
+      html+='</tbody></table></div>';if(resultContent)resultContent.innerHTML=html;
+    }
+    
+    function updateExtractTab(){
+      if(!currentScrapeData)return;
+      const ebooks=currentScrapeData.ebooks||[],databases=currentScrapeData.edatabases||[],total=ebooks.length+databases.length;
+      const now=new Date();const timeStr=now.toLocaleString('zh-HK');
+      let tableHtml='';
+      if(total===0){tableHtml='<tr><td colspan="5" style="padding:40px 20px;text-align:center;color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">📊</div>暫無資料<br><small>請到「電子資源」頁點擊「手動更新」抓取資料</small></td></tr>';}
+      else{
+        ebooks.forEach(item=>{tableHtml+='<tr>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;background:#d1fae5;color:#065f46;">'+escapeHtml(item.category||'電子書')+'</span></td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);font-weight:600;">'+escapeHtml(item.title)+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;"><a href="'+(item.link||'#')+'" target="_blank" style="color:var(--primary);">'+(item.link||'--')+'</a></td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);">'+escapeHtml(item.category||'電子書')+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);">'+escapeHtml(item.description||'--')+'</td>'+'</tr>';});
+        databases.forEach(item=>{tableHtml+='<tr>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;background:#dbeafe;color:#1e40af;">資料庫</span></td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);font-weight:600;">'+escapeHtml(item.title)+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;"><a href="'+(item.link||'#')+'" target="_blank" style="color:var(--primary);">'+(item.link||'--')+'</a></td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);">'+(item.locations||[]).map(l=>escapeHtml(l)).join('; ')+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid var(--border);">'+(item.tags||[]).slice(0,5).map(t=>escapeHtml(t)).join(', ')+((item.tags||[]).length>5?'...':'')+'</td>'+'</tr>';});
       }
+      const extractBody=document.getElementById('extractTableBody'),extractTextarea=document.getElementById('extractTextarea'),extractTime=document.getElementById('extractLastTime');
+      if(extractBody)extractBody.innerHTML=tableHtml;if(extractTextarea)extractTextarea.value=generateCSV();if(extractTime)extractTime.textContent=timeStr+`（共 ${total} 筆：電子書 ${ebooks.length} + 資料庫 ${databases.length}）`;
     }
     
-    // 僅在當前會話顯示抓取結果
-    function renderScrapeData(data) {
-      const ebooks = data.ebooks || [];
-      const databases = data.edatabases || [];
-      const total = ebooks.length + databases.length;
-      
-      const resultSection = document.getElementById('resultSection');
-      const resultContent = document.getElementById('resultContent');
-      const resultCount = document.getElementById('resultCount');
-      if (resultSection) resultSection.style.display = 'block';
-      if (resultCount) resultCount.textContent = `電子書 ${ebooks.length} 個 + 資料庫 ${databases.length} 個 = ${total} 筆`;
-      
-      let html = '<div style="overflow-x: auto;"><table style="margin-bottom: 0;">';
-      html += '<thead><tr><th>類型</th><th>標題</th><th>連結</th><th>分類/地點</th><th>說明/標籤</th></tr></thead><tbody>';
-      
-      ebooks.forEach(item => {
-        html += '<tr>' +
-          '<td><span class="badge badge-ebook">' + escapeHtml(item.category || '電子書') + '</span></td>' +
-          '<td><strong>' + escapeHtml(item.title) + '</strong></td>' +
-          '<td><a href="' + (item.link || '#') + '" target="_blank" style="color: var(--primary);">查看 →</a></td>' +
-          '<td>' + escapeHtml(item.category || '電子書') + '</td>' +
-          '<td>' + escapeHtml(item.description || '--') + '</td>' +
-        '</tr>';
-      });
-      
-      databases.forEach(db => {
-        const locs = (db.locations || []).map(l => escapeHtml(l)).join('; ');
-        const tags = (db.tags || []).slice(0, 5).map(t => escapeHtml(t)).join(', ') + ((db.tags || []).length > 5 ? '...' : '');
-        html += '<tr>' +
-          '<td><span class="badge badge-db">資料庫</span></td>' +
-          '<td><strong>' + escapeHtml(db.title) + '</strong></td>' +
-          '<td><a href="' + (db.link || '#') + '" target="_blank" style="color: var(--primary);">查看 →</a></td>' +
-          '<td>' + locs + '</td>' +
-          '<td>' + tags + '</td>' +
-        '</tr>';
-      });
-      
-      html += '</tbody></table></div>';
-      if (resultContent) resultContent.innerHTML = html;
-    }
-    
-    // ===== 更新「資料提取」分頁 =====
-    function updateExtractTab() {
-      if (!currentScrapeData) return;
-      
-      const ebooks = currentScrapeData.ebooks || [];
-      const databases = currentScrapeData.edatabases || [];
-      const total = ebooks.length + databases.length;
-      const now = new Date();
-      const timeStr = now.toLocaleString('zh-HK');
-      
-      let tableHtml = '';
-      if (total === 0) {
-        tableHtml = '<tr><td colspan="5" style="padding: 40px 20px; text-align: center; color: var(--text-muted);"><div style="font-size: 32px; margin-bottom: 12px;">📊</div>暫無資料<br><small>請到「電子資源」頁點擊「手動更新」抓取資料</small></td></tr>';
-      } else {
-        ebooks.forEach(item => {
-          tableHtml += '<tr>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);"><span style="padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; background: #d1fae5; color: #065f46;">' + escapeHtml(item.category || '電子書') + '</span></td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-weight: 600;">' + escapeHtml(item.title) + '</td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px;"><a href="' + (item.link || '#') + '" target="_blank" style="color: var(--primary);">' + (item.link || '--') + '</a></td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + escapeHtml(item.category || '電子書') + '</td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + escapeHtml(item.description || '--') + '</td>' +
-          '</tr>';
-        });
-        databases.forEach(item => {
-          tableHtml += '<tr>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);"><span style="padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; background: #dbeafe; color: #1e40af;">資料庫</span></td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-weight: 600;">' + escapeHtml(item.title) + '</td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px;"><a href="' + (item.link || '#') + '" target="_blank" style="color: var(--primary);">' + (item.link || '--') + '</a></td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + (item.locations || []).map(l => escapeHtml(l)).join('; ') + '</td>' +
-            '<td style="padding: 10px 16px; border-bottom: 1px solid var(--border);">' + (item.tags || []).slice(0, 5).map(t => escapeHtml(t)).join(', ') + ((item.tags || []).length > 5 ? '...' : '') + '</td>' +
-          '</tr>';
-        });
-      }
-      
-      const extractBody = document.getElementById('extractTableBody');
-      const extractTextarea = document.getElementById('extractTextarea');
-      const extractTime = document.getElementById('extractLastTime');
-      if (extractBody) extractBody.innerHTML = tableHtml;
-      if (extractTextarea) extractTextarea.value = generateCSV();
-      if (extractTime) extractTime.textContent = timeStr + `（共 ${total} 筆：電子書 ${ebooks.length} + 資料庫 ${databases.length}）`;
-    }
-    
-    function generateCSV() {
-      if (!currentScrapeData) return '';
-      const ebooks = currentScrapeData.ebooks || [];
-      const databases = currentScrapeData.edatabases || [];
-      let csv = '\uFEFF類型,標題,連結,分類/地點,說明/標籤\n';
-      ebooks.forEach(item => {
-        const cat = (item.category || '電子書').replace(/"/g, '""');
-        const title = (item.title || '').replace(/"/g, '""');
-        const link = (item.link || '').replace(/"/g, '""');
-        const desc = (item.description || '').replace(/"/g, '""');
-        csv += `"電子書","${title}","${link}","${cat}","${desc}"\n`;
-      });
-      databases.forEach(item => {
-        const locations = (item.locations || []).join('; ').replace(/"/g, '""');
-        const tags = (item.tags || []).join('; ').replace(/"/g, '""');
-        const title = (item.title || '').replace(/"/g, '""');
-        const link = (item.link || '').replace(/"/g, '""');
-        csv += `"資料庫","${title}","${link}","${locations}","${tags}"\n`;
-      });
+    function generateCSV(){
+      if(!currentScrapeData)return'';
+      const ebooks=currentScrapeData.ebooks||[],databases=currentScrapeData.edatabases||[];
+      let csv='\uFEFF類型,標題,連結,分類/地點,說明/標籤\n';
+      ebooks.forEach(item=>{const cat=(item.category||'電子書').replace(/"/g,'""'),title=(item.title||'').replace(/"/g,'""'),link=(item.link||'').replace(/"/g,'""'),desc=(item.description||'').replace(/"/g,'""');csv+=`"電子書","${title}","${link}","${cat}","${desc}"\n`;});
+      databases.forEach(item=>{const locations=(item.locations||[]).join('; ').replace(/"/g,'""'),tags=(item.tags||[]).join('; ').replace(/"/g,'""'),title=(item.title||'').replace(/"/g,'""'),link=(item.link||'').replace(/"/g,'""');csv+=`"資料庫","${title}","${link}","${locations}","${tags}"\n`;});
       return csv;
     }
     
-    function generateJSON() {
-      if (!currentScrapeData) return '{}';
-      return JSON.stringify(currentScrapeData, null, 2);
-    }
+    function generateJSON(){if(!currentScrapeData)return'{}';return JSON.stringify(currentScrapeData,null,2);}
     
-    function copyStaticData(format) {
-      const content = format === 'csv' ? generateCSV() : generateJSON();
-      if (!content || content === '{}' || content === '') {
-        setStatus('無資料可複製', 'error', 'extractStatus');
-        return;
-      }
-      
-      navigator.clipboard.writeText(content).then(() => {
-        setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`, 'success', 'extractStatus');
-        addLog('success', `已複製 ${format.toUpperCase()}`, '資料提取頁內容已複製');
-      }).catch(() => {
-        const textarea = document.getElementById('extractTextarea');
-        textarea.value = content;
-        textarea.select();
-        try {
-          document.execCommand('copy');
-          setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`, 'success', 'extractStatus');
-        } catch (err) {
-          setStatus('複製失敗，請手動複製', 'error', 'extractStatus');
-        }
+    function copyStaticData(format){
+      const content=format==='csv'?generateCSV():generateJSON();
+      if(!content||content==='{}'||content===''){setStatus('無資料可複製','error','extractStatus');return;}
+      navigator.clipboard.writeText(content).then(()=>{setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`,'success','extractStatus');addLog('success',`已複製 ${format.toUpperCase()}`,'資料提取頁內容已複製');}).catch(()=>{
+        const textarea=document.getElementById('extractTextarea');textarea.value=content;textarea.select();
+        try{document.execCommand('copy');setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`,'success','extractStatus');}catch(err){setStatus('複製失敗，請手動複製','error','extractStatus');}
       });
     }
     
-    function downloadStaticData(format) {
-      const content = format === 'csv' ? generateCSV() : generateJSON();
-      if (!content || content === '{}' || content === '') {
-        setStatus('無資料可下載', 'error', 'extractStatus');
-        return;
-      }
-      
-      const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.download = `HKPL_Data_${date}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success', 'extractStatus');
-      addLog('success', `已下載 ${format.toUpperCase()}`, `檔名: HKPL_Data_${date}.${format}`);
+    function downloadStaticData(format){
+      const content=format==='csv'?generateCSV():generateJSON();
+      if(!content||content==='{}'||content===''){setStatus('無資料可下載','error','extractStatus');return;}
+      const blob=new Blob([content],{type:format==='csv'?'text/csv;charset=utf-8;':'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;
+      const date=new Date().toISOString().slice(0,10).replace(/-/g,'');link.download=`HKPL_Data_${date}.${format}`;document.body.appendChild(link);link.click();document.body.removeChild(link);URL.revokeObjectURL(url);
+      setStatus(`已下載 ${format.toUpperCase()} 檔案`,'success','extractStatus');addLog('success',`已下載 ${format.toUpperCase()}`,`檔名: HKPL_Data_${date}.${format}`);
     }
     
-    function downloadStaticHTML() {
-      if (!currentScrapeData) {
-        setStatus('無資料，請先抓取', 'error', 'extractStatus');
-        return;
-      }
-      
-      const ebooks = currentScrapeData.ebooks || [];
-      const databases = currentScrapeData.edatabases || [];
-      const total = ebooks.length + databases.length;
-      const now = new Date();
-      const timeStr = now.toLocaleString('zh-HK');
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-      
-      let tableRows = '';
-      ebooks.forEach(item => {
-        const title = String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const link = String(item.link || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const cat = String(item.category || '電子書').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const desc = String(item.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        tableRows += '<tr>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + cat + '</td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">' + title + '</td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="' + link + '" target="_blank">' + link + '</a></td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + cat + '</td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + desc + '</td>' +
-        '</tr>';
-      });
-      databases.forEach(item => {
-        const title = String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const link = String(item.link || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const locs = (item.locations || []).map(l => String(l).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join('; ');
-        const tags = (item.tags || []).slice(0, 5).map(t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join(', ') + ((item.tags || []).length > 5 ? '...' : '');
-        tableRows += '<tr>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">資料庫</td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">' + title + '</td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="' + link + '" target="_blank">' + link + '</a></td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + locs + '</td>' +
-          '<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">' + tags + '</td>' +
-        '</tr>';
-      });
-      
-      const html = `<!DOCTYPE html>
-<html lang="zh-HK">
-<head>
-<meta charset="UTF-8">
-<title>HKPL 資料提取 - ${timeStr}</title>
-<style>
-  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; padding: 20px; color: #2d3748; }
-  h1 { font-size: 20px; margin-bottom: 8px; }
-  .meta { color: #718096; font-size: 13px; margin-bottom: 16px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { background: #f0fff4; padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid #48bb78; }
-  td { padding: 10px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-  tr:hover { background: #f8fafc; }
-  a { color: #667eea; }
-</style>
-</head>
-<body>
-<h1>HKPL 電子資源資料</h1>
-<div class="meta">抓取時間：${timeStr} | 共 ${total} 筆（電子書 ${ebooks.length} + 資料庫 ${databases.length}）</div>
-<table>
-<thead><tr><th>類型</th><th>標題</th><th>連結</th><th>分類/地點</th><th>說明/標籤</th></tr></thead>
-<tbody>
-${tableRows}
-</tbody>
-</table>
-</body>
-</html>`;
-      
-      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `HKPL_Extract_${dateStr}_${total}筆.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      setStatus('已下載靜態 HTML', 'success', 'extractStatus');
-      addLog('success', '已下載靜態 HTML', `檔名: HKPL_Extract_${dateStr}_${total}筆.html | Excel 可直接開啟此檔案`);
+    function downloadStaticHTML(){
+      if(!currentScrapeData){setStatus('無資料，請先抓取','error','extractStatus');return;}
+      const ebooks=currentScrapeData.ebooks||[],databases=currentScrapeData.edatabases||[],total=ebooks.length+databases.length;
+      const now=new Date(),timeStr=now.toLocaleString('zh-HK'),dateStr=now.toISOString().slice(0,10).replace(/-/g,'');
+      let tableRows='';
+      ebooks.forEach(item=>{const title=String(item.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),link=String(item.link||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),cat=String(item.category||'電子書').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),desc=String(item.description||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');tableRows+='<tr>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">'+cat+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">'+title+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="'+link+'" target="_blank">'+link+'</a></td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">'+cat+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">'+desc+'</td>'+'</tr>';});
+      databases.forEach(item=>{const title=String(item.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),link=String(item.link||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),locs=(item.locations||[]).map(l=>String(l).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')).join('; '),tags=(item.tags||[]).slice(0,5).map(t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')).join(', ')+((item.tags||[]).length>5?'...':'');tableRows+='<tr>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">資料庫</td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">'+title+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="'+link+'" target="_blank">'+link+'</a></td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">'+locs+'</td>'+'<td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">'+tags+'</td>'+'</tr>';});
+      const html=`<!DOCTYPE html><html lang="zh-HK"><head><meta charset="UTF-8"><title>HKPL 資料提取 - ${timeStr}</title><style>body{font-family:-apple-system,"Microsoft YaHei",sans-serif;padding:20px;color:#2d3748;}h1{font-size:20px;margin-bottom:8px;}.meta{color:#718096;font-size:13px;margin-bottom:16px;}table{width:100%;border-collapse:collapse;font-size:14px;}th{background:#f0fff4;padding:14px 16px;text-align:left;font-weight:600;color:#22543d;border-bottom:2px solid #48bb78;}td{padding:10px 16px;border-bottom:1px solid #e2e8f0;vertical-align:top;}tr:hover{background:#f8fafc;}a{color:#667eea;}</style></head><body><h1>HKPL 電子資源資料</h1><div class="meta">抓取時間：${timeStr} | 共 ${total} 筆（電子書 ${ebooks.length} + 資料庫 ${databases.length}）</div><table><thead><tr><th>類型</th><th>標題</th><th>連結</th><th>分類/地點</th><th>說明/標籤</th></tr></thead><tbody>${tableRows}</tbody></table></body></html>`;
+      const blob=new Blob([html],{type:'text/html;charset=utf-8;'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`HKPL_Extract_${dateStr}_${total}筆.html`;document.body.appendChild(link);link.click();document.body.removeChild(link);URL.revokeObjectURL(url);
+      setStatus('已下載靜態 HTML','success','extractStatus');addLog('success','已下載靜態 HTML',`檔名: HKPL_Extract_${dateStr}_${total}筆.html | Excel 可直接開啟此檔案`);
     }
     
-    function escapeHtml(text) {
-      if (!text) return '--';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+    // ===== 刷新靜態資料預覽 =====
+    function refreshStaticPreview(){
+      const iframe=document.getElementById('staticPreview');
+      iframe.src=iframe.src+'&t='+Date.now();
+      setStatus('靜態資料預覽已刷新','success','extractStatus');
+      addLog('info','刷新靜態資料預覽','iframe 重新載入根網址');
     }
     
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.getElementById('tab-books').classList.contains('active')) {
-        fetchBookData();
-      }
-    });
+    function escapeHtml(text){if(!text)return'--';const div=document.createElement('div');div.textContent=text;return div.innerHTML;}
+    
+    document.addEventListener('keydown',(e)=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&document.getElementById('tab-books').classList.contains('active')){fetchBookData();}});
   </script>
 </body>
 </html>
