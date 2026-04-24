@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v3.3 (優化版)</title>
+  <title>HKPL 資源控制台 v3.4 (自動重連版)</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
@@ -257,6 +257,11 @@
       color: #065f46;
     }
     
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
     .result-section {
       margin-bottom: 32px;
     }
@@ -437,6 +442,11 @@
     .log-tag.success {
       background: #2d6a4f;
       color: #d8f3dc;
+    }
+    
+    .log-tag.retry {
+      background: #b45309;
+      color: #fef3c7;
     }
     
     .log-content {
@@ -735,6 +745,30 @@
       to { transform: rotate(360deg); }
     }
     
+    /* 診斷提示框 */
+    .diagnostic-box {
+      background: #fff5f5;
+      border: 1px solid #feb2b2;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #742a2a;
+      line-height: 1.5;
+    }
+    
+    .diagnostic-box strong {
+      color: #c53030;
+    }
+    
+    .diagnostic-box code {
+      background: #fed7d7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+    
     @media (max-width: 1200px) {
       .search-layout {
         grid-template-columns: 1fr;
@@ -770,8 +804,8 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v3.3</h1>
-          <p>全自動抓取系統 - 每日 09:00 自動更新</p>
+          <h1>HKPL 資源控制台 v3.4</h1>
+          <p>全自動抓取系統 - 每日 09:00 自動更新 | 斷線自動重連</p>
         </div>
         <div class="network-status" id="networkStatus">
           <span class="status-dot"></span>
@@ -804,6 +838,12 @@
         <span id="nextUpdateTime" style="color: var(--text-muted);"></span>
       </div>
 
+      <!-- API 連線診斷提示（動態顯示） -->
+      <div class="diagnostic-box" id="apiDiagnostic" style="display: none;">
+        <strong>⚠️ API 連線診斷</strong><br>
+        <span id="diagnosticText"></span>
+      </div>
+
       <!-- 狀態列 + 手動更新按鍵 -->
       <div class="auto-status-bar" id="autoStatusBar">
         <span class="indicator">
@@ -811,7 +851,7 @@
           自動更新已啟用
         </span>
         <span style="color: var(--text-muted);">
-          系統將於每日 09:00 自動抓取最新資料 | 頁面開啟時自動檢查更新
+          系統將於每日 09:00 自動抓取最新資料 | 頁面開啟時自動檢查更新 | 斷線自動重試
         </span>
         <button class="btn btn-sm btn-primary" onclick="fetchData(false, true)" id="btnManualUpdate" style="margin-left: auto;">
           🔄 手動更新
@@ -839,12 +879,12 @@
         </div>
       </div>
 
-      <!-- 抓取結果（不長駐，抓取時短暫顯示） -->
+      <!-- 抓取結果（僅當前會話顯示，關閉/刷新後不保留） -->
       <div class="result-section" id="resultSection" style="display: none;">
         <div class="section-header">
           <div class="section-title">
             <span>📊</span>
-            抓取結果
+            抓取結果 <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">（僅本次會話顯示，刷新後消失）</span>
           </div>
           <span class="badge badge-ebook" id="resultCount">0 筆</span>
         </div>
@@ -852,6 +892,7 @@
           <div class="empty-state">點擊「手動更新」開始抓取資料</div>
         </div>
       </div>
+      
       <div class="result-section" id="staticDataSection">
         <div class="section-header">
           <div class="section-title">
@@ -1050,9 +1091,15 @@
     let autoScrapeTimer = null;
     let logEntries = [];
     let logCollapsed = false;
+    let apiRetryCount = 0;
+    let apiRetryTimer = null;
+    let lastApiFailure = 0;
+    let isApiHealthy = true;
     
     const STORAGE_KEY_DATA = 'hkpl_scrape_data';
     const STORAGE_KEY_TIME = 'hkpl_scrape_time';
+    const MAX_RETRY = 3;
+    const RETRY_DELAYS = [3000, 6000, 12000]; // 3s, 6s, 12s
     
     // ===== API 配置（繞過代理，直接連接後端服務） =====
     // 如果 API 在不同主機，請修改以下網址
@@ -1127,6 +1174,49 @@
       renderLogs();
     }
     
+    // ===== API 連線診斷 =====
+    function getApiDiagnostic() {
+      const currentHost = window.location.hostname;
+      const scraperUrl = API_CONFIG.scraper;
+      const isLocalhostApi = scraperUrl.includes('localhost') || scraperUrl.includes('127.0.0.1');
+      const isHttpsPage = window.location.protocol === 'https:';
+      const isLocalPage = currentHost === 'localhost' || currentHost === '127.0.0.1';
+      
+      let diagnosis = [];
+      
+      if (isLocalhostApi && !isLocalPage) {
+        diagnosis.push(`網頁位於 <code>${currentHost}</code>，但 API 設定為 <code>${scraperUrl}</code>。`);
+        diagnosis.push('瀏覽器從公網/外部網域無法直接存取您本機的 localhost。');
+        diagnosis.push('解決方案：將 API 部署到與網頁相同網域，或透過反向代理轉發。');
+      }
+      
+      if (isHttpsPage && scraperUrl.startsWith('http:')) {
+        diagnosis.push('網頁使用 HTTPS，但 API 使用 HTTP（混合內容/Mixed Content）。');
+        diagnosis.push('現代瀏覽器會攔截 HTTPS 頁面對 HTTP 資源的請求。');
+        diagnosis.push('解決方案：將 API 改為 HTTPS，或將網頁改為 HTTP/localhost 存取。');
+      }
+      
+      if (diagnosis.length === 0) {
+        diagnosis.push('無法連線到 API 伺服器，可能原因：');
+        diagnosis.push('1) API 伺服器未啟動（請確認 port 9000 有服務運行）');
+        diagnosis.push('2) Flask CORS 未正確配置（需允許此網頁來源）');
+        diagnosis.push('3) 防火牆或網絡設定阻擋了連線');
+      }
+      
+      return diagnosis.join('<br>');
+    }
+    
+    function showDiagnostic(show) {
+      const box = document.getElementById('apiDiagnostic');
+      const text = document.getElementById('diagnosticText');
+      if (show) {
+        text.innerHTML = getApiDiagnostic();
+        box.style.display = 'block';
+      } else {
+        box.style.display = 'none';
+      }
+    }
+    
     // Network Status
     function updateNetworkStatus() {
       const statusEl = document.getElementById('networkStatus');
@@ -1143,16 +1233,33 @@
     window.addEventListener('online', () => {
       updateNetworkStatus();
       addLog('info', '網絡已恢復連線');
-      if (document.getElementById('tab-scrape').classList.contains('active')) {
-        setStatus('網絡已恢復，自動刷新中...', 'loading');
-        setTimeout(() => fetchData(true, true), 1000);
-      }
+      setStatus('網絡已恢復，自動重試中...', 'loading');
+      // 網絡恢復時自動重試 API
+      setTimeout(() => {
+        if (!isApiHealthy) {
+          addLog('retry', '網絡恢復，觸發自動重連');
+          fetchData(true, true);
+        }
+      }, 1000);
     });
     
     window.addEventListener('offline', () => {
       updateNetworkStatus();
       addLog('error', '網絡已斷開');
       setStatus('網絡已斷開', 'error');
+      isApiHealthy = false;
+    });
+    
+    // 頁面可見性變化時自動補抓（從背景切回前台）
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !isApiHealthy && currentScrapeData) {
+        const now = Date.now();
+        // 距離上次失敗超過 10 秒才重試，避免頻繁切換頁面導致暴衝
+        if (now - lastApiFailure > 10000) {
+          addLog('retry', '頁面重新可見，觸發自動重連');
+          fetchData(true, true);
+        }
+      }
     });
     
     // Loading Control
@@ -1251,7 +1358,7 @@
       
       if (stored && stored.data) {
         currentScrapeData = stored.data;
-        renderScrapeData(stored.data);
+        // ===== 關鍵修改：頁面載入時只還原靜態資料，不顯示「抓取結果」紅框區域 =====
         updateStaticData();
         updateStorageInfo();
         setStatus('已載入儲存資料', 'success');
@@ -1449,7 +1556,7 @@
             } else if (xhr.status === 404) {
               reject(new Error('HTTP 404: 書籍不存在'));
             } else {
-              let errMsg = `HTTP ${xhr.status}`;
+              let errMsg = `HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`;
               try {
                 if (xhr.responseText) {
                   const errBody = JSON.parse(xhr.responseText);
@@ -1757,14 +1864,26 @@
       addLog('success', '已滙出 JSON 檔案', `書籍數量: ${currentBookData.length}`);
     }
     
-    // Fetch Scrape Data
-    function fetchData(isAuto = false, saveToStorageFlag = false) {
+    // ===== 自動重試機制包裝 =====
+    function fetchData(isAuto = false, saveToStorageFlag = false, retryAttempt = 0) {
       const apiUrl = API_CONFIG.scraper + '/scrape';
       const apiDesc = '電子資源抓取 API (localhost:9000, endpoint=/scrape)';
       
+      // 清除之前的重試計時器
+      if (apiRetryTimer) {
+        clearTimeout(apiRetryTimer);
+        apiRetryTimer = null;
+      }
+      
       setLoading(true);
-      setStatus(isAuto ? '自動更新中...' : '手動更新中...', 'loading');
-      addLog('request', (isAuto ? '自動' : '手動') + '抓取電子資源', `POST ${apiUrl} | ${apiDesc}`);
+      const statusMsg = isAuto ? '自動更新中...' : (retryAttempt > 0 ? `自動重試 (${retryAttempt}/${MAX_RETRY})...` : '手動更新中...');
+      setStatus(statusMsg, 'loading');
+      
+      if (retryAttempt === 0) {
+        addLog('request', (isAuto ? '自動' : '手動') + '抓取電子資源', `POST ${apiUrl} | ${apiDesc}`);
+      } else {
+        addLog('retry', `第 ${retryAttempt} 次重試抓取`, `POST ${apiUrl} | ${apiDesc}`);
+      }
       
       const xhr = new XMLHttpRequest();
       xhr.open('POST', apiUrl, true);
@@ -1781,84 +1900,131 @@
         }
       }
       
+      function handleSuccess(result) {
+        isApiHealthy = true;
+        lastApiFailure = 0;
+        apiRetryCount = 0;
+        showDiagnostic(false);
+        
+        if (result.success && result.data) {
+          currentScrapeData = result.data;
+          // 僅在當前會話顯示抓取結果（紅框區域）
+          renderScrapeData(result.data);
+          updateStaticData();
+          
+          if (saveToStorageFlag) {
+            saveToStorage(result.data);
+          }
+          
+          setStatus(isAuto ? '自動更新完成' : '手動更新完成', 'success');
+          addLog('response', '電子資源抓取成功', 
+            `${apiDesc} | 電子書: ${result.data.ebooks?.length || 0} 個 | 資料庫: ${result.data.edatabases?.length || 0} 個`);
+          
+          if (isAuto && isFirstLoad) {
+            isFirstLoad = false;
+          }
+        } else {
+          setStatus('數據格式錯誤', 'error');
+          addLog('error', 'API 回應格式錯誤', `${apiDesc} | 回應: ${JSON.stringify(result).substring(0, 200)}`);
+        }
+        finish();
+      }
+      
+      function handleError(status, statusText, responseText, isNetworkError, isTimeout) {
+        isApiHealthy = false;
+        lastApiFailure = Date.now();
+        
+        // 構建詳細錯誤診斷
+        let errorDetail = '';
+        let diagnosis = '';
+        
+        if (isNetworkError) {
+          errorDetail = `無法連接到 API 伺服器 | 請檢查：1) 網絡連線 2) API 伺服器(Scraper)是否已啟動在 port 9000 3) Flask CORS 是否正確配置`;
+          diagnosis = getApiDiagnostic();
+        } else if (isTimeout) {
+          errorDetail = `30秒內未收到回應，請確認 Flask Scraper 服務正在運行`;
+        } else {
+          errorDetail = `HTTP ${status} - ${statusText || '未知錯誤'}`;
+          if (responseText) {
+            try {
+              const errorJson = JSON.parse(responseText);
+              if (errorJson.error || errorJson.message) {
+                errorDetail += ` | 伺服器訊息: ${errorJson.error || errorJson.message}`;
+              }
+            } catch (e) {
+              errorDetail += ` | 回應: ${responseText.substring(0, 500)}`;
+            }
+          } else {
+            errorDetail += ' | 回應內容為空';
+          }
+          
+          // HTTP 狀態碼診斷
+          if (status === 0) {
+            diagnosis = getApiDiagnostic();
+            errorDetail += ' | [診斷] 瀏覽器攔截了請求（可能是 CORS、混合內容、或 localhost 不可達）';
+          } else if (status === 400) {
+            errorDetail += ' | [診斷] 請求格式錯誤：可能是缺少必要參數、JSON 格式不正確、或 API Key 無效';
+          } else if (status === 401) {
+            errorDetail += ' | [診斷] 未授權：API Key 可能已過期或無效';
+          } else if (status === 403) {
+            errorDetail += ' | [診斷] 拒絕存取：沒有權限呼叫此 API';
+          } else if (status === 404) {
+            errorDetail += ' | [診斷] 端點不存在：請檢查 endpoint 路徑是否正確';
+          } else if (status === 500) {
+            errorDetail += ' | [診斷] 伺服器內部錯誤：後端服務可能異常';
+          } else if (status === 502) {
+            errorDetail += ' | [診斷] 閘道錯誤：後端服務 (localhost:9000) 可能未啟動';
+          } else if (status === 503) {
+            errorDetail += ' | [診斷] 服務不可用：後端服務可能過載或維護中';
+          }
+        }
+        
+        setStatus('連接失敗 (' + status + ')', 'error');
+        addLog('error', isNetworkError ? 'API 網絡錯誤' : 'API 連接失敗', `${apiDesc} | ${errorDetail}`);
+        
+        // 顯示診斷提示
+        if (diagnosis) {
+          showDiagnostic(true);
+        }
+        
+        // ===== 自動重試邏輯 =====
+        if (retryAttempt < MAX_RETRY) {
+          const delay = RETRY_DELAYS[retryAttempt] || 12000;
+          addLog('retry', `將於 ${delay/1000} 秒後自動重試 (${retryAttempt + 1}/${MAX_RETRY})...`);
+          setStatus(`連接失敗，${delay/1000}秒後重試...`, 'loading');
+          
+          apiRetryTimer = setTimeout(() => {
+            fetchData(isAuto, saveToStorageFlag, retryAttempt + 1);
+          }, delay);
+        } else {
+          setStatus('API 連接失敗，已達最大重試次數', 'error');
+          addLog('error', '已達最大重試次數', `${apiDesc} | 請檢查 API 伺服器狀態後手動重試`);
+        }
+        
+        finish();
+      }
+      
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
             try {
               const result = JSON.parse(xhr.responseText);
-              if (result.success && result.data) {
-                currentScrapeData = result.data;
-                renderScrapeData(result.data);
-                updateStaticData();
-                
-                if (saveToStorageFlag) {
-                  saveToStorage(result.data);
-                }
-                
-                setStatus(isAuto ? '自動更新完成' : '手動更新完成', 'success');
-                addLog('response', '電子資源抓取成功', 
-                  `${apiDesc} | 電子書: ${result.data.ebooks?.length || 0} 個 | 資料庫: ${result.data.edatabases?.length || 0} 個`);
-                
-                if (isAuto && isFirstLoad) {
-                  isFirstLoad = false;
-                }
-              } else {
-                setStatus('數據格式錯誤', 'error');
-                addLog('error', 'API 回應格式錯誤', `${apiDesc} | 回應: ${JSON.stringify(result).substring(0, 200)}`);
-              }
+              handleSuccess(result);
             } catch (e) {
-              setStatus('解析失敗', 'error');
-              addLog('error', 'JSON 解析失敗', `${apiDesc} | ${e.message}`);
+              handleError(xhr.status, xhr.statusText, xhr.responseText, false, false);
             }
           } else {
-            // 嘗試讀取錯誤回應內容
-            let errorDetail = `HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`;
-            let responsePreview = '';
-            try {
-              if (xhr.responseText) {
-                responsePreview = xhr.responseText.substring(0, 500);
-                // 嘗試解析 JSON 錯誤回應
-                const errorJson = JSON.parse(xhr.responseText);
-                if (errorJson.error || errorJson.message) {
-                  errorDetail += ` | 伺服器訊息: ${errorJson.error || errorJson.message}`;
-                } else {
-                  errorDetail += ` | 回應: ${JSON.stringify(errorJson).substring(0, 300)}`;
-                }
-              } else {
-                errorDetail += ' | 回應內容為空';
-              }
-            } catch (e) {
-              // 非 JSON 回應，直接顯示文字
-              if (xhr.responseText) {
-                errorDetail += ` | 回應: ${responsePreview}`;
-              }
-            }
-            
-            // 根據 HTTP 狀態碼給出更具體的診斷
-            let diagnosis = '';
-            if (xhr.status === 400) diagnosis = ' | [診斷] 請求格式錯誤：可能是缺少必要參數、JSON 格式不正確、或 API Key 無效';
-            else if (xhr.status === 401) diagnosis = ' | [診斷] 未授權：API Key 可能已過期或無效';
-            else if (xhr.status === 403) diagnosis = ' | [診斷] 拒絕存取：沒有權限呼叫此 API';
-            else if (xhr.status === 404) diagnosis = ' | [診斷] 端點不存在：請檢查 endpoint 路徑是否正確';
-            else if (xhr.status === 500) diagnosis = ' | [診斷] 伺服器內部錯誤：後端服務可能異常';
-            else if (xhr.status === 502) diagnosis = ' | [診斷] 閘道錯誤：後端服務 (localhost:9000) 可能未啟動';
-            else if (xhr.status === 503) diagnosis = ' | [診斷] 服務不可用：後端服務可能過載或維護中';
-            
-            setStatus('連接失敗 (' + xhr.status + ')', 'error');
-            addLog('error', 'API 連接失敗', `${apiDesc} | ${errorDetail}${diagnosis}`);
+            handleError(xhr.status, xhr.statusText, xhr.responseText, false, false);
           }
-          finish();
         }
       };
-      xhr.onerror = () => { 
-        setStatus('網絡錯誤', 'error'); 
-        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 localhost:9000，請檢查：1) 網絡連線 2) API 伺服器(Scraper)是否已啟動在 port 9000 3) Flask CORS 是否正確配置`);
-        finish();
+      
+      xhr.onerror = () => {
+        handleError(0, 'Network Error', '', true, false);
       };
+      
       xhr.ontimeout = () => {
-        setStatus('請求逾時', 'error');
-        addLog('error', 'API 請求逾時', `${apiDesc} | 30秒內未收到回應，請確認 Flask Scraper 服務正在運行`);
-        finish();
+        handleError(0, 'Timeout', '', false, true);
       };
       
       try {
@@ -1869,12 +2035,13 @@
       }
     }
     
+    // 僅在當前會話顯示抓取結果（頁面刷新後不保留）
     function renderScrapeData(data) {
       const ebooks = data.ebooks || [];
       const databases = data.edatabases || [];
       const total = ebooks.length + databases.length;
       
-      // 顯示結果區塊
+      // 顯示結果區塊（僅本次會話）
       const resultSection = document.getElementById('resultSection');
       const resultContent = document.getElementById('resultContent');
       const resultCount = document.getElementById('resultCount');
