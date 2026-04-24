@@ -12,18 +12,24 @@ export default async function handler(req, res) {
 
   const { endpoint, target } = req.query;
   
-  if (!target || !['8000', '8081'].includes(target)) {
+  // 【修改】加入 9000 到允許的 port 列表
+  if (!target || !['8000', '8081', '9000'].includes(target)) {
     return res.status(400).json({ 
       success: false, 
       error: 'Invalid target port',
-      detail: 'Allowed ports: 8000 (scraper), 8081 (book query)'
+      detail: 'Allowed ports: 8000 (scraper), 8081 (book query), 9000 (ebook API)'
     });
   }
 
   // 從環境變量獲取配置
-  const baseURL = target === '8000' 
-    ? (process.env.WKY_API_8000 || process.env.HKPL_SCRAPER_URL) 
-    : (process.env.WKY_API_8081 || process.env.HKPL_BOOK_API_URL);
+  let baseURL;
+  if (target === '8000') {
+    baseURL = process.env.WKY_API_8000 || process.env.HKPL_SCRAPER_URL;
+  } else if (target === '8081') {
+    baseURL = process.env.WKY_API_8081 || process.env.HKPL_BOOK_API_URL;
+  } else if (target === '9000') {
+    baseURL = process.env.WKY_API_9000 || process.env.HKPL_EBOOK_API_URL;
+  }
   
   const apiKey = process.env.API_KEY || 'HKPL2024SecureKey';
 
@@ -64,10 +70,9 @@ export default async function handler(req, res) {
       }
     } else if (target === '8081') {
       // API 2: 圖書查詢服務 (Port 8081)
-      // 【修改1】顯式處理書籍查詢路徑 book/{id}
       if (endpoint && endpoint.startsWith('book/')) {
         targetURL = `${baseURL}/${endpoint}`;
-        fetchOptions.method = 'GET'; // 明確使用 GET
+        fetchOptions.method = 'GET';
         console.log(`[Proxy] Book query: ${endpoint}`);
       } else if (endpoint === 'check' || endpoint === 'PublicCheckStatus') {
         targetURL = `${baseURL}/PublicCheckStatus`;
@@ -78,9 +83,25 @@ export default async function handler(req, res) {
         targetURL = `${baseURL}/health`;
         fetchOptions.method = 'GET';
       } else {
-        // 【修改2】默認處理，保留原始 HTTP 方法
         targetURL = `${baseURL}${endpoint ? '/' + endpoint : ''}`;
       }
+    } else if (target === '9000') {
+      // 【新增】API 3: 電子資源抓取服務 (Port 9000)
+      if (endpoint === 'scrape') {
+        targetURL = `${baseURL}/scrape`;
+        fetchOptions.method = 'POST';
+        fetchOptions.body = JSON.stringify(req.body || {});
+      } else if (endpoint === 'health') {
+        targetURL = `${baseURL}/health`;
+        fetchOptions.method = 'GET';
+      } else {
+        // 默認透傳，保留原始 HTTP 方法
+        targetURL = `${baseURL}${endpoint ? '/' + endpoint : ''}`;
+        if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+          fetchOptions.body = JSON.stringify(req.body || {});
+        }
+      }
+      console.log(`[Proxy] Ebook API: ${fetchOptions.method} ${targetURL}`);
     }
 
     // 超時控制 (30秒)
@@ -114,7 +135,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 智能透傳邏輯（保留原有）
+    // 智能透傳邏輯
     const isStandardFormat = (
       typeof backendData === 'object' && 
       backendData !== null &&
@@ -134,7 +155,7 @@ export default async function handler(req, res) {
       }
       return res.status(response.status).json(backendData);
     } else {
-      // 8081 API 返回的是非標準格式（直接是書籍對象），需要包裝
+      // 非標準格式（直接是書籍對象或電子資源數據），需要包裝
       console.log('[Proxy] Wrapping non-standard response');
       return res.status(response.status).json({
         success: response.ok,
