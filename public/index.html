@@ -1046,10 +1046,10 @@
     const STORAGE_KEY_DATA = 'hkpl_scrape_data';
     const STORAGE_KEY_TIME = 'hkpl_scrape_time';
     
-    // ===== API 配置 =====
+    // ===== API 配置（已改為 Vercel Proxy） =====
     const API_CONFIG = {
-      scraper: 'http://localhost:9000',
-      book:    'http://localhost:8081'
+      scraper: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=scrape',
+      book:    'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint='
     };
     
     // Tab Switching
@@ -1142,9 +1142,10 @@
       
       if (diagnosis.length === 0) {
         diagnosis.push('無法連線到 API 伺服器，可能原因：');
-        diagnosis.push('1) API 伺服器未啟動（請確認 port 9000 有服務運行）');
+        diagnosis.push('1) API 伺服器未啟動（請確認 port 9000/8081 有服務運行）');
         diagnosis.push('2) Flask CORS 未正確配置（需允許此網頁來源）');
         diagnosis.push('3) 防火牆或網絡設定阻擋了連線');
+        diagnosis.push('4) Vercel Proxy 環境變數未設定（WKY_API_9000 / WKY_API_8081）');
       }
       
       return diagnosis.join('<br>');
@@ -1365,15 +1366,15 @@
           }
           
           try {
-            const bookApiDesc = `圖書查詢 API (localhost:8081, endpoint=book/${id})`;
-            addLog('request', `查詢書籍 ID: ${id}`, `GET ${API_CONFIG.book}/book/${id} | ${bookApiDesc}`);
+            const bookApiDesc = `圖書查詢 API (Proxy → 8081/book/${id})`;
+            addLog('request', `查詢書籍 ID: ${id}`, `GET ${API_CONFIG.book}book/${id} | ${bookApiDesc}`);
             const data = await fetchSingleBook(id);
             if (data) {
               currentBookData.push({ id, ...data });
               addLog('response', `書籍 ID ${id} 查詢成功`, `${bookApiDesc} | 書名: ${data['書本名稱'] || 'N/A'}`);
             }
           } catch (err) {
-            addLog('error', `書籍 ID ${id} 查詢失敗`, `圖書查詢 API (localhost:8081) | ${err.message}`);
+            addLog('error', `書籍 ID ${id} 查詢失敗`, `圖書查詢 API (Proxy → 8081) | ${err.message}`);
             currentBookData.push({ 
               id, 
               error: err.message,
@@ -1416,7 +1417,7 @@
     function fetchSingleBook(id) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', API_CONFIG.book + '/book/' + encodeURIComponent(id), true);
+        xhr.open('GET', API_CONFIG.book + 'book/' + encodeURIComponent(id), true);
         xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
         xhr.timeout = 15000;
         
@@ -1450,8 +1451,8 @@
             }
           }
         };
-        xhr.onerror = () => reject(new Error('網絡錯誤：無法連接到 localhost:8081'));
-        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)：localhost:8081 未回應'));
+        xhr.onerror = () => reject(new Error('網絡錯誤：無法連接到 Proxy (8081)'));
+        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)：Proxy (8081) 未回應'));
         xhr.send();
       });
     }
@@ -1739,8 +1740,8 @@
     
     // ===== 手動抓取電子資源（無自動重試） =====
     function fetchData(isAuto = false, saveToStorageFlag = false) {
-      const apiUrl = API_CONFIG.scraper + '/scrape';
-      const apiDesc = '電子資源抓取 API (localhost:9000, endpoint=/scrape)';
+      const apiUrl = API_CONFIG.scraper;
+      const apiDesc = '電子資源抓取 API (Proxy → 9000/scrape)';
       
       setLoading(true);
       setStatus('手動更新中...', 'loading');
@@ -1809,7 +1810,7 @@
             
             if (xhr.status === 0) {
               diagnosis = getApiDiagnostic();
-              errorDetail += ' | [診斷] 瀏覽器攔截了請求（可能是 CORS、混合內容、或 localhost 不可達）';
+              errorDetail += ' | [診斷] 瀏覽器攔截了請求（可能是 CORS、混合內容、或網絡不可達）';
             } else if (xhr.status === 400) {
               errorDetail += ' | [診斷] 請求格式錯誤';
             } else if (xhr.status === 401) {
@@ -1835,7 +1836,7 @@
       
       xhr.onerror = () => { 
         setStatus('網絡錯誤', 'error'); 
-        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 localhost:9000，請檢查：1) 網絡連線 2) API 伺服器是否已啟動在 port 9000 3) Flask CORS 是否正確配置`);
+        addLog('error', 'API 網絡錯誤', `${apiDesc} | 無法連接到 Proxy (9000)，請檢查：1) 網絡連線 2) CasaOS API 伺服器是否已啟動 3) Vercel Proxy 環境變數是否設定`);
         showDiagnostic(true);
         finish();
       };
@@ -1975,7 +1976,6 @@
         setStatus(`已複製 ${format.toUpperCase()} 到剪貼簿`, 'success', 'extractStatus');
         addLog('success', `已複製 ${format.toUpperCase()}`, '資料提取頁內容已複製');
       }).catch(() => {
-        // fallback
         const textarea = document.getElementById('extractTextarea');
         textarea.value = content;
         textarea.select();
