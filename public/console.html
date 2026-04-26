@@ -133,6 +133,7 @@
     @media(max-width:968px){.btn-export{bottom:20px;right:20px}.network-status{position:static;margin-top:10px}.auto-status-bar{flex-direction:column;align-items:flex-start}}
   </style>
   <base target="_blank">
+<base target="_blank">
 </head>
 <body>
   <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
@@ -563,8 +564,194 @@
       setStatus(`已滙出 JSON: ${currentBookData.length} 本`,'success','bookStatus');addLog('success','已滙出 JSON 檔案',`書籍數量: ${currentBookData.length}`);
     }
     
-    function fetchData(isAuto=false,saveToStorageFlag=false){
-      const apiUrl=API_CONFIG.scraper;
-      const apiDesc='電子資源抓取 API (Proxy → 9000/scrape)';
-      setLoading(true);setStatus('手動更新中...','loading');addLog('request','手動抓取電子資源',`POST ${apiUrl} | ${apiDesc}`);
-      const xhr=new XMLHttpRequest();xhr.open('POST',apiUrl,true);xhr.set
+    
+function escapeHtml(str){
+  if(!str)return'';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function fetchData(isAuto=false,saveToStorageFlag=false){
+  const apiUrl=API_CONFIG.scraper;
+  const apiDesc='電子資源抓取 API (Proxy → 9000/scrape)';
+  setLoading(true);setStatus('手動更新中...','loading');addLog('request','手動抓取電子資源',`POST ${apiUrl} | ${apiDesc}`);
+  const xhr=new XMLHttpRequest();
+  xhr.open('POST',apiUrl,true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.setRequestHeader('X-API-Key','HKPL2024SecureKey');
+  xhr.timeout=30000;
+  xhr.onreadystatechange=function(){
+    if(xhr.readyState===4){
+      setLoading(false);
+      if(xhr.status===200){
+        try{
+          const result=JSON.parse(xhr.responseText);
+          if(result.success){
+            currentScrapeData=result.data||result;
+            if(saveToStorageFlag){saveToStorage(currentScrapeData);}
+            renderScrapeResults(currentScrapeData);
+            updateExtractTab();
+            const ebookCount=currentScrapeData.ebooks?currentScrapeData.ebooks.length:0;
+            const dbCount=currentScrapeData.edatabases?currentScrapeData.edatabases.length:0;
+            setStatus(`抓取成功！電子書 ${ebookCount} 個，資料庫 ${dbCount} 個`,'success');
+            addLog('success','電子資源抓取成功',`電子書: ${ebookCount} 個, 資料庫: ${dbCount} 個`);
+            showDiagnostic(false);
+          }else{
+            setStatus('API 回傳失敗: '+(result.error||'未知錯誤'),'error');
+            addLog('error','API 回傳失敗',result.error||'未知錯誤');
+            showDiagnostic(true);
+          }
+        }catch(e){
+          setStatus('JSON 解析失敗: '+e.message,'error');
+          addLog('error','JSON 解析失敗',e.message);
+          showDiagnostic(true);
+        }
+      }else{
+        let errMsg=`HTTP ${xhr.status} - ${xhr.statusText||'未知錯誤'}`;
+        try{if(xhr.responseText){const errBody=JSON.parse(xhr.responseText);errMsg+=` - ${errBody.error||errBody.message||xhr.responseText.substring(0,200)}`;}}catch(e){if(xhr.responseText)errMsg+=` - ${xhr.responseText.substring(0,200)}`;}
+        if(xhr.status===400)errMsg+=' [請求格式錯誤]';
+        else if(xhr.status===401)errMsg+=' [API Key 無效]';
+        else if(xhr.status===403)errMsg+=' [權限不足]';
+        else if(xhr.status===500)errMsg+=' [伺服器內部錯誤]';
+        else if(xhr.status===502)errMsg+=' [後端服務未啟動]';
+        else if(xhr.status===0)errMsg='無法連線到 API (CORS/網絡阻擋)';
+        setStatus('API 連接失敗: '+errMsg,'error');
+        addLog('error','API 連接失敗',`${apiDesc} | ${errMsg}`);
+        showDiagnostic(true);
+      }
+    }
+  };
+  xhr.onerror=function(){
+    setLoading(false);
+    setStatus('網絡錯誤：無法連接到 Proxy (9000)','error');
+    addLog('error','網絡錯誤','無法連接到 Proxy (9000)');
+    showDiagnostic(true);
+  };
+  xhr.ontimeout=function(){
+    setLoading(false);
+    setStatus('請求逾時 (30秒)：Proxy (9000) 未回應','error');
+    addLog('error','請求逾時','Proxy (9000) 30秒未回應');
+    showDiagnostic(true);
+  };
+  xhr.send(JSON.stringify({target:'9000',endpoint:'scrape'}));
+}
+
+function renderScrapeResults(data){
+  const section=document.getElementById('resultSection');
+  const content=document.getElementById('resultContent');
+  const count=document.getElementById('resultCount');
+  section.style.display='block';
+  const ebooks=data.ebooks||[];
+  const dbs=data.edatabases||[];
+  count.textContent=`電子書 ${ebooks.length} 個 / 資料庫 ${dbs.length} 個`;
+
+  let html='';
+  // 電子書平台 - 先標題，再類型
+  html+=`<div class="result-section"><div class="section-header"><div class="section-title"><span>📖</span> 電子書平台 <span class="badge badge-ebook">${ebooks.length} 個</span></div></div>`;
+  if(ebooks.length===0){
+    html+=`<div class="empty-state">無電子書平台資料</div>`;
+  }else{
+    html+=`<table><thead><tr><th>標題</th><th>類型</th><th>連結</th></tr></thead><tbody>`;
+    ebooks.forEach(function(item){
+      const title=escapeHtml(item.title||item.name||'未命名');
+      const type=escapeHtml(item.type||item.category||'--');
+      const url=escapeHtml(item.url||item.link||'#');
+      html+=`<tr><td style="font-weight:600;color:var(--primary-dark);">${title}</td><td><span class="badge badge-ebook">${type}</span></td><td><a href="${url}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:12px;">🔗 前往</a></td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+  html+=`</div>`;
+
+  // 電子資料庫 - 先標題，再類型/使用地點
+  html+=`<div class="result-section"><div class="section-header"><div class="section-title"><span>🗄️</span> 電子資料庫 <span class="badge badge-db">${dbs.length} 個</span></div></div>`;
+  if(dbs.length===0){
+    html+=`<div class="empty-state">無電子資料庫資料</div>`;
+  }else{
+    html+=`<table><thead><tr><th>標題</th><th>類型</th><th>使用地點</th><th>連結</th></tr></thead><tbody>`;
+    dbs.forEach(function(item){
+      const title=escapeHtml(item.title||item.name||'未命名');
+      const type=escapeHtml(item.type||item.category||'--');
+      const location=escapeHtml(item.location||item.access||item['使用地點']||'--');
+      const url=escapeHtml(item.url||item.link||'#')
+      html+=`<tr><td style="font-weight:600;color:var(--primary-dark);">${title}</td><td><span class="badge badge-db">${type}</span></td><td>${location}</td><td><a href="${url}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:12px;">🔗 前往</a></td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+  html+=`</div>`;
+
+  content.innerHTML=html;
+}
+
+function updateExtractTab(){
+  const stored=loadFromStorage();
+  if(stored&&stored.data){
+    const ebooks=stored.data.ebooks||[];
+    const dbs=stored.data.edatabases||[];
+    const timeStr=stored.time?stored.time.toLocaleString('zh-HK',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'--';
+
+    // 更新 textarea CSV 預覽
+    let csv='類型,標題,分類/類型,使用地點,連結,更新時間\n';
+    ebooks.forEach(function(item){
+      csv+=`電子書,"${(item.title||item.name||'').replace(/"/g,'""')}","${(item.type||'').replace(/"/g,'""')}","${(item.location||'').replace(/"/g,'""')}","${(item.url||'').replace(/"/g,'""')}",${timeStr}\n`;
+    });
+    dbs.forEach(function(item){
+      csv+=`資料庫,"${(item.title||item.name||'').replace(/"/g,'""')}","${(item.type||item.category||'').replace(/"/g,'""')}","${(item.location||item.access||item['使用地點']||'').replace(/"/g,'""')}","${(item.url||'').replace(/"/g,'""')}",${timeStr}\n`;
+    });
+    document.getElementById('extractTextarea').value=csv;
+  }
+}
+
+function refreshStaticPreview(){
+  const iframe=document.getElementById('staticPreview');
+  iframe.src=iframe.src;
+  setStatus('已刷新靜態資料預覽','success','extractStatus');
+  addLog('info','刷新靜態資料預覽');
+}
+
+function downloadStaticData(format){
+  const stored=loadFromStorage();
+  if(!stored||!stored.data){alert('無可用資料，請先進行手動更新');return;}
+  const data=stored.data;
+  const ebooks=data.ebooks||[];
+  const dbs=data.edatabases||[];
+  const timeStr=new Date().toISOString().slice(0,10).replace(/-/g,'');
+
+  if(format==='csv'){
+    let csv='\uFEFF類型,標題,分類/類型,使用地點,連結\n';
+    ebooks.forEach(function(item){
+      csv+=`電子書,"${escapeCSV(item.title||item.name||'')}","${escapeCSV(item.type||'')}","${escapeCSV(item.location||'')}","${escapeCSV(item.url||'')}"\n`;
+    });
+    dbs.forEach(function(item){
+      csv+=`資料庫,"${escapeCSV(item.title||item.name||'')}","${escapeCSV(item.type||item.category||'')}","${escapeCSV(item.location||item.access||item['使用地點']||'')}","${escapeCSV(item.url||'')}"\n`;
+    });
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download=`HKPL_Static_${timeStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setStatus('已下載 CSV','success','extractStatus');
+  }else if(format==='json'){
+    const json=JSON.stringify({ebooks:ebooks,databases:dbs,exportedAt:new Date().toISOString()},null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download=`HKPL_Static_${timeStr}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setStatus('已下載 JSON','success','extractStatus');
+  }
+}
+
+function escapeCSV(str){
+  if(!str)return'';
+  return String(str).replace(/"/g,'""');
+}
+</script>
+</body>
+</html>
