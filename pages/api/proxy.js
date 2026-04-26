@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     // ==================== 9000 電子資源 ====================
     if (target === '9000') {
       
-      // 【Excel 備用】透傳靜態 HTML（不做 JSON 解析）
+      // 【新增】Excel 專用靜態 HTML（直接透傳，不解析 JSON）
       if (endpoint === 'static-html') {
         targetURL = `${baseURL}/static-html`;
         fetchOptions.method = 'GET';
@@ -96,12 +96,6 @@ export default async function handler(req, res) {
       if (endpoint && endpoint.startsWith('book/')) {
         targetURL = `${baseURL}/${endpoint}`;
         fetchOptions.method = 'GET';
-        console.log(`[Proxy] Book query: ${endpoint}`);
-      } else if (endpoint === 'check' || endpoint === 'PublicCheckStatus') {
-        targetURL = `${baseURL}/PublicCheckStatus`;
-        fetchOptions.method = 'POST';
-        const { ph } = req.body || {};
-        fetchOptions.body = JSON.stringify({ ph });
       } else if (endpoint === 'health') {
         targetURL = `${baseURL}/health`;
         fetchOptions.method = 'GET';
@@ -116,12 +110,6 @@ export default async function handler(req, res) {
         targetURL = `${baseURL}/scrape`;
         fetchOptions.method = 'POST';
         fetchOptions.body = JSON.stringify({});
-      } else if (endpoint === 'scrape-simple') {
-        targetURL = `${baseURL}/scrape-simple`;
-        fetchOptions.method = 'POST';
-      } else if (endpoint === 'health') {
-        targetURL = `${baseURL}/health`;
-        fetchOptions.method = 'GET';
       } else {
         targetURL = `${baseURL}${endpoint ? '/' + endpoint : ''}`;
       }
@@ -130,23 +118,18 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
 
-    console.log(`[Proxy] ${fetchOptions.method} ${targetURL}`);
-    
     const response = await fetch(targetURL, {
       ...fetchOptions,
       signal: controller.signal,
     });
     
     clearTimeout(timeout);
-
     const responseText = await response.text();
     let backendData;
     
     try {
       backendData = JSON.parse(responseText);
-      console.log(`[Proxy] Response from ${target}:`, JSON.stringify(backendData).substring(0, 200) + '...');
     } catch (parseError) {
-      console.error('[Proxy] JSON parse error:', parseError);
       return res.status(502).json({
         success: false,
         error: 'Invalid JSON response from backend',
@@ -164,17 +147,8 @@ export default async function handler(req, res) {
     );
 
     if (isStandardFormat) {
-      console.log('[Proxy] Passing through standard format response');
-      if (process.env.NODE_ENV !== 'production') {
-        backendData._proxy = {
-          target: target,
-          endpoint: endpoint,
-          timestamp: new Date().toISOString()
-        };
-      }
       return res.status(response.status).json(backendData);
     } else {
-      console.log('[Proxy] Wrapping non-standard response');
       return res.status(response.status).json({
         success: response.ok,
         data: backendData,
@@ -188,8 +162,6 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    console.error('[Proxy] Error:', error);
-    
     let statusCode = 500;
     let errorType = 'Unknown Error';
     
