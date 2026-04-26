@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "public": true,
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
-  ]
-}
