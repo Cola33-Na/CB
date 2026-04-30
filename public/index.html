@@ -605,7 +605,8 @@
     function parseBookIds() {
       const input = document.getElementById('bookInput').value;
       const ids = input.split(/[\n\r,،\s\t]+/).map(id => id.trim()).filter(id => id.length > 0 && /^\d+$/.test(id));
-      return [...new Set(ids)];
+      // 移除 new Set(ids) 去重，保留所有輸入的 ID（包括重複）
+      return ids;
     }
 
     function clearBookInput() {
