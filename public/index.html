@@ -365,7 +365,7 @@
         </p>
       </div>
 
-      <div class="storage-info" style="background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%); border-left-color: var(--warning); color: #856404;">
+      <div class="storage-info" style="background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%); border-left-color: var(--warning); color: #92400e;">
         <span>
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
             <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7a5.002 5.002 0 0 0-3.005-4.901z"/>
@@ -382,12 +382,6 @@
         <button class="btn btn-sm btn-info" onclick="copyStaticData('json')">📋 複製 JSON</button>
         <button class="btn btn-sm btn-secondary" onclick="downloadStaticData('csv')">💾 下載 CSV</button>
         <button class="btn btn-sm btn-warning" onclick="downloadStaticHTML()">📄 下載靜態 HTML（Excel 專用）</button>
-        
-        <!-- 【修改】改為純前端 button，不依賴後端 /download-html -->
-        <button class="btn btn-sm btn-warning" onclick="downloadStaticHTML()" title="直接下載當前表格資料的 HTML 檔案，無需後端連線">
-          ⬇️ 下載
-        </button>
-        
         <span class="status" id="extractStatus" style="display: none; margin-left: auto;"></span>
       </div>
 
@@ -591,6 +585,7 @@
       const stored = loadFromStorage();
       if (stored && stored.data) {
         currentScrapeData = stored.data;
+        // 關鍵：初始化時立即更新資料提取頁
         updateExtractTab();
         updateStorageInfo();
         setStatus('已載入儲存資料', 'success');
@@ -610,6 +605,7 @@
     function parseBookIds() {
       const input = document.getElementById('bookInput').value;
       const ids = input.split(/[\n\r,،\s\t]+/).map(id => id.trim()).filter(id => id.length > 0 && /^\d+$/.test(id));
+      // 移除 new Set(ids) 去重，保留所有輸入的 ID（包括重複）
       return ids;
     }
 
@@ -726,7 +722,7 @@
               let errMsg = `HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`;
               try {
                 const errBody = JSON.parse(xhr.responseText);
-                if (errBody.error || errBody.message) errMsg += ` - ${errBody.error || errBody.message || xhr.responseText.substring(0, 200)}`;
+                errMsg += ` - ${errBody.error || errBody.message || xhr.responseText.substring(0, 200)}`;
               } catch (e) { if (xhr.responseText) errMsg += ` - ${xhr.responseText.substring(0, 200)}`; }
               reject(new Error(errMsg));
             }
@@ -945,6 +941,7 @@
                 const data = result.data || result;
                 currentScrapeData = data;
                 renderScrapeData(data);
+                // 關鍵：抓取成功後立即更新靜態資料頁
                 updateExtractTab();
                 if (saveToStorageFlag) saveToStorage(data);
                 setStatus('手動更新完成', 'success');
@@ -1113,70 +1110,29 @@
       addLog('success', `已下載 ${format.toUpperCase()}`, `檔名: HKPL_Data_${date}.${format}`);
     }
 
-    // 【核心修改】downloadStaticHTML：純前端生成，不依賴後端
     function downloadStaticHTML() {
-      // 優先使用 currentScrapeData，若無則嘗試從 localStorage 讀取
-      let data = currentScrapeData;
-      if (!data) {
-        try {
-          const stored = localStorage.getItem(STORAGE_KEY_DATA);
-          if (stored) data = JSON.parse(stored);
-        } catch (e) { /* ignore */ }
-      }
-      
-      if (!data || (!data.ebooks?.length && !data.edatabases?.length)) {
-        setStatus('無資料，請先到「電子資源」頁點擊「手動更新」抓取資料', 'error', 'extractStatus');
-        addLog('error', '下載 HTML 失敗', '無可用資料');
-        return;
-      }
-
-      const ebooks = data.ebooks || [];
-      const databases = data.edatabases || [];
+      if (!currentScrapeData) { setStatus('無資料，請先抓取', 'error', 'extractStatus'); return; }
+      const ebooks = currentScrapeData.ebooks || [];
+      const databases = currentScrapeData.edatabases || [];
       const total = ebooks.length + databases.length;
       const now = new Date();
       const timeStr = now.toLocaleString('zh-HK');
       const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
 
-      // 安全轉義函數
-      const esc = (s) => {
-        if (!s) return '';
-        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      };
-
       let tableRows = '';
-      
-      // 電子書
       ebooks.forEach(item => {
-        const title = esc(item.title);
-        const link = esc(item.link);
-        const cat = esc(item.category || '電子書');
-        const desc = esc(item.description || '--');
-        tableRows += `<tr>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${cat}</td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">${title}</td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;">
-            <a href="${link || '#'}" target="_blank" style="color:#667eea;text-decoration:none;">${link || '--'}</a>
-          </td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${cat}</td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${desc}</td>
-        </tr>`;
+        const title = String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const link = String(item.link || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const cat = String(item.category || '電子書').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const desc = String(item.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        tableRows += `<tr><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${cat}</td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">${title}</td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="${link}" target="_blank">${link}</a></td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${cat}</td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${desc}</td></tr>`;
       });
-      
-      // 資料庫
       databases.forEach(item => {
-        const title = esc(item.title);
-        const link = esc(item.link);
-        const locs = (item.locations || []).map(l => esc(l)).join('; ');
-        const tags = (item.tags || []).slice(0, 5).map(t => esc(t)).join(', ') + ((item.tags || []).length > 5 ? '...' : '');
-        tableRows += `<tr>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">資料庫</td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">${title}</td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;">
-            <a href="${link || '#'}" target="_blank" style="color:#667eea;text-decoration:none;">${link || '--'}</a>
-          </td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${locs}</td>
-          <td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${tags}</td>
-        </tr>`;
+        const title = String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const link = String(item.link || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const locs = (item.locations || []).map(l => String(l).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join('; ');
+        const tags = (item.tags || []).slice(0, 5).map(t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join(', ') + ((item.tags || []).length > 5 ? '...' : '');
+        tableRows += `<tr><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">資料庫</td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;">${title}</td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;font-size:12px;"><a href="${link}" target="_blank">${link}</a></td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${locs}</td><td style="padding:10px 16px;border-bottom:1px solid #e2e8f0;">${tags}</td></tr>`;
       });
 
       const html = `<!DOCTYPE html>
@@ -1185,16 +1141,14 @@
 <meta charset="UTF-8">
 <title>HKPL 資料提取 - ${timeStr}</title>
 <style>
-  body { font-family: -apple-system, "Microsoft YaHei", "PingFang HK", sans-serif; padding: 20px; color: #2d3748; background: #f7fafc; }
-  h1 { font-size: 20px; margin-bottom: 6px; color: #1a202c; }
-  .meta { color: #718096; font-size: 13px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-  th { background: #f0fff4; padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid #48bb78; border-right: 1px solid #c6f6d5; }
-  td { padding: 10px 16px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #edf2f7; vertical-align: top; }
+  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; padding: 20px; color: #2d3748; }
+  h1 { font-size: 20px; margin-bottom: 8px; }
+  .meta { color: #718096; font-size: 13px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #f0fff4; padding: 14px 16px; text-align: left; font-weight: 600; color: #22543d; border-bottom: 2px solid #48bb78; }
+  td { padding: 10px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
   tr:hover { background: #f8fafc; }
-  tr:nth-child(even) { background: #fafafa; }
-  a { color: #667eea; text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  a { color: #667eea; }
 </style>
 </head>
 <body>
@@ -1209,14 +1163,10 @@
 
       const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `HKPL_Extract_${dateStr}_${total}筆.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `HKPL_Extract_${dateStr}_${total}筆.html`;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
       setStatus('已下載靜態 HTML', 'success', 'extractStatus');
       addLog('success', '已下載靜態 HTML', `檔名: HKPL_Extract_${dateStr}_${total}筆.html | Excel 可直接開啟此檔案`);
     }
