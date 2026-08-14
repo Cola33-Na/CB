@@ -42,8 +42,8 @@
     .btn-sm { padding: 8px 16px; font-size: 13px; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* 【新增】確保 <a> 標籤按鈕樣式與 <button> 一致 */
-    a.btn { text-decoration: none; }
+    /* 確保 <a> 標籤按鈕樣式與 <button> 一致 */
+    a.btn { text-decoration: none; color: white; }
     a.btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
     a.btn-disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
 
@@ -387,10 +387,17 @@
         <button class="btn btn-sm btn-info" onclick="copyStaticData('json')">📋 複製 JSON</button>
         <button class="btn btn-sm btn-secondary" onclick="downloadStaticData('csv')">💾 下載 CSV</button>
         <button class="btn btn-sm btn-warning" onclick="downloadStaticHTML()">📄 下載靜態 HTML（Excel 專用）</button>
-        <!-- 【新增】直接從後端 URL 下載，右鍵可複製連結 -->
-        <a class="btn btn-sm btn-warning" id="btnDirectDownload" href="/api/proxy?target=9000&endpoint=download-html" download style="text-decoration: none; color: white;">
+        
+        <!-- 【固定連結給 VBA】真正的 <a> 標籤，右鍵可複製連結網址，直接下載後端檔案 -->
+        <a class="btn btn-sm btn-warning" 
+           id="btnDirectDownload" 
+           href="/api/proxy?target=9000&endpoint=download-html" 
+           download="hkpl_data.html"
+           style="text-decoration: none; color: white;"
+           title="固定連結：右鍵複製連結網址，可貼到 VBA 直接下載最新靜態 HTML">
           ⬇️ 下載
         </a>
+        
         <span class="status" id="extractStatus" style="display: none; margin-left: auto;"></span>
       </div>
 
@@ -594,7 +601,6 @@
       const stored = loadFromStorage();
       if (stored && stored.data) {
         currentScrapeData = stored.data;
-        // 關鍵：初始化時立即更新資料提取頁
         updateExtractTab();
         updateStorageInfo();
         setStatus('已載入儲存資料', 'success');
@@ -603,7 +609,6 @@
         addLog('info', '無本地資料', '請點擊「手動更新」抓取資料');
         setStatus('無本地資料，請手動更新', 'loading');
       }
-      // 【新增】初始化直接下載按鈕狀態
       updateDirectDownloadBtn();
     }
 
@@ -612,7 +617,7 @@
       initLoad();
     });
 
-    // 【新增】更新直接下載按鈕狀態（有資料時啟用，無資料時禁用）
+    // 更新直接下載按鈕狀態
     function updateDirectDownloadBtn() {
       const btn = document.getElementById('btnDirectDownload');
       if (!btn) return;
@@ -621,7 +626,7 @@
         btn.classList.remove('btn-disabled');
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
-        btn.title = '直接從後端下載 hkpl_data.html，無需進入網址';
+        btn.title = '固定連結：右鍵複製連結網址，可貼到 VBA 直接下載最新靜態 HTML';
       } else {
         btn.classList.add('btn-disabled');
         btn.style.pointerEvents = 'none';
@@ -634,7 +639,6 @@
     function parseBookIds() {
       const input = document.getElementById('bookInput').value;
       const ids = input.split(/[\n\r,،\s\t]+/).map(id => id.trim()).filter(id => id.length > 0 && /^\d+$/.test(id));
-      // 移除 new Set(ids) 去重，保留所有輸入的 ID（包括重複）
       return ids;
     }
 
@@ -970,7 +974,6 @@
                 const data = result.data || result;
                 currentScrapeData = data;
                 renderScrapeData(data);
-                // 關鍵：抓取成功後立即更新靜態資料頁
                 updateExtractTab();
                 if (saveToStorageFlag) saveToStorage(data);
                 setStatus('手動更新完成', 'success');
@@ -1091,7 +1094,6 @@
       if (extractTime) extractTime.textContent = timeStr + `（共 ${total} 筆：電子書 ${ebooks.length} + 資料庫 ${databases.length}）`;
       if (extractBadge) extractBadge.textContent = `${total} 筆`;
 
-      // 【新增】更新直接下載按鈕狀態
       updateDirectDownloadBtn();
     }
 
