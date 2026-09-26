@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v3.7</title>
+  <title>HKPL 資源控制台 v3.8</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -245,7 +245,7 @@
 
     .diagnostic-box { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #742a2a; line-height: 1.5; }
 
-    /* v3.7：穩定下載連結區塊 */
+    /* 穩定下載連結區塊 */
     .stable-link-panel { background: #f0fff4; border: 2px solid var(--success); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .stable-link-panel h3 { color: #22543d; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .stable-link-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
@@ -265,7 +265,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v3.7</h1>
+          <h1>HKPL 資源控制台 v3.8</h1>
           <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -373,12 +373,13 @@
         </p>
       </div>
 
-      <!-- v3.7 新增：電子資源列表穩定下載連結（供其他 Excel 直接下載分析） -->
+      <!-- v3.8：電子資源列表自動儲存與下載 -->
       <div class="stable-link-panel">
-        <h3>🔗 電子資源列表 — 穩定下載連結（其他 Excel 專用）</h3>
+        <h3>🔗 電子資源列表 — 自動儲存與下載</h3>
         <p style="font-size: 13px; color: #22543d; line-height: 1.6;">
           每次「手動更新 / 自動更新」後，伺服器會自動把最新資料儲存為「電子資源列表.csv / .txt」（位於爬蟲 Python 檔所在目錄）。<br>
-          以下連結<strong>永久不變</strong>，其他 Excel 可用「資料 → 從 Web」直接貼上連結，下載最新資料並填入相應儲存格：
+          <strong>① 其他 Excel 用「資料 → 從 Web」</strong>：請貼以下<strong>直接連結</strong>（永久不變、不經 Proxy；如 Excel 在另一部電腦，請把 localhost 改為伺服器 IP）：<br>
+          <strong>② 本瀏覽器立即下載</strong>：請按右方「💾 下載」按鈕（經 Proxy 取回 JSON 再還原成檔案）。
         </p>
         <div class="stable-link-row">
           <span class="link-label">CSV 連結：</span>
@@ -464,9 +465,12 @@
     const API_CONFIG = {
       scraper: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=scrape',
       book:    'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint=',
-      // v3.7：電子資源列表穩定下載連結（永久不變，供其他 Excel「從 Web」下載）
-      eresourceCsv: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list',
-      eresourceTxt: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt'
+      // v3.8：Excel「從 Web」專用直接連結（不經 Proxy；Excel 在另一部電腦時請把 localhost 改為伺服器 IP）
+      eresourceCsv: 'http://localhost:9000/e-resources-list',
+      eresourceTxt: 'http://localhost:9000/e-resources-list-txt',
+      // v3.8：瀏覽器下載按鈕專用（Proxy 只支援 JSON，故後端以 JSON 封裝再由前端還原下載）
+      eresourceCsvJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-json',
+      eresourceTxtJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt-json'
     };
 
     // ==================== Tab 切換 ====================
@@ -628,7 +632,7 @@
       }
     }
 
-    // v3.7：初始化穩定下載連結顯示
+    // 初始化穩定下載連結顯示
     function initStableLinks() {
       const csvEl = document.getElementById('stableCsvUrl');
       const txtEl = document.getElementById('stableTxtUrl');
@@ -648,7 +652,7 @@
       const ids = input.split(/[\n\r,،\s\t]+/)
         .map(id => id.trim())
         .filter(id => id.length > 0 && /^\d+$/.test(id))
-        .map(id => id.replace(/^0+/, '') || '0');  // v3.7：自動忽略前導零（0854001 / 0000854001 → 854001）
+        .map(id => id.replace(/^0+/, '') || '0');  // 自動忽略前導零（0854001 / 0000854001 → 854001）
       // 移除 new Set(ids) 去重，保留所有輸入的 ID（包括重複）
       return ids;
     }
@@ -754,7 +758,7 @@
         const xhr = new XMLHttpRequest();
         xhr.open('GET', API_CONFIG.book + 'book/' + encodeURIComponent(id), true);
         xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
-        // v3.7：館藏多的書籍（如 854001 有 500+ 條記錄）HKPL 需 20 秒以上回應，
+        // 館藏多的書籍（如 854001 有 500+ 條記錄）HKPL 需 20 秒以上回應，
         // 逾時由 15 秒提高至 65 秒，避免誤判「查詢失敗」
         xhr.timeout = 65000;
         xhr.onreadystatechange = function() {
@@ -1156,29 +1160,53 @@
       addLog('success', `已下載 ${format.toUpperCase()}`, `檔名: HKPL_Data_${date}.${format}`);
     }
 
-    // ==================== v3.7：穩定下載連結功能 ====================
+    // ==================== 電子資源列表：複製連結 / 下載（v3.8）====================
     function copyStableLink(format) {
+      // 複製「直接連結」供 Excel「資料 → 從 Web」使用（不經 Proxy）
       const url = format === 'csv' ? API_CONFIG.eresourceCsv : API_CONFIG.eresourceTxt;
       navigator.clipboard.writeText(url).then(() => {
-        setStatus(`已複製${format.toUpperCase()}穩定連結`, 'success', 'extractStatus');
-        addLog('success', `已複製穩定${format.toUpperCase()}連結`, url);
+        setStatus(`已複製${format.toUpperCase()}直接連結`, 'success', 'extractStatus');
+        addLog('success', `已複製${format.toUpperCase()}直接連結`, url + '（Excel「資料 → 從 Web」貼上此連結）');
       }).catch(() => {
         const el = document.getElementById(format === 'csv' ? 'stableCsvUrl' : 'stableTxtUrl');
         const range = document.createRange();
         range.selectNodeContents(el);
         const sel = window.getSelection();
         sel.removeAllRanges(); sel.addRange(range);
-        try { document.execCommand('copy'); setStatus(`已複製${format.toUpperCase()}穩定連結`, 'success', 'extractStatus'); }
+        try { document.execCommand('copy'); setStatus(`已複製${format.toUpperCase()}直接連結`, 'success', 'extractStatus'); }
         catch (err) { setStatus('複製失敗，請手動選取複製', 'error', 'extractStatus'); }
         sel.removeAllRanges();
       });
     }
 
-    function downloadFromStableLink(format) {
-      const url = format === 'csv' ? API_CONFIG.eresourceCsv : API_CONFIG.eresourceTxt;
-      window.open(url, '_blank');
-      setStatus(`已開啟${format.toUpperCase()}穩定下載連結`, 'success', 'extractStatus');
-      addLog('info', `開啟穩定${format.toUpperCase()}下載連結`, url);
+    async function downloadFromStableLink(format) {
+      // v3.8：Proxy 只支援 JSON 回應，故經 JSON 端點取回內容，再還原成檔案觸發本機下載
+      const apiUrl = format === 'csv' ? API_CONFIG.eresourceCsvJson : API_CONFIG.eresourceTxtJson;
+      setStatus(`正在從伺服器取得電子資源列表 (${format.toUpperCase()})...`, 'loading', 'extractStatus');
+      addLog('request', `下載電子資源列表 (${format.toUpperCase()})`, `GET ${apiUrl}`);
+      try {
+        const resp = await fetch(apiUrl);
+        const result = await resp.json();
+        // 兼容 Proxy 可能的外層封裝（result.data 內才是真正的 payload）
+        const payload = (result && typeof result === 'object' && result.data && typeof result.data === 'object' && 'content' in result.data) ? result.data : result;
+        if (!payload || payload.success === false || !payload.content) {
+          const errMsg = (payload && payload.error) || result.error || '伺服器尚未有資料，請先按一次「手動更新」';
+          setStatus(errMsg, 'error', 'extractStatus');
+          addLog('error', '下載電子資源列表失敗', errMsg);
+          return;
+        }
+        const blob = new Blob([payload.content], { type: format === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = payload.filename || `電子資源列表.${format}`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+        setStatus(`已下載 ${link.download}`, 'success', 'extractStatus');
+        addLog('success', `已下載電子資源列表 (${format.toUpperCase()})`, `檔名: ${link.download} | 更新時間: ${payload.updated || '--'} | 資料行數: ${payload.rows ?? '--'}`);
+      } catch (e) {
+        setStatus('下載失敗: ' + e.message, 'error', 'extractStatus');
+        addLog('error', '下載電子資源列表失敗', e.message);
+      }
     }
 
     function downloadStaticHTML() {
