@@ -1,4 +1,5 @@
 // pages/api/proxy.js — 完整版（支援 8000/8081/9000 + HTML 表格輸出）
+export const maxDuration = 60;
 export default async function handler(req, res) {
   // 設置 CORS 頭
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
       console.log(`[Proxy] Generating HTML table from ${targetURL}`);
       
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
+      const timeout = setTimeout(() => controller.abort(), 55000);
       
       const response = await fetch(targetURL, {
         ...fetchOptions,
@@ -190,7 +191,7 @@ a{color:#667eea;text-decoration:none;}
 
     // 超時控制 (30秒)
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => controller.abort(), 55000);
 
     console.log(`[Proxy] ${fetchOptions.method} ${targetURL}`);
     
