@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v3.6</title>
+  <title>HKPL 資源控制台 v3.7</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,7 +26,7 @@
     .network-status.offline { background: rgba(245, 101, 101, 0.3); }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    
+
     .tab-nav { display: flex; background: #f8fafc; border-bottom: 1px solid var(--border); }
     .tab-btn { flex: 1; padding: 18px 24px; background: none; border: none; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.3s; }
     .tab-btn:hover { color: var(--primary); background: rgba(102, 126, 234, 0.05); }
@@ -245,10 +245,18 @@
 
     .diagnostic-box { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #742a2a; line-height: 1.5; }
 
+    /* v3.7：穩定下載連結區塊 */
+    .stable-link-panel { background: #f0fff4; border: 2px solid var(--success); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .stable-link-panel h3 { color: #22543d; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .stable-link-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+    .stable-link-row .link-label { font-size: 13px; font-weight: 700; color: #065f46; min-width: 80px; }
+    .stable-link-row code { flex: 1; min-width: 260px; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #c6f6d5; font-size: 12px; word-break: break-all; color: #1a202c; }
+
     @media (max-width: 1200px) {
       .search-layout { grid-template-columns: 1fr; height: auto; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
   <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
@@ -257,7 +265,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v3.6</h1>
+          <h1>HKPL 資源控制台 v3.7</h1>
           <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -332,8 +340,8 @@
         <div class="search-sidebar">
           <div class="input-group">
             <label class="input-label">書籍 ID 輸入</label>
-            <textarea class="book-input" id="bookInput" placeholder="請輸入書籍 ID...&#10;支援格式：&#10;• 單一 ID：3780306&#10;• 多個 ID（換行分隔）：&#10;  3780306&#10;  3780307&#10;  3780308"></textarea>
-            <div class="input-hint">支援單一查詢或批量查詢（換行、逗號、空格分隔）</div>
+            <textarea class="book-input" id="bookInput" placeholder="請輸入書籍 ID...&#10;支援格式：&#10;• 單一 ID：3780306&#10;• 多個 ID（換行分隔）：&#10;  3780306&#10;  3780307&#10;  3780308&#10;• 前導零自動忽略：0854001 → 854001"></textarea>
+            <div class="input-hint">支援單一查詢或批量查詢（換行、逗號、空格分隔）；ID 開頭的 0 會自動忽略（如 0854001、0000854001 → 854001）</div>
           </div>
           <button class="btn btn-secondary" onclick="fetchBookData()" id="btnBookSearch" style="width: 100%; justify-content: center;">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
@@ -363,6 +371,27 @@
           本頁表格為靜態 HTML，Excel 可使用「資料 → 從 Web」直接讀取此網址。<br>
           資料會在每次「手動更新」後自動保存，關閉瀏覽器後下次開啟自動載入。
         </p>
+      </div>
+
+      <!-- v3.7 新增：電子資源列表穩定下載連結（供其他 Excel 直接下載分析） -->
+      <div class="stable-link-panel">
+        <h3>🔗 電子資源列表 — 穩定下載連結（其他 Excel 專用）</h3>
+        <p style="font-size: 13px; color: #22543d; line-height: 1.6;">
+          每次「手動更新 / 自動更新」後，伺服器會自動把最新資料儲存為「電子資源列表.csv / .txt」（位於爬蟲 Python 檔所在目錄）。<br>
+          以下連結<strong>永久不變</strong>，其他 Excel 可用「資料 → 從 Web」直接貼上連結，下載最新資料並填入相應儲存格：
+        </p>
+        <div class="stable-link-row">
+          <span class="link-label">CSV 連結：</span>
+          <code id="stableCsvUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyStableLink('csv')">📋 複製連結</button>
+          <button class="btn btn-sm btn-info" onclick="downloadFromStableLink('csv')">💾 下載 CSV</button>
+        </div>
+        <div class="stable-link-row">
+          <span class="link-label">TXT 連結：</span>
+          <code id="stableTxtUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyStableLink('txt')">📋 複製連結</button>
+          <button class="btn btn-sm btn-warning" onclick="downloadFromStableLink('txt')">💾 下載 TXT</button>
+        </div>
       </div>
 
       <div class="storage-info" style="background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%); border-left-color: var(--warning); color: #92400e;">
@@ -434,7 +463,10 @@
 
     const API_CONFIG = {
       scraper: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=scrape',
-      book:    'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint='
+      book:    'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint=',
+      // v3.7：電子資源列表穩定下載連結（永久不變，供其他 Excel「從 Web」下載）
+      eresourceCsv: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list',
+      eresourceTxt: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt'
     };
 
     // ==================== Tab 切換 ====================
@@ -596,15 +628,27 @@
       }
     }
 
+    // v3.7：初始化穩定下載連結顯示
+    function initStableLinks() {
+      const csvEl = document.getElementById('stableCsvUrl');
+      const txtEl = document.getElementById('stableTxtUrl');
+      if (csvEl) csvEl.textContent = API_CONFIG.eresourceCsv;
+      if (txtEl) txtEl.textContent = API_CONFIG.eresourceTxt;
+    }
+
     window.addEventListener('DOMContentLoaded', function() {
       updateNetworkStatus();
       initLoad();
+      initStableLinks();
     });
 
     // ==================== 書籍查詢 ====================
     function parseBookIds() {
       const input = document.getElementById('bookInput').value;
-      const ids = input.split(/[\n\r,،\s\t]+/).map(id => id.trim()).filter(id => id.length > 0 && /^\d+$/.test(id));
+      const ids = input.split(/[\n\r,،\s\t]+/)
+        .map(id => id.trim())
+        .filter(id => id.length > 0 && /^\d+$/.test(id))
+        .map(id => id.replace(/^0+/, '') || '0');  // v3.7：自動忽略前導零（0854001 / 0000854001 → 854001）
       // 移除 new Set(ids) 去重，保留所有輸入的 ID（包括重複）
       return ids;
     }
@@ -668,7 +712,7 @@
       currentBookData = [];
       setLoading(true);
       setStatus(`查詢中...`, 'loading', 'bookStatus');
-      addLog('info', '開始查詢書籍', `ID 數量: ${ids.length} 個`);
+      addLog('info', '開始查詢書籍', `ID 數量: ${ids.length} 個（前導零已自動忽略）`);
       if (ids.length > 1) document.getElementById('progressBar').style.display = 'block';
 
       try {
@@ -710,7 +754,9 @@
         const xhr = new XMLHttpRequest();
         xhr.open('GET', API_CONFIG.book + 'book/' + encodeURIComponent(id), true);
         xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
-        xhr.timeout = 15000;
+        // v3.7：館藏多的書籍（如 854001 有 500+ 條記錄）HKPL 需 20 秒以上回應，
+        // 逾時由 15 秒提高至 65 秒，避免誤判「查詢失敗」
+        xhr.timeout = 65000;
         xhr.onreadystatechange = function() {
           if (xhr.readyState === 4) {
             if (xhr.status === 200) {
@@ -722,14 +768,14 @@
               let errMsg = `HTTP ${xhr.status} - ${xhr.statusText || '未知錯誤'}`;
               try {
                 const errBody = JSON.parse(xhr.responseText);
-                errMsg += ` - ${errBody.error || errBody.message || xhr.responseText.substring(0, 200)}`;
+                errMsg += ` - ${errBody.error || errBody.message || errBody.detail || xhr.responseText.substring(0, 200)}`;
               } catch (e) { if (xhr.responseText) errMsg += ` - ${xhr.responseText.substring(0, 200)}`; }
               reject(new Error(errMsg));
             }
           }
         };
         xhr.onerror = () => reject(new Error('網絡錯誤：無法連接到 Proxy (8081)'));
-        xhr.ontimeout = () => reject(new Error('請求逾時 (15秒)：Proxy (8081) 未回應'));
+        xhr.ontimeout = () => reject(new Error('請求逾時 (65秒)：此書籍館藏記錄可能極多，或 Proxy (8081) 未回應'));
         xhr.send();
       });
     }
@@ -857,7 +903,7 @@
 
     function exportBookToCSV() {
       if (!currentBookData || currentBookData.length === 0) { alert('沒有可滙出的資料'); return; }
-      let csv = '\uFEFF序號,書名,作者,ISBN,館藏編號,索書號,出版地,出版者,出版年份,圖書編號,叢書名,其他著者,書刊別名,標準號碼,附加叢書名稱,附註,語言,館藏數量,館藏分佈\n';
+      let csv = '﻿序號,書名,作者,ISBN,館藏編號,索書號,出版地,出版者,出版年份,圖書編號,叢書名,其他著者,書刊別名,標準號碼,附加叢書名稱,附註,語言,館藏數量,館藏分佈\n';
       const escapeCSV = (str) => {
         if (!str) return '';
         str = String(str).replace(/"/g, '""');
@@ -925,7 +971,7 @@
       xhr.open('POST', apiUrl, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('X-API-Key', 'HKPL2024SecureKey');
-      xhr.timeout = 30000;
+      xhr.timeout = 120000;
       let completed = false;
 
       function finish() {
@@ -945,7 +991,7 @@
                 updateExtractTab();
                 if (saveToStorageFlag) saveToStorage(data);
                 setStatus('手動更新完成', 'success');
-                addLog('response', '電子資源抓取成功', `電子書: ${data.ebooks?.length || 0} 個 | 資料庫: ${data.edatabases?.length || 0} 個`);
+                addLog('response', '電子資源抓取成功', `電子書: ${data.ebooks?.length || 0} 個 | 資料庫: ${data.edatabases?.length || 0} 個 | 伺服器已自動儲存「電子資源列表.csv/.txt」`);
                 if (isAuto && isFirstLoad) isFirstLoad = false;
               } else {
                 setStatus('數據格式錯誤', 'error');
@@ -981,7 +1027,7 @@
       };
       xhr.ontimeout = () => {
         setStatus('請求逾時', 'error');
-        addLog('error', 'API 請求逾時', '30秒內未收到回應');
+        addLog('error', 'API 請求逾時', '120秒內未收到回應');
         finish();
       };
       try { xhr.send('{}'); } catch (e) { addLog('error', '發送請求失敗', e.message); finish(); }
@@ -1067,7 +1113,7 @@
       if (!currentScrapeData) return '';
       const ebooks = currentScrapeData.ebooks || [];
       const databases = currentScrapeData.edatabases || [];
-      let csv = '\uFEFF類型,標題,連結,分類/地點,說明/標籤\n';
+      let csv = '﻿類型,標題,連結,分類/地點,說明/標籤\n';
       ebooks.forEach(item => {
         csv += `"電子書","${(item.title || '').replace(/"/g, '""')}","${(item.link || '').replace(/"/g, '""')}","${(item.category || '電子書').replace(/"/g, '""')}","${(item.description || '').replace(/"/g, '""')}"\n`;
       });
@@ -1108,6 +1154,31 @@
       document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
       setStatus(`已下載 ${format.toUpperCase()} 檔案`, 'success', 'extractStatus');
       addLog('success', `已下載 ${format.toUpperCase()}`, `檔名: HKPL_Data_${date}.${format}`);
+    }
+
+    // ==================== v3.7：穩定下載連結功能 ====================
+    function copyStableLink(format) {
+      const url = format === 'csv' ? API_CONFIG.eresourceCsv : API_CONFIG.eresourceTxt;
+      navigator.clipboard.writeText(url).then(() => {
+        setStatus(`已複製${format.toUpperCase()}穩定連結`, 'success', 'extractStatus');
+        addLog('success', `已複製穩定${format.toUpperCase()}連結`, url);
+      }).catch(() => {
+        const el = document.getElementById(format === 'csv' ? 'stableCsvUrl' : 'stableTxtUrl');
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        try { document.execCommand('copy'); setStatus(`已複製${format.toUpperCase()}穩定連結`, 'success', 'extractStatus'); }
+        catch (err) { setStatus('複製失敗，請手動選取複製', 'error', 'extractStatus'); }
+        sel.removeAllRanges();
+      });
+    }
+
+    function downloadFromStableLink(format) {
+      const url = format === 'csv' ? API_CONFIG.eresourceCsv : API_CONFIG.eresourceTxt;
+      window.open(url, '_blank');
+      setStatus(`已開啟${format.toUpperCase()}穩定下載連結`, 'success', 'extractStatus');
+      addLog('info', `開啟穩定${format.toUpperCase()}下載連結`, url);
     }
 
     function downloadStaticHTML() {
