@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v4.1</title>
+  <title>HKPL 資源控制台 v4.2</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -265,7 +265,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v4.1</h1>
+          <h1>HKPL 資源控制台 v4.2</h1>
           <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取，附 Code 128 條碼圖輸出</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -378,7 +378,7 @@
         <h3>🔗 電子資源列表 — 自動儲存與下載</h3>
         <p style="font-size: 13px; color: #22543d; line-height: 1.6;">
           每次「手動更新 / 自動更新」後，伺服器會自動把最新資料儲存為「電子資源列表.csv / .txt」（位於爬蟲 Python 檔所在目錄）。<br>
-          <strong>① 其他 Excel 用「資料 → 從 Web」</strong>：請貼以下<strong>直接連結</strong>（永久不變、不經 Proxy；如 Excel 在另一部電腦，請把 localhost 改為伺服器 IP）：<br>
+          <strong>① 其他 Excel 用「資料 → 從 Web」</strong>：請貼以下<strong>直接連結</strong>（永久不變、不經 Proxy；固定 DDNS 地址，任何電腦可直接使用）：<br>
           <strong>② 本瀏覽器立即下載</strong>：請按右方「💾 下載」按鈕（經 Proxy 取回 JSON 再還原成檔案）。
         </p>
         <div class="stable-link-row">
@@ -395,14 +395,14 @@
         </div>
       </div>
 
-      <!-- v4.1：電子資源條碼圖固定下載連結 -->
+      <!-- v4.2：電子資源條碼全張圖固定下載連結（只有一張 PNG） -->
       <div class="stable-link-panel" style="background: #eff6ff; border-color: #60a5fa;">
-        <h3 style="color: #1e40af;">🔖 電子資源條碼圖 — 固定下載連結（v4.1 新增）</h3>
+        <h3 style="color: #1e40af;">🔖 電子資源條碼全張圖 — 固定下載連結（v4.2）</h3>
         <p style="font-size: 13px; color: #1e3a8a; line-height: 1.6;">
-          每次更新「電子資源列表」後，伺服器自動把整份列表轉成 Code 128 Set B 條碼圖（與列表同一目錄；
-          含中文內容會先 UTF-8 → Base64 再分段，每段 ≤ 80 字元、帶 Pk/N|B64: 前綴，掃描端按段號重組即可）。<br>
-          以下連結<strong>永久不變、不經 Proxy</strong>；在其他電腦直接下載時，把 localhost 改為伺服器 IP 即可。<br>
-          ※ 條碼圖為二進制檔，<strong>不能</strong>經 Vercel Proxy（只支援 JSON）；若本頁以 https 開啟而瀏覽器攔截 http 下載，
+          每次更新「電子資源列表」後，伺服器自動把整份列表轉成<strong>一張</strong> Code 128 Set B 條碼長圖
+          （所有段垂直疊排，每行一條獨立條碼，≤ 80 字元、帶 Pk/N|B64: 前綴，掃描槍逐行掃、VBA 按段號重組）。<br>
+          <strong>每次下載 PNG 會先觸發一次資料更新；3 分鐘內重複下載會直接沿用舊檔</strong>（回應標頭 X-Refresh-Status 可查看狀態）。<br>
+          以下連結<strong>永久不變、不經 Proxy</strong>，任何電腦直接使用；若本頁以 https 開啟而瀏覽器攔截 http 下載，
           請改用「📋 複製連結」，到目標電腦的瀏覽器 / Excel / 掃描工具貼上使用。
         </p>
         <div class="stable-link-row">
@@ -410,17 +410,6 @@
           <code id="barcodePngUrl">--</code>
           <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodePngUrl')">📋 複製連結</button>
           <button class="btn btn-sm btn-info" onclick="openBarcodeLink('barcodePng')">💾 下載全張</button>
-        </div>
-        <div class="stable-link-row">
-          <span class="link-label" style="color: #1e40af;">分段 ZIP：</span>
-          <code id="barcodeZipUrl">--</code>
-          <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodeZipUrl')">📋 複製連結</button>
-          <button class="btn btn-sm btn-warning" onclick="openBarcodeLink('barcodeZip')">💾 下載 ZIP</button>
-        </div>
-        <div class="stable-link-row">
-          <span class="link-label" style="color: #1e40af;">單一分段：</span>
-          <code id="barcodePartUrl">--</code>
-          <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodePartUrl')">📋 複製連結</button>
         </div>
         <div class="stable-link-row">
           <span class="link-label" style="color: #1e40af;">JSON 清單：</span>
@@ -499,17 +488,15 @@
     const API_CONFIG = {
       scraper: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=scrape',
       book:    'https://cb-one-phi.vercel.app/api/proxy?target=8081&endpoint=',
-      // v3.8：Excel「從 Web」專用直接連結（不經 Proxy；Excel 在另一部電腦時請把 localhost 改為伺服器 IP）
-      eresourceCsv: 'http://localhost:9000/e-resources-list',
-      eresourceTxt: 'http://localhost:9000/e-resources-list-txt',
+      // v4.2：Excel「從 Web」專用直接連結（不經 Proxy；固定 DDNS 地址，任何電腦可用）
+      eresourceCsv: 'http://bobbybase.ddns.net:9000/e-resources-list',
+      eresourceTxt: 'http://bobbybase.ddns.net:9000/e-resources-list-txt',
       // v3.8：瀏覽器下載按鈕專用（Proxy 只支援 JSON，故後端以 JSON 封裝再由前端還原下載）
       eresourceCsvJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-json',
       eresourceTxtJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt-json',
-      // v4.1：條碼圖固定連結（二進制 PNG/ZIP，不可經 Proxy；其他電腦請把 localhost 改為伺服器 IP）
-      barcodePng: 'http://localhost:9000/barcodes.png',
-      barcodeZip: 'http://localhost:9000/barcodes.zip',
-      barcodePart: 'http://localhost:9000/barcode/1',
-      barcodeManifest: 'http://localhost:9000/barcodes'
+      // v4.2：條碼全張圖固定連結（只有一張 PNG，二進制不可經 Proxy；固定 DDNS 地址）
+      barcodePng: 'http://bobbybase.ddns.net:9000/barcodes.png',
+      barcodeManifest: 'http://bobbybase.ddns.net:9000/barcodes'
     };
 
     // ==================== Tab 切換 ====================
@@ -677,14 +664,10 @@
       const txtEl = document.getElementById('stableTxtUrl');
       if (csvEl) csvEl.textContent = API_CONFIG.eresourceCsv;
       if (txtEl) txtEl.textContent = API_CONFIG.eresourceTxt;
-      // v4.1：條碼圖固定連結
+      // v4.2：條碼全張圖固定連結（只有一張 PNG）
       const bp = document.getElementById('barcodePngUrl');
-      const bz = document.getElementById('barcodeZipUrl');
-      const bs = document.getElementById('barcodePartUrl');
       const bm = document.getElementById('barcodeManifestUrl');
       if (bp) bp.textContent = API_CONFIG.barcodePng;
-      if (bz) bz.textContent = API_CONFIG.barcodeZip;
-      if (bs) bs.textContent = API_CONFIG.barcodePart + '  （1 至 N 段，改網址尾數即攞第 N 段）';
       if (bm) bm.textContent = API_CONFIG.barcodeManifest;
     }
 
@@ -1257,7 +1240,7 @@
       }
     }
 
-    // ==================== 電子資源條碼圖（v4.1）====================
+    // ==================== 電子資源條碼全張圖（v4.2）====================
     function copyBarcodeLink(elId) {
       // 條碼圖係二進制，唔經 Proxy；複製固定連結俾其他電腦 / 工具直接用
       const url = document.getElementById(elId).textContent.trim();
