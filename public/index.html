@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v4.2</title>
+  <title>HKPL 資源控制台 v4.3</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -103,7 +103,7 @@
     .excel-book-table th { background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); color: var(--text); font-weight: 700; padding: 6px 4px; border: 1px solid var(--border); text-align: center; position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: none; height: 24px; }
     .excel-book-table td { padding: 2px 4px; border: 1px solid var(--border); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; height: var(--row-height); max-height: var(--row-height); font-size: 12px; line-height: calc(var(--row-height) - 4px); white-space: nowrap; }
     .excel-book-table tr:hover { background: #e0e7ff; }
-    .excel-book-table tr:hover td { overflow: visible; white-space: normal; background: #e0e7ff; z-index: 10; position: relative; }
+    /* v4.3：行高固定，hover 唔再展開（內容以 title tooltip 顯示） */
     .resizer { position: absolute; right: 0; top: 0; height: 100%; width: 5px; cursor: col-resize; background: transparent; z-index: 10; }
     .resizer:hover { background: var(--primary); width: 3px; }
 
@@ -265,7 +265,7 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v4.2</h1>
+          <h1>HKPL 資源控制台 v4.3</h1>
           <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取，附 Code 128 條碼圖輸出</p>
         </div>
         <div class="network-status" id="networkStatus">
@@ -395,16 +395,23 @@
         </div>
       </div>
 
-      <!-- v4.2：電子資源條碼全張圖固定下載連結（只有一張 PNG） -->
+      <!-- v4.3：電子資源條碼全張圖 + 條碼表顯示頁固定連結 -->
       <div class="stable-link-panel" style="background: #eff6ff; border-color: #60a5fa;">
-        <h3 style="color: #1e40af;">🔖 電子資源條碼全張圖 — 固定下載連結（v4.2）</h3>
+        <h3 style="color: #1e40af;">🔖 電子資源條碼全張圖 — 固定連結（v4.3）</h3>
         <p style="font-size: 13px; color: #1e3a8a; line-height: 1.6;">
           每次更新「電子資源列表」後，伺服器自動把整份列表轉成<strong>一張</strong> Code 128 Set B 條碼長圖
           （所有段垂直疊排，每行一條獨立條碼，≤ 80 字元、帶 Pk/N|B64: 前綴，掃描槍逐行掃、VBA 按段號重組）。<br>
-          <strong>每次下載 PNG 會先觸發一次資料更新；3 分鐘內重複下載會直接沿用舊檔</strong>（回應標頭 X-Refresh-Status 可查看狀態）。<br>
-          以下連結<strong>永久不變、不經 Proxy</strong>，任何電腦直接使用；若本頁以 https 開啟而瀏覽器攔截 http 下載，
+          <strong>「條碼表頁面」會直接顯示全張圖＋每段代碼文字，可逐段複製或一撳複製全部</strong>；
+          每次開啟/下載會先觸發一次資料更新，3 分鐘內重複請求沿用舊檔。<br>
+          以下連結<strong>永久不變、不經 Proxy</strong>，任何電腦直接使用；若本頁以 https 開啟而瀏覽器攔截 http 內容，
           請改用「📋 複製連結」，到目標電腦的瀏覽器 / Excel / 掃描工具貼上使用。
         </p>
+        <div class="stable-link-row">
+          <span class="link-label" style="color: #1e40af;">條碼表頁面：</span>
+          <code id="barcodeSheetUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodeSheetUrl')">📋 複製連結</button>
+          <button class="btn btn-sm btn-secondary" onclick="openBarcodeLink('barcodeSheet')">👁️ 開啟顯示</button>
+        </div>
         <div class="stable-link-row">
           <span class="link-label" style="color: #1e40af;">全張 PNG：</span>
           <code id="barcodePngUrl">--</code>
@@ -494,8 +501,9 @@
       // v3.8：瀏覽器下載按鈕專用（Proxy 只支援 JSON，故後端以 JSON 封裝再由前端還原下載）
       eresourceCsvJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-json',
       eresourceTxtJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt-json',
-      // v4.2：條碼全張圖固定連結（只有一張 PNG，二進制不可經 Proxy；固定 DDNS 地址）
+      // v4.3：條碼全張圖 + 條碼表顯示頁固定連結（二進制/頁面不可經 Proxy；固定 DDNS 地址）
       barcodePng: 'http://bobbybase.ddns.net:9000/barcodes.png',
+      barcodeSheet: 'http://bobbybase.ddns.net:9000/barcode-sheet',
       barcodeManifest: 'http://bobbybase.ddns.net:9000/barcodes'
     };
 
@@ -664,10 +672,12 @@
       const txtEl = document.getElementById('stableTxtUrl');
       if (csvEl) csvEl.textContent = API_CONFIG.eresourceCsv;
       if (txtEl) txtEl.textContent = API_CONFIG.eresourceTxt;
-      // v4.2：條碼全張圖固定連結（只有一張 PNG）
+      // v4.3：條碼全張圖 + 條碼表顯示頁固定連結
       const bp = document.getElementById('barcodePngUrl');
+      const bsh = document.getElementById('barcodeSheetUrl');
       const bm = document.getElementById('barcodeManifestUrl');
       if (bp) bp.textContent = API_CONFIG.barcodePng;
+      if (bsh) bsh.textContent = API_CONFIG.barcodeSheet;
       if (bm) bm.textContent = API_CONFIG.barcodeManifest;
     }
 
@@ -897,7 +907,7 @@
         </tr>`;
       });
       html += '</tbody></table></div>';
-      html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 滑鼠懸停可查看完整內容</div>';
+      html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">拖曳欄位標題右側邊界可調整欄寬 | 每行高度固定，滑鼠懸停儲存格可查看完整內容提示</div>';
       container.innerHTML = html;
     }
 
@@ -1240,7 +1250,7 @@
       }
     }
 
-    // ==================== 電子資源條碼全張圖（v4.2）====================
+    // ==================== 電子資源條碼全張圖（v4.3）====================
     function copyBarcodeLink(elId) {
       // 條碼圖係二進制，唔經 Proxy；複製固定連結俾其他電腦 / 工具直接用
       const url = document.getElementById(elId).textContent.trim();
