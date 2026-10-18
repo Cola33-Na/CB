@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v4.5</title>
+  <title>HKPL 資源控制台 v4.6</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -265,8 +265,8 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v4.5</h1>
-          <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取，附 1-bit 位元圖輸出（1 像素 = 1 bit，連結直接開圖）</p>
+          <h1>HKPL 資源控制台 v4.6</h1>
+          <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取，附 1-bit 位元圖輸出（1 像素 = 1 bit，連結直接開圖；每日 08:00 自動更新）</p>
         </div>
         <div class="network-status" id="networkStatus">
           <span class="status-dot"></span>
@@ -395,17 +395,20 @@
         </div>
       </div>
 
-      <!-- v4.5：電子資源位元圖 + 位元圖顯示頁固定連結 -->
+      <!-- v4.6：電子資源位元圖 + 位元圖顯示頁固定連結（新增即時更新連結 + 每日 08:00 自動更新） -->
       <div class="stable-link-panel" style="background: #eff6ff; border-color: #60a5fa;">
-        <h3 style="color: #1e40af;">🗺️ 電子資源位元圖 — 固定連結（v4.5）</h3>
+        <h3 style="color: #1e40af;">🗺️ 電子資源位元圖 — 固定連結（v4.6）</h3>
         <p style="font-size: 13px; color: #1e3a8a; line-height: 1.6;">
           每次更新「電子資源列表」後，伺服器自動把整份列表的 UTF-8 bytes 直接畫成<strong>一張 1-bit 位元圖</strong>
           （1 像素 = 1 bit；每行 1664px：同步碼 A5 5A + 行號 + 總行數 + 數據 200B + CRC16 校驗，每行 4px 高、行距 2px；
           約 19.6KB 數據 ≈ 98 行 = 1664×586px，比舊條碼圖細約 60 倍）。<br>
-          <strong>v4.5：「位元圖 BMP」連結會喺瀏覽器直接開圖</strong>（同一般網上圖片連結一樣，唔會彈下載；
-          要儲存檔案請撳「💾 下載 BMP」，佢會用 <code>?download=1</code>）。<br>
-          開啟位元圖<strong>唔再觸發伺服器更新</strong>——伺服器直接送出原目錄嘅現有檔案
-          （位元圖會喺每次「手動更新 / 下載列表」後自動重新生成，唔使再等 30–90 秒）。<br>
+          <strong>v4.6：伺服器每日 08:00 自動更新一次</strong>（失敗會保留原位元圖，每隔 1 小時重試，最多 3 次；
+          3 次都失敗就等下一日 08:00 再試）。<br>
+          <strong>「位元圖 BMP」</strong>連結會喺瀏覽器直接開圖（唔彈下載；要儲存檔案請撳「💾 下載 BMP」，佢會用
+          <code>?download=1</code>），開啟<strong>唔會觸發更新</strong>——伺服器直接送出原目錄嘅現有檔案，即開即得。<br>
+          <strong>v4.6 新增「位元圖BMP（即時更新）」</strong>：用法同「位元圖 BMP」一樣（直接開圖），分別在於
+          <strong>收到請求時會即時更新一次</strong>；3 分鐘內嘅重複請求會沿用同一個位元圖，超過 3 分鐘先重新更新
+          （更新需時約 30–90 秒，請耐心等候；更新失敗會自動沿用原位元圖）。<br>
           以下連結<strong>永久不變、不經 Proxy</strong>，任何電腦直接使用；若本頁以 https 開啟而瀏覽器攔截 http 內容，
           請改用「📋 複製連結」，到目標電腦的瀏覽器 / Excel / 解碼工具貼上使用。
         </p>
@@ -421,6 +424,12 @@
           <button class="btn btn-sm btn-primary" onclick="copyBitmapLink('bitmapBmpUrl')">📋 複製連結</button>
           <button class="btn btn-sm btn-info" onclick="openBitmapLink('bitmapBmp')">🖼️ 開啟圖片</button>
           <button class="btn btn-sm btn-warning" onclick="downloadBitmapFile()">💾 下載 BMP</button>
+        </div>
+        <div class="stable-link-row">
+          <span class="link-label" style="color: #b45309;">位元圖BMP（即時更新）：</span>
+          <code id="bitmapRealtimeUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyBitmapLink('bitmapRealtimeUrl')">📋 複製連結</button>
+          <button class="btn btn-sm btn-warning" onclick="openBitmapLink('bitmapRealtime')">⚡ 即時更新開圖</button>
         </div>
         <div class="stable-link-row">
           <span class="link-label" style="color: #1e40af;">JSON 清單：</span>
@@ -505,9 +514,11 @@
       // v3.8：瀏覽器下載按鈕專用（Proxy 只支援 JSON，故後端以 JSON 封裝再由前端還原下載）
       eresourceCsvJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-json',
       eresourceTxtJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt-json',
-      // v4.5：位元圖 + 位元圖顯示頁固定連結（二進制/頁面不可經 Proxy；固定 DDNS 地址）
+      // v4.5/v4.6：位元圖 + 位元圖顯示頁固定連結（二進制/頁面不可經 Proxy；固定 DDNS 地址）
       // bitmap.bmp 預設 inline 直接開圖；強制下載用 bitmapBmp + '?download=1'
+      // v4.6：bitmapRealtime 收到請求先即時更新（3 分鐘內重用），其餘行為同 bitmap.bmp
       bitmapBmp: 'http://bobbybase.ddns.net:9000/bitmap.bmp',
+      bitmapRealtime: 'http://bobbybase.ddns.net:9000/bitmap-realtime.bmp',
       bitmapSheet: 'http://bobbybase.ddns.net:9000/bitmap-sheet',
       bitmapManifest: 'http://bobbybase.ddns.net:9000/bitmaps'
     };
@@ -677,11 +688,13 @@
       const txtEl = document.getElementById('stableTxtUrl');
       if (csvEl) csvEl.textContent = API_CONFIG.eresourceCsv;
       if (txtEl) txtEl.textContent = API_CONFIG.eresourceTxt;
-      // v4.5：位元圖 + 位元圖顯示頁固定連結
+      // v4.5/v4.6：位元圖 + 即時更新位元圖 + 位元圖顯示頁固定連結
       const bp = document.getElementById('bitmapBmpUrl');
+      const brt = document.getElementById('bitmapRealtimeUrl');
       const bsh = document.getElementById('bitmapSheetUrl');
       const bm = document.getElementById('bitmapManifestUrl');
       if (bp) bp.textContent = API_CONFIG.bitmapBmp;
+      if (brt) brt.textContent = API_CONFIG.bitmapRealtime;
       if (bsh) bsh.textContent = API_CONFIG.bitmapSheet;
       if (bm) bm.textContent = API_CONFIG.bitmapManifest;
     }
@@ -1255,7 +1268,7 @@
       }
     }
 
-    // ==================== 電子資源位元圖（v4.5）====================
+    // ==================== 電子資源位元圖（v4.5/v4.6）====================
     function copyBitmapLink(elId) {
       // 位元圖係二進制，唔經 Proxy；複製固定連結俾其他電腦 / 工具直接用
       const url = document.getElementById(elId).textContent.trim();
@@ -1275,11 +1288,15 @@
     }
 
     function openBitmapLink(key) {
-      // v4.5：位元圖連結預設 inline，瀏覽器新分頁直接開圖（唔彈下載）。
+      // v4.5/v4.6：位元圖連結預設 inline，瀏覽器新分頁直接開圖（唔彈下載）。
+      // bitmapRealtime 會先觸發伺服器即時更新（約 30–90 秒；3 分鐘內重用）。
       // 注意：若本頁以 https 開啟，瀏覽器可能攔截 http 內容（混合內容），
       // 屆時請改用「複製連結」貼到目標電腦使用
       const url = API_CONFIG[key];
-      addLog('request', key === 'bitmapBmp' ? '開啟位元圖（直接開圖）' : '開啟位元圖頁面', `GET ${url}`);
+      const label = key === 'bitmapBmp' ? '開啟位元圖（直接開圖）'
+                  : key === 'bitmapRealtime' ? '開啟位元圖（即時更新，需時約 30–90 秒）'
+                  : '開啟位元圖頁面';
+      addLog('request', label, `GET ${url}`);
       window.open(url, '_blank');
     }
 
