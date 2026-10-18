@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HKPL 資源控制台 v4.3</title>
+  <title>HKPL 資源控制台 v4.4</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -265,8 +265,8 @@
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div style="flex: 1;">
-          <h1>HKPL 資源控制台 v4.3</h1>
-          <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取，附 Code 128 條碼圖輸出</p>
+          <h1>HKPL 資源控制台 v4.4</h1>
+          <p>靜態資料保存系統 — 抓取後自動保存，Excel 可直接從 Web 提取，附 1-bit 位元圖輸出（1 像素 = 1 bit）</p>
         </div>
         <div class="network-status" id="networkStatus">
           <span class="status-dot"></span>
@@ -395,33 +395,34 @@
         </div>
       </div>
 
-      <!-- v4.3：電子資源條碼全張圖 + 條碼表顯示頁固定連結 -->
+      <!-- v4.4：電子資源位元圖 + 位元圖顯示頁固定連結 -->
       <div class="stable-link-panel" style="background: #eff6ff; border-color: #60a5fa;">
-        <h3 style="color: #1e40af;">🔖 電子資源條碼全張圖 — 固定連結（v4.3）</h3>
+        <h3 style="color: #1e40af;">🗺️ 電子資源位元圖 — 固定連結（v4.4）</h3>
         <p style="font-size: 13px; color: #1e3a8a; line-height: 1.6;">
-          每次更新「電子資源列表」後，伺服器自動把整份列表轉成<strong>一張</strong> Code 128 Set B 條碼長圖
-          （所有段垂直疊排，每行一條獨立條碼，≤ 80 字元、帶 Pk/N|B64: 前綴，掃描槍逐行掃、VBA 按段號重組）。<br>
-          <strong>「條碼表頁面」會直接顯示全張圖＋每段代碼文字，可逐段複製或一撳複製全部</strong>；
+          每次更新「電子資源列表」後，伺服器自動把整份列表的 UTF-8 bytes 直接畫成<strong>一張 1-bit 位元圖</strong>
+          （1 像素 = 1 bit；每行 1664px：同步碼 A5 5A + 行號 + 總行數 + 數據 200B + CRC16 校驗，每行 4px 高、行距 2px；
+          約 19.6KB 數據 ≈ 98 行 = 1664×586px，比舊條碼圖細約 60 倍）。<br>
+          <strong>「位元圖頁面」會直接顯示位元圖＋完整列表文字（可一撳複製）</strong>；
           每次開啟/下載會先觸發一次資料更新，3 分鐘內重複請求沿用舊檔。<br>
           以下連結<strong>永久不變、不經 Proxy</strong>，任何電腦直接使用；若本頁以 https 開啟而瀏覽器攔截 http 內容，
-          請改用「📋 複製連結」，到目標電腦的瀏覽器 / Excel / 掃描工具貼上使用。
+          請改用「📋 複製連結」，到目標電腦的瀏覽器 / Excel / 解碼工具貼上使用。
         </p>
         <div class="stable-link-row">
-          <span class="link-label" style="color: #1e40af;">條碼表頁面：</span>
-          <code id="barcodeSheetUrl">--</code>
-          <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodeSheetUrl')">📋 複製連結</button>
-          <button class="btn btn-sm btn-secondary" onclick="openBarcodeLink('barcodeSheet')">👁️ 開啟顯示</button>
+          <span class="link-label" style="color: #1e40af;">位元圖頁面：</span>
+          <code id="bitmapSheetUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyBitmapLink('bitmapSheetUrl')">📋 複製連結</button>
+          <button class="btn btn-sm btn-secondary" onclick="openBitmapLink('bitmapSheet')">👁️ 開啟顯示</button>
         </div>
         <div class="stable-link-row">
-          <span class="link-label" style="color: #1e40af;">全張 PNG：</span>
-          <code id="barcodePngUrl">--</code>
-          <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodePngUrl')">📋 複製連結</button>
-          <button class="btn btn-sm btn-info" onclick="openBarcodeLink('barcodePng')">💾 下載全張</button>
+          <span class="link-label" style="color: #1e40af;">位元圖 BMP：</span>
+          <code id="bitmapBmpUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyBitmapLink('bitmapBmpUrl')">📋 複製連結</button>
+          <button class="btn btn-sm btn-info" onclick="openBitmapLink('bitmapBmp')">💾 下載位元圖</button>
         </div>
         <div class="stable-link-row">
           <span class="link-label" style="color: #1e40af;">JSON 清單：</span>
-          <code id="barcodeManifestUrl">--</code>
-          <button class="btn btn-sm btn-primary" onclick="copyBarcodeLink('barcodeManifestUrl')">📋 複製連結</button>
+          <code id="bitmapManifestUrl">--</code>
+          <button class="btn btn-sm btn-primary" onclick="copyBitmapLink('bitmapManifestUrl')">📋 複製連結</button>
         </div>
       </div>
 
@@ -501,10 +502,10 @@
       // v3.8：瀏覽器下載按鈕專用（Proxy 只支援 JSON，故後端以 JSON 封裝再由前端還原下載）
       eresourceCsvJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-json',
       eresourceTxtJson: 'https://cb-one-phi.vercel.app/api/proxy?target=9000&endpoint=e-resources-list-txt-json',
-      // v4.3：條碼全張圖 + 條碼表顯示頁固定連結（二進制/頁面不可經 Proxy；固定 DDNS 地址）
-      barcodePng: 'http://bobbybase.ddns.net:9000/barcodes.png',
-      barcodeSheet: 'http://bobbybase.ddns.net:9000/barcode-sheet',
-      barcodeManifest: 'http://bobbybase.ddns.net:9000/barcodes'
+      // v4.4：位元圖 + 位元圖顯示頁固定連結（二進制/頁面不可經 Proxy；固定 DDNS 地址）
+      bitmapBmp: 'http://bobbybase.ddns.net:9000/bitmap.bmp',
+      bitmapSheet: 'http://bobbybase.ddns.net:9000/bitmap-sheet',
+      bitmapManifest: 'http://bobbybase.ddns.net:9000/bitmaps'
     };
 
     // ==================== Tab 切換 ====================
@@ -672,13 +673,13 @@
       const txtEl = document.getElementById('stableTxtUrl');
       if (csvEl) csvEl.textContent = API_CONFIG.eresourceCsv;
       if (txtEl) txtEl.textContent = API_CONFIG.eresourceTxt;
-      // v4.3：條碼全張圖 + 條碼表顯示頁固定連結
-      const bp = document.getElementById('barcodePngUrl');
-      const bsh = document.getElementById('barcodeSheetUrl');
-      const bm = document.getElementById('barcodeManifestUrl');
-      if (bp) bp.textContent = API_CONFIG.barcodePng;
-      if (bsh) bsh.textContent = API_CONFIG.barcodeSheet;
-      if (bm) bm.textContent = API_CONFIG.barcodeManifest;
+      // v4.4：位元圖 + 位元圖顯示頁固定連結
+      const bp = document.getElementById('bitmapBmpUrl');
+      const bsh = document.getElementById('bitmapSheetUrl');
+      const bm = document.getElementById('bitmapManifestUrl');
+      if (bp) bp.textContent = API_CONFIG.bitmapBmp;
+      if (bsh) bsh.textContent = API_CONFIG.bitmapSheet;
+      if (bm) bm.textContent = API_CONFIG.bitmapManifest;
     }
 
     window.addEventListener('DOMContentLoaded', function() {
@@ -1250,30 +1251,30 @@
       }
     }
 
-    // ==================== 電子資源條碼全張圖（v4.3）====================
-    function copyBarcodeLink(elId) {
-      // 條碼圖係二進制，唔經 Proxy；複製固定連結俾其他電腦 / 工具直接用
+    // ==================== 電子資源位元圖（v4.4）====================
+    function copyBitmapLink(elId) {
+      // 位元圖係二進制，唔經 Proxy；複製固定連結俾其他電腦 / 工具直接用
       const url = document.getElementById(elId).textContent.trim();
       navigator.clipboard.writeText(url).then(() => {
-        setStatus('已複製條碼連結', 'success', 'extractStatus');
-        addLog('success', '已複製條碼連結', url);
+        setStatus('已複製位元圖連結', 'success', 'extractStatus');
+        addLog('success', '已複製位元圖連結', url);
       }).catch(() => {
         const el = document.getElementById(elId);
         const range = document.createRange();
         range.selectNodeContents(el);
         const sel = window.getSelection();
         sel.removeAllRanges(); sel.addRange(range);
-        try { document.execCommand('copy'); setStatus('已複製條碼連結', 'success', 'extractStatus'); }
+        try { document.execCommand('copy'); setStatus('已複製位元圖連結', 'success', 'extractStatus'); }
         catch (err) { setStatus('複製失敗，請手動選取複製', 'error', 'extractStatus'); }
         sel.removeAllRanges();
       });
     }
 
-    function openBarcodeLink(key) {
-      // 直接下載條碼圖（唔經 Proxy）。注意：若本頁以 https 開啟，
+    function openBitmapLink(key) {
+      // 直接下載位元圖（唔經 Proxy）。注意：若本頁以 https 開啟，
       // 瀏覽器可能攔截 http 下載（混合內容），屆時請改用「複製連結」
       const url = API_CONFIG[key];
-      addLog('request', '下載條碼圖', `GET ${url}`);
+      addLog('request', '下載位元圖', `GET ${url}`);
       window.open(url, '_blank');
     }
 
